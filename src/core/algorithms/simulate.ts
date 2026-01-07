@@ -1,0 +1,2 @@
+// String acceptance testing
+export {}
