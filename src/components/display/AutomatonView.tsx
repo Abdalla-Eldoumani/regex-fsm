@@ -7,9 +7,17 @@ interface AutomatonViewProps {
   automaton: Automaton | null
   title: string
   error?: string
+  highlightStates?: string[]
+  highlightEdges?: string[]
 }
 
-export function AutomatonView({ automaton, title, error }: AutomatonViewProps) {
+export function AutomatonView({
+  automaton,
+  title,
+  error,
+  highlightStates = [],
+  highlightEdges = [],
+}: AutomatonViewProps) {
   const [activeTab, setActiveTab] = useState('graph')
 
   const tabs = [
@@ -50,7 +58,11 @@ export function AutomatonView({ automaton, title, error }: AutomatonViewProps) {
       <div className="flex-1 p-4 overflow-auto">
         {activeTab === 'graph' && (
           <div className="w-full h-full min-h-[400px] bg-base rounded border border-overlay0">
-            <AutomatonGraph automaton={automaton} />
+            <AutomatonGraph
+              automaton={automaton}
+              highlightStates={highlightStates}
+              highlightEdges={highlightEdges}
+            />
           </div>
         )}
 
