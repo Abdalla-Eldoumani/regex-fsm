@@ -6,6 +6,8 @@ import { NFA, DFA } from '@/core/automata/types'
 import { RegexInput } from './input/RegexInput'
 import { StringInput } from './input/StringInput'
 import { AutomatonView } from './display/AutomatonView'
+import { SimulationPanel } from './simulation/SimulationPanel'
+import { Button } from './common/Button'
 
 function App() {
   const [regex, setRegex] = useState('')
@@ -13,6 +15,11 @@ function App() {
   const [nfa, setNfa] = useState<NFA | null>(null)
   const [dfa, setDfa] = useState<DFA | null>(null)
   const [error, setError] = useState<string>('')
+  const [simulationMode, setSimulationMode] = useState<'nfa' | 'dfa'>('nfa')
+  const [nfaHighlightStates, setNfaHighlightStates] = useState<string[]>([])
+  const [dfaHighlightStates, setDfaHighlightStates] = useState<string[]>([])
+  const [nfaHighlightEdges, setNfaHighlightEdges] = useState<string[]>([])
+  const [dfaHighlightEdges, setDfaHighlightEdges] = useState<string[]>([])
 
   useEffect(() => {
     if (!regex) {
@@ -54,21 +61,69 @@ function App() {
           <StringInput value={testString} onChange={setTestString} />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="h-[600px]">
-            <AutomatonView
-              automaton={nfa}
-              title="NFA (Nondeterministic Finite Automaton)"
-              error={error}
-            />
+        <div className="space-y-6">
+          <div className="p-4 bg-surface0 rounded-lg">
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-sm font-medium text-text">Simulate:</span>
+              <div className="flex gap-2">
+                <Button
+                  label="NFA"
+                  onClick={() => setSimulationMode('nfa')}
+                  variant={simulationMode === 'nfa' ? 'primary' : 'secondary'}
+                />
+                <Button
+                  label="DFA"
+                  onClick={() => setSimulationMode('dfa')}
+                  variant={simulationMode === 'dfa' ? 'primary' : 'secondary'}
+                />
+              </div>
+            </div>
+
+            {simulationMode === 'nfa' && (
+              <SimulationPanel
+                automaton={nfa}
+                input={testString}
+                mode="nfa"
+                onHighlightChange={(states, edges) => {
+                  setNfaHighlightStates(states)
+                  setNfaHighlightEdges(edges)
+                }}
+              />
+            )}
+
+            {simulationMode === 'dfa' && (
+              <SimulationPanel
+                automaton={dfa}
+                input={testString}
+                mode="dfa"
+                onHighlightChange={(states, edges) => {
+                  setDfaHighlightStates(states)
+                  setDfaHighlightEdges(edges)
+                }}
+              />
+            )}
           </div>
 
-          <div className="h-[600px]">
-            <AutomatonView
-              automaton={dfa}
-              title="DFA (Deterministic Finite Automaton)"
-              error={error}
-            />
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="h-[600px]">
+              <AutomatonView
+                automaton={nfa}
+                title="NFA (Nondeterministic Finite Automaton)"
+                error={error}
+                highlightStates={simulationMode === 'nfa' ? nfaHighlightStates : []}
+                highlightEdges={simulationMode === 'nfa' ? nfaHighlightEdges : []}
+              />
+            </div>
+
+            <div className="h-[600px]">
+              <AutomatonView
+                automaton={dfa}
+                title="DFA (Deterministic Finite Automaton)"
+                error={error}
+                highlightStates={simulationMode === 'dfa' ? dfaHighlightStates : []}
+                highlightEdges={simulationMode === 'dfa' ? dfaHighlightEdges : []}
+              />
+            </div>
           </div>
         </div>
 
