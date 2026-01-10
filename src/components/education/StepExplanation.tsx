@@ -5,9 +5,10 @@ interface StepExplanationProps {
   mode: 'nfa' | 'dfa'
   isComplete: boolean
   accepted: boolean
+  inputLength?: number
 }
 
-export function StepExplanation({ step, mode, isComplete, accepted }: StepExplanationProps) {
+export function StepExplanation({ step, mode, isComplete, accepted, inputLength = 0 }: StepExplanationProps) {
   if (!step) {
     return (
       <div className="p-4 bg-surface0 rounded-lg">
@@ -101,7 +102,7 @@ export function StepExplanation({ step, mode, isComplete, accepted }: StepExplan
       {!isComplete && step.position !== undefined && (
         <div className="mt-3 pt-3 border-t border-overlay0">
           <div className="text-xs text-subtext0">
-            Position: {step.position} / {step.totalLength || 0}
+            Position: {step.position} / {inputLength}
           </div>
         </div>
       )}

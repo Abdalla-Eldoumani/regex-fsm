@@ -110,6 +110,7 @@ export function SimulationPanel({
         mode={mode}
         isComplete={currentStep === totalSteps - 1}
         accepted={result.accepted}
+        inputLength={input.length}
       />
 
       {currentStepData && (
