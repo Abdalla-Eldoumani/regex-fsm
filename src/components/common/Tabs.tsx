@@ -8,10 +8,10 @@ export function TabButton({ label, active, onClick }: TabButtonProps) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 font-medium transition-colors border-b-2 ${
+      className={`px-5 py-3 font-sans font-medium transition-all border-b-3 relative ${
         active
-          ? 'border-blue text-blue'
-          : 'border-transparent text-subtext0 hover:text-text'
+          ? 'border-teal text-teal bg-teal/5'
+          : 'border-transparent text-ink-light hover:text-ink hover:bg-canvas/50'
       }`}
     >
       {label}
@@ -27,7 +27,7 @@ interface TabsProps {
 
 export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
   return (
-    <div className="flex gap-1 border-b border-surface0">
+    <div className="flex gap-0.5 border-b-2 border-border bg-parchment px-2">
       {tabs.map(tab => (
         <TabButton
           key={tab.id}
