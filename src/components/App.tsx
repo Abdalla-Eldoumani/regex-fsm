@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { parse } from '@/core/regex/parser'
 import { buildNFA } from '@/core/algorithms/thompson'
 import { nfaToDFA } from '@/core/algorithms/subset'
@@ -7,7 +8,6 @@ import { RegexInput } from './input/RegexInput'
 import { StringInput } from './input/StringInput'
 import { AutomatonView } from './display/AutomatonView'
 import { SimulationPanel } from './simulation/SimulationPanel'
-import { Button } from './common/Button'
 
 function App() {
   const [regex, setRegex] = useState('')
@@ -45,53 +45,107 @@ function App() {
   }, [regex])
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
-      <header className="border-b-2 border-border-dark bg-gradient-to-b from-parchment to-paper">
-        <div className="container mx-auto px-8 py-8 animate-fade-in">
-          <div className="max-w-4xl">
-            <h1 className="text-5xl md:text-6xl font-display font-bold text-ink leading-tight">
-              RegexFSM
-            </h1>
-            <p className="text-lg text-ink-light mt-3 font-sans">
-              A Visual Exploration of Regular Expressions and Finite State Machines
-            </p>
+    <div className="min-h-screen bg-background text-text-primary">
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'radial-gradient(circle at center, var(--color-border) 1px, transparent 1px)',
+          backgroundSize: '50px 50px',
+          opacity: 0.3
+        }}></div>
+
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-pulse"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-secondary rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+
+      <header className="sticky top-0 z-50 bg-surface/70 backdrop-blur-xl border-b border-border shadow-medium relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 pointer-events-none"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-accent to-secondary flex items-center justify-center shadow-lg ring-2 ring-primary/30 transition-all hover:ring-primary/60 hover:scale-105">
+              <span className="text-background font-mono font-bold text-xl drop-shadow-md">R</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-display font-bold text-text-primary tracking-tight">
+                RegexFSM
+              </h1>
+            </div>
+          </div>
+          <div className="hidden md:flex items-center gap-6">
+             <span className="text-sm font-medium text-text-secondary bg-surface-hover px-3 py-1.5 rounded-full border border-border">
+               Visualizing Regular Expressions
+             </span>
+             <Link to="/github" className="text-text-tertiary hover:text-primary transition-all hover:scale-110 active:scale-95">
+               <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
+                 <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+               </svg>
+             </Link>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-8 py-12 max-w-7xl">
-        <section className="mb-16 animate-slide-up animate-delay-100">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <RegexInput value={regex} onChange={setRegex} error={error} />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 relative z-10">
+
+        <section className="bg-surface/80 backdrop-blur-md rounded-3xl shadow-hard border border-border hover:border-border-hover transition-all duration-300 p-8 md:p-10 animate-slide-up group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative">
+            <div className="lg:col-span-2 space-y-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-1.5 h-6 bg-gradient-to-b from-primary to-accent rounded-full"></div>
+                  <h2 className="text-xl font-display font-bold text-text-primary">Pattern</h2>
+                </div>
+                <p className="text-sm text-text-secondary mb-5 ml-3.5">Enter a regular expression to generate the automata.</p>
+                <RegexInput value={regex} onChange={setRegex} error={error} />
+              </div>
             </div>
-            <div>
-              <StringInput value={testString} onChange={setTestString} />
+            <div className="space-y-6">
+               <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-1.5 h-6 bg-gradient-to-b from-secondary to-primary rounded-full"></div>
+                  <h2 className="text-xl font-display font-bold text-text-primary">Test String</h2>
+                </div>
+                <p className="text-sm text-text-secondary mb-5 ml-3.5">Simulate how the machine processes input.</p>
+                <StringInput value={testString} onChange={setTestString} />
+              </div>
             </div>
           </div>
         </section>
 
-        <div className="space-y-12">
-          <section className="animate-slide-up animate-delay-200">
-            <div className="bg-parchment border-2 border-border rounded-sm p-8 shadow-sm">
-              <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
-                <h2 className="text-2xl font-display font-semibold text-ink">
-                  Simulation Mode
-                </h2>
-                <div className="flex gap-3">
-                  <Button
-                    label="NFA"
-                    onClick={() => setSimulationMode('nfa')}
-                    variant={simulationMode === 'nfa' ? 'primary' : 'secondary'}
-                  />
-                  <Button
-                    label="DFA"
-                    onClick={() => setSimulationMode('dfa')}
-                    variant={simulationMode === 'dfa' ? 'primary' : 'secondary'}
-                  />
+        <section className="bg-surface/80 backdrop-blur-md rounded-3xl shadow-hard border border-border overflow-hidden animate-slide-up animate-delay-200 hover:border-border-hover transition-all duration-300">
+           <div className="border-b border-border p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 relative">
+             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-50"></div>
+             <div className="relative">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-1.5 h-6 bg-gradient-to-b from-accent to-accent-secondary rounded-full"></div>
+                  <h2 className="text-xl font-display font-bold text-text-primary">Simulation</h2>
                 </div>
-              </div>
+                <p className="text-sm text-text-secondary ml-3.5">Step through the state transitions.</p>
+             </div>
+             <div className="flex p-1.5 bg-background/60 rounded-xl border border-border shadow-inner relative backdrop-blur-sm">
+                <button
+                  onClick={() => setSimulationMode('nfa')}
+                  className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    simulationMode === 'nfa'
+                      ? 'bg-gradient-to-br from-primary to-primary-hover shadow-lg text-background ring-2 ring-primary/50 scale-105'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+                  }`}
+                >
+                  NFA Simulation
+                </button>
+                <button
+                  onClick={() => setSimulationMode('dfa')}
+                  className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    simulationMode === 'dfa'
+                      ? 'bg-gradient-to-br from-secondary to-secondary-hover shadow-lg text-background ring-2 ring-secondary/50 scale-105'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+                  }`}
+                >
+                  DFA Simulation
+                </button>
+             </div>
+           </div>
 
+           <div className="p-6 md:p-8 bg-gradient-to-b from-transparent to-background/30">
               {simulationMode === 'nfa' && (
                 <SimulationPanel
                   automaton={nfa}
@@ -115,82 +169,92 @@ function App() {
                   }}
                 />
               )}
-            </div>
-          </section>
+           </div>
+        </section>
 
-          <section className="grid grid-cols-1 xl:grid-cols-2 gap-8 animate-slide-up animate-delay-300">
-            <article className="h-[650px]">
+        <section className="grid grid-cols-1 xl:grid-cols-2 gap-8 animate-slide-up animate-delay-300">
+          <article className="bg-surface/80 backdrop-blur-md rounded-3xl shadow-hard border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-primary/50 hover:shadow-glow-primary group">
+            <div className="p-5 border-b border-border bg-gradient-to-r from-primary/20 via-primary/10 to-transparent flex justify-between items-center backdrop-blur-sm relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+               <h3 className="font-display font-bold text-text-primary flex items-center gap-3 relative z-10">
+                 <span className="w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/50 animate-pulse"></span>
+                 <span className="text-lg">Nondeterministic Finite Automaton</span>
+               </h3>
+               <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-primary/20 border border-primary/40 text-primary font-bold shadow-inner relative z-10">NFA</span>
+            </div>
+            <div className="flex-1 relative bg-gradient-to-br from-background to-background-secondary">
               <AutomatonView
                 automaton={nfa}
-                title="NFA (Nondeterministic Finite Automaton)"
+                title=""
                 error={error}
                 highlightStates={simulationMode === 'nfa' ? nfaHighlightStates : []}
                 highlightEdges={simulationMode === 'nfa' ? nfaHighlightEdges : []}
               />
-            </article>
+            </div>
+          </article>
 
-            <article className="h-[650px]">
+          <article className="bg-surface/80 backdrop-blur-md rounded-3xl shadow-hard border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-secondary/50 hover:shadow-glow-secondary group">
+             <div className="p-5 border-b border-border bg-gradient-to-r from-secondary/20 via-secondary/10 to-transparent flex justify-between items-center backdrop-blur-sm relative">
+               <div className="absolute inset-0 bg-gradient-to-r from-secondary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+               <h3 className="font-display font-bold text-text-primary flex items-center gap-3 relative z-10">
+                  <span className="w-3 h-3 rounded-full bg-secondary shadow-lg shadow-secondary/50 animate-pulse" style={{ animationDelay: '0.5s' }}></span>
+                  <span className="text-lg">Deterministic Finite Automaton</span>
+               </h3>
+               <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-secondary/20 border border-secondary/40 text-secondary font-bold shadow-inner relative z-10">DFA</span>
+            </div>
+            <div className="flex-1 relative bg-gradient-to-br from-background to-background-secondary">
               <AutomatonView
                 automaton={dfa}
-                title="DFA (Deterministic Finite Automaton)"
+                title=""
                 error={error}
                 highlightStates={simulationMode === 'dfa' ? dfaHighlightStates : []}
                 highlightEdges={simulationMode === 'dfa' ? dfaHighlightEdges : []}
               />
-            </article>
-          </section>
-        </div>
+            </div>
+          </article>
+        </section>
 
         {nfa && dfa && (
-          <aside className="mt-16 animate-slide-up animate-delay-400">
-            <div className="border-t-2 border-border-dark pt-8">
-              <h3 className="text-2xl font-display font-semibold text-ink mb-6">
-                Automaton Statistics
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <div className="group">
-                  <div className="text-sm font-medium text-ink-lighter uppercase tracking-wide mb-2">
-                    NFA States
-                  </div>
-                  <div className="text-4xl font-display font-bold text-teal group-hover:text-teal-dark transition-colors">
-                    {nfa.states.length}
-                  </div>
-                </div>
-                <div className="group">
-                  <div className="text-sm font-medium text-ink-lighter uppercase tracking-wide mb-2">
-                    NFA Transitions
-                  </div>
-                  <div className="text-4xl font-display font-bold text-teal group-hover:text-teal-dark transition-colors">
-                    {nfa.transitions.length}
-                  </div>
-                </div>
-                <div className="group">
-                  <div className="text-sm font-medium text-ink-lighter uppercase tracking-wide mb-2">
-                    DFA States
-                  </div>
-                  <div className="text-4xl font-display font-bold text-terracotta group-hover:text-terracotta-dark transition-colors">
-                    {dfa.states.length}
-                  </div>
-                </div>
-                <div className="group">
-                  <div className="text-sm font-medium text-ink-lighter uppercase tracking-wide mb-2">
-                    DFA Transitions
-                  </div>
-                  <div className="text-4xl font-display font-bold text-terracotta group-hover:text-terracotta-dark transition-colors">
-                    {dfa.transitions.length}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
+          <section className="animate-slide-up animate-delay-400">
+             <div className="bg-surface/80 backdrop-blur-md rounded-3xl shadow-hard border border-border p-8 md:p-10 hover:border-border-hover transition-all duration-300">
+               <div className="flex items-center gap-2 mb-8">
+                 <div className="w-1.5 h-6 bg-gradient-to-b from-success to-accent rounded-full"></div>
+                 <h3 className="text-xl font-display font-bold text-text-primary">Automaton Statistics</h3>
+               </div>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <StatCard label="NFA States" value={nfa.states.length} color="text-primary" gradient="from-primary/20 to-primary/5" />
+                  <StatCard label="NFA Transitions" value={nfa.transitions.length} color="text-primary" gradient="from-primary/20 to-primary/5" />
+                  <StatCard label="DFA States" value={dfa.states.length} color="text-secondary" gradient="from-secondary/20 to-secondary/5" />
+                  <StatCard label="DFA Transitions" value={dfa.transitions.length} color="text-secondary" gradient="from-secondary/20 to-secondary/5" />
+               </div>
+             </div>
+          </section>
         )}
       </main>
 
-      <footer className="border-t border-border mt-20 py-8">
-        <div className="container mx-auto px-8 text-center text-sm text-ink-lighter">
-          <p>An educational tool for understanding formal language theory</p>
+      <footer className="mt-16 py-10 border-t border-border bg-surface/50 backdrop-blur-md relative z-10">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-sm text-text-tertiary">
+            Designed for educational purposes. Visualizing Formal Language Theory.
+          </p>
+          <div className="mt-4 flex justify-center items-center gap-2">
+            <div className="w-1 h-1 rounded-full bg-primary animate-pulse"></div>
+            <div className="w-1 h-1 rounded-full bg-secondary animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+            <div className="w-1 h-1 rounded-full bg-accent animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+          </div>
         </div>
       </footer>
+    </div>
+  )
+}
+
+function StatCard({ label, value, color, gradient }: { label: string, value: number, color: string, gradient: string }) {
+  return (
+    <div className={`p-6 rounded-2xl bg-gradient-to-br ${gradient} border border-border hover:border-border-bright transition-all group hover:shadow-lg hover:scale-105 duration-300`}>
+      <div className="text-xs font-bold text-text-tertiary uppercase tracking-widest mb-3">{label}</div>
+      <div className={`text-4xl font-mono font-black ${color} group-hover:scale-110 transition-transform origin-left`}>
+        {value}
+      </div>
     </div>
   )
 }
