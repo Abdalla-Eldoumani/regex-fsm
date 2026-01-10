@@ -4,11 +4,11 @@ interface InputTapeProps {
   accepted?: boolean | null
 }
 
-export function InputTape({ input, currentPosition, accepted }: InputTapeProps) {
+export function InputTape({ input, currentPosition }: InputTapeProps) {
   if (!input) {
     return (
-      <div className="flex items-center justify-center h-24 bg-canvas rounded-sm border-2 border-border text-ink-lighter italic">
-        Enter a test string to simulate
+      <div className="flex items-center justify-center h-24 text-text-tertiary italic text-sm border-2 border-dashed border-border rounded-xl bg-background/50">
+        Enter a test string to visualize the input tape
       </div>
     )
   }
@@ -16,47 +16,44 @@ export function InputTape({ input, currentPosition, accepted }: InputTapeProps) 
   const cells = input.split('')
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 overflow-x-auto pb-3">
-        {cells.map((char, idx) => {
-          const isConsumed = idx < currentPosition
-          const isCurrent = idx === currentPosition
-          const isRemaining = idx > currentPosition
+    <div className="relative flex flex-col gap-4 py-8 overflow-hidden">
+      <div className="absolute top-1/2 left-0 w-full h-1 bg-border/50 -translate-y-1/2 rounded-full" />
+      
+      <div className="flex items-center justify-center overflow-x-auto pb-4 pt-4 px-4 scrollbar-hide relative z-10">
+        <div className="flex items-center gap-3">
+          {cells.map((char, idx) => {
+            const isConsumed = idx < currentPosition
+            const isCurrent = idx === currentPosition
+            const isRemaining = idx > currentPosition
 
-          return (
-            <div
-              key={idx}
-              className={`
-                relative flex items-center justify-center min-w-14 h-14
-                border-3 rounded-sm font-mono text-xl font-semibold transition-all
-                ${isCurrent ? 'border-ochre bg-ochre/20 text-ochre-dark scale-110 shadow-md' : ''}
-                ${isConsumed ? 'border-border bg-parchment text-border-dark opacity-60' : ''}
-                ${isRemaining ? 'border-teal bg-paper text-ink' : ''}
-              `}
-            >
-              {char}
-              {isCurrent && (
-                <div className="absolute -bottom-7 text-ochre-dark text-xs font-sans font-medium">
-                  ▲ reading
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="flex items-center justify-between text-sm pt-2 border-t border-border">
-        <div className="text-ink-light">
-          <span className="uppercase tracking-wide text-xs text-ink-lighter font-medium">Position:</span>{' '}
-          <span className="font-mono font-semibold text-ink">{currentPosition}</span>
-          <span className="text-ink-lighter"> / </span>
-          <span className="font-mono font-semibold text-ink">{input.length}</span>
+            return (
+              <div
+                key={idx}
+                className={`
+                  relative flex items-center justify-center w-14 h-14
+                  rounded-xl font-mono text-xl font-bold transition-all duration-300
+                  ${isCurrent 
+                    ? 'bg-primary text-white scale-110 shadow-xl shadow-primary/30 z-20 -translate-y-1 ring-4 ring-primary/20' 
+                    : ''}
+                  ${isConsumed 
+                    ? 'bg-secondary-light border-2 border-border text-text-tertiary opacity-70 grayscale' 
+                    : ''}
+                  ${isRemaining 
+                    ? 'bg-surface border-2 border-border text-text-primary shadow-sm' 
+                    : ''}
+                `}
+              >
+                {char}
+                {isCurrent && (
+                  <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 flex flex-col items-center animate-bounce-small">
+                     <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-primary"></div>
+                     <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1">Head</span>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
-        {accepted !== null && accepted !== undefined && (
-          <div className={`font-semibold text-base ${accepted ? 'text-sage-dark' : 'text-terracotta'}`}>
-            {accepted ? '✓ Accepted' : '✗ Rejected'}
-          </div>
-        )}
       </div>
     </div>
   )
