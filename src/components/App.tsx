@@ -61,9 +61,9 @@ function App() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 pointer-events-none"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-accent to-secondary flex items-center justify-center shadow-lg ring-2 ring-primary/30 transition-all hover:ring-primary/60 hover:scale-105">
+            <Link to="/" className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-accent to-secondary flex items-center justify-center shadow-lg ring-2 ring-primary/30 transition-all hover:ring-primary/60 hover:scale-105 cursor-pointer">
               <span className="text-background font-mono font-bold text-xl drop-shadow-md">R</span>
-            </div>
+            </Link>
             <div>
               <h1 className="text-xl font-display font-bold text-text-primary tracking-tight">
                 RegexFSM
@@ -124,7 +124,7 @@ function App() {
              <div className="flex p-1.5 bg-background/60 rounded-xl border border-border shadow-inner relative backdrop-blur-sm">
                 <button
                   onClick={() => setSimulationMode('nfa')}
-                  className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  className={`cursor-pointer px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
                     simulationMode === 'nfa'
                       ? 'bg-gradient-to-br from-primary to-primary-hover shadow-lg text-background ring-2 ring-primary/50 scale-105'
                       : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
@@ -134,7 +134,7 @@ function App() {
                 </button>
                 <button
                   onClick={() => setSimulationMode('dfa')}
-                  className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  className={`cursor-pointer px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
                     simulationMode === 'dfa'
                       ? 'bg-gradient-to-br from-secondary to-secondary-hover shadow-lg text-background ring-2 ring-secondary/50 scale-105'
                       : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
