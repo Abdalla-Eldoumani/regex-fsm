@@ -8,12 +8,12 @@ interface StepExplanationProps {
   inputLength?: number
 }
 
-export function StepExplanation({ step, mode, isComplete, accepted, inputLength = 0 }: StepExplanationProps) {
+export function StepExplanation({ step, mode, isComplete, accepted }: StepExplanationProps) {
   if (!step) {
     return (
-      <div className="p-4 bg-surface0 rounded-lg">
-        <div className="text-sm text-subtext0 italic">
-          No simulation in progress. Enter a test string and start the simulation.
+      <div className="p-4 bg-background border border-border rounded-xl">
+        <div className="text-sm text-text-tertiary italic">
+          No simulation in progress.
         </div>
       </div>
     )
@@ -80,32 +80,26 @@ export function StepExplanation({ step, mode, isComplete, accepted, inputLength 
   const additionalInfo = getAdditionalInfo()
 
   return (
-    <div className="p-4 bg-surface0 rounded-lg">
+    <div className="p-4 bg-background border border-border rounded-xl shadow-sm">
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">
           {isComplete ? (
-            <span className={`text-lg ${accepted ? 'text-green' : 'text-red'}`}>
+            <span className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold ${accepted ? 'bg-success text-white' : 'bg-error text-white'}`}>
               {accepted ? '✓' : '✗'}
             </span>
           ) : (
-            <span className="text-blue text-lg">→</span>
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary-light text-primary text-xs font-bold">
+              →
+            </span>
           )}
         </div>
         <div className="flex-1">
-          <div className="text-sm text-text leading-relaxed">{explanation}</div>
+          <div className="text-sm text-text-primary leading-relaxed font-medium">{explanation}</div>
           {additionalInfo && (
-            <div className="mt-2 text-xs text-subtext0 italic">{additionalInfo}</div>
+            <div className="mt-2 text-xs text-text-secondary italic pl-3 border-l-2 border-secondary-light">{additionalInfo}</div>
           )}
         </div>
       </div>
-
-      {!isComplete && step.position !== undefined && (
-        <div className="mt-3 pt-3 border-t border-overlay0">
-          <div className="text-xs text-subtext0">
-            Position: {step.position} / {inputLength}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
