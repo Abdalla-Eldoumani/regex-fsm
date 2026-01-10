@@ -12,16 +12,18 @@ export function StringInput({ value, onChange, placeholder = 'abb' }: StringInpu
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm text-text font-medium">Test String</label>
+    <div className="flex flex-col gap-3">
+      <label className="text-base font-display font-semibold text-ink">Test String</label>
       <input
         type="text"
         value={value}
         onChange={handleChange}
-        className="px-3 py-2 bg-surface0 border border-overlay0 rounded font-mono text-text placeholder:text-overlay0 focus:outline-none focus:ring-2 focus:ring-blue"
+        className="px-5 py-4 bg-paper border-2 border-border rounded-sm font-mono text-lg text-ink placeholder:text-ink-lighter/50 focus:outline-none focus:ring-4 focus:ring-teal/10 focus:border-teal transition-all"
         placeholder={placeholder}
       />
-      <p className="text-xs text-subtext0">Enter a string to test against the automaton</p>
+      <p className="text-sm text-ink-lighter leading-relaxed">
+        Input string to simulate against the automaton
+      </p>
     </div>
   )
 }
