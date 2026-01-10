@@ -26,12 +26,12 @@ export function SimulationControls({
   onComplete,
 }: SimulationControlsProps) {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={onReset}
           disabled={!canReset}
-          className="px-3 py-2 bg-surface1 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text transition-colors"
+          className="px-4 py-2.5 bg-canvas hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-ink border-2 border-border hover:border-border-dark transition-all font-medium"
           title="Reset to start"
         >
           ⏮ Reset
@@ -40,7 +40,7 @@ export function SimulationControls({
         <button
           onClick={onStepBack}
           disabled={currentStep === 0}
-          className="px-3 py-2 bg-surface1 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text transition-colors"
+          className="px-4 py-2.5 bg-canvas hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-ink border-2 border-border hover:border-border-dark transition-all font-medium"
           title="Step back"
         >
           ◀ Back
@@ -49,10 +49,10 @@ export function SimulationControls({
         <button
           onClick={isRunning ? onPause : onPlay}
           disabled={!canStep && !isRunning}
-          className={`px-4 py-2 rounded font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`px-6 py-2.5 rounded-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow-md ${
             isRunning
-              ? 'bg-yellow hover:bg-yellow/80 text-base'
-              : 'bg-blue hover:bg-blue/80 text-base'
+              ? 'bg-ochre hover:bg-ochre-dark text-paper'
+              : 'bg-teal hover:bg-teal-dark text-paper'
           }`}
           title={isRunning ? 'Pause' : 'Play'}
         >
@@ -62,7 +62,7 @@ export function SimulationControls({
         <button
           onClick={onStepForward}
           disabled={!canStep}
-          className="px-3 py-2 bg-surface1 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text transition-colors"
+          className="px-4 py-2.5 bg-canvas hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-ink border-2 border-border hover:border-border-dark transition-all font-medium"
           title="Step forward"
         >
           Forward ▶
@@ -71,17 +71,19 @@ export function SimulationControls({
         <button
           onClick={onComplete}
           disabled={!canStep}
-          className="px-3 py-2 bg-surface1 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed rounded text-text transition-colors"
+          className="px-4 py-2.5 bg-canvas hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-ink border-2 border-border hover:border-border-dark transition-all font-medium"
           title="Run to completion"
         >
           ⏭ Complete
         </button>
       </div>
 
-      <div className="flex items-center gap-3 text-sm text-subtext0">
+      <div className="flex items-center gap-3 text-sm text-ink-light">
         <div>
-          Step: <span className="font-mono text-text">{currentStep}</span> /{' '}
-          <span className="font-mono text-text">{totalSteps - 1}</span>
+          <span className="uppercase tracking-wide text-xs text-ink-lighter font-medium">Step:</span>{' '}
+          <span className="font-mono text-base text-ink font-semibold">{currentStep}</span>
+          <span className="text-ink-lighter"> / </span>
+          <span className="font-mono text-base text-ink font-semibold">{totalSteps - 1}</span>
         </div>
       </div>
     </div>
