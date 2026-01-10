@@ -1,2 +1,2 @@
-// Education components
-export {}
+export { TheoryPanel } from './TheoryPanel'
+export { StepExplanation } from './StepExplanation'
