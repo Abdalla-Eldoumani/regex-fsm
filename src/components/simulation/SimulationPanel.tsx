@@ -3,6 +3,7 @@ import { Automaton } from '@/core/automata/types'
 import { useSimulation } from '@/hooks/useSimulation'
 import { SimulationControls } from './SimulationControls'
 import { InputTape } from './InputTape'
+import { StepExplanation } from '../education/StepExplanation'
 
 interface SimulationPanelProps {
   automaton: Automaton | null
@@ -102,6 +103,13 @@ export function SimulationPanel({
         onStepBack={stepBack}
         onReset={reset}
         onComplete={complete}
+      />
+
+      <StepExplanation
+        step={currentStepData}
+        mode={mode}
+        isComplete={currentStep === totalSteps - 1}
+        accepted={result.accepted}
       />
 
       {currentStepData && (
