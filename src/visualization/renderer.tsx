@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import cytoscape, { Core } from 'cytoscape'
 import { Automaton } from '@/core/automata/types'
 import { automatonToCytoscape } from './cytoscape-config'
@@ -13,15 +13,27 @@ export interface AutomatonGraphProps {
   onEdgeClick?: (edgeId: string) => void
 }
 
-export function AutomatonGraph({
-  automaton,
-  highlightStates = [],
-  highlightEdges = [],
-  onNodeClick,
-  onEdgeClick,
-}: AutomatonGraphProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const cyRef = useRef<Core | null>(null)
+export interface AutomatonGraphHandle {
+  getCytoscapeInstance: () => Core | null
+}
+
+export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphProps>(
+  (
+    {
+      automaton,
+      highlightStates = [],
+      highlightEdges = [],
+      onNodeClick,
+      onEdgeClick,
+    },
+    ref
+  ) => {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const cyRef = useRef<Core | null>(null)
+
+    useImperativeHandle(ref, () => ({
+      getCytoscapeInstance: () => cyRef.current,
+    }))
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -69,5 +81,6 @@ export function AutomatonGraph({
     })
   }, [highlightStates, highlightEdges])
 
-  return <div ref={containerRef} className="w-full h-full" />
-}
+    return <div ref={containerRef} className="w-full h-full" />
+  }
+)
