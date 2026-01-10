@@ -21,19 +21,19 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
   const isStartState = (state: string) => state === automaton.startState
 
   return (
-    <div className="overflow-auto">
+    <div className="overflow-auto rounded-lg border border-border">
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="bg-surface1">
-            <th className="px-3 py-2 text-left border border-overlay0 text-subtext0 font-semibold">
+          <tr className="bg-secondary-light/50">
+            <th className="px-4 py-3 text-left border-b border-r border-border text-text-secondary font-semibold">
               State
             </th>
             {columns.map(symbol => (
               <th
                 key={symbol}
-                className="px-3 py-2 text-center border border-overlay0 text-subtext0 font-semibold"
+                className="px-4 py-3 text-center border-b border-border text-text-secondary font-semibold"
               >
-                <code className="text-yellow">{symbol}</code>
+                <code className="px-2 py-1 bg-background rounded border border-border text-text-primary font-mono text-xs">{symbol}</code>
               </th>
             ))}
           </tr>
@@ -42,21 +42,21 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
           {automaton.states.map(state => {
             const isHighlighted = highlightState === state.id
             const rowClasses = isHighlighted
-              ? 'bg-blue/20 border-blue'
-              : 'hover:bg-surface0/50'
+              ? 'bg-primary-light/20'
+              : 'hover:bg-secondary-light/20 even:bg-secondary-light/5'
 
             return (
-              <tr key={state.id} className={rowClasses}>
-                <td className="px-3 py-2 border border-overlay0 font-mono">
+              <tr key={state.id} className={`${rowClasses} transition-colors`}>
+                <td className="px-4 py-3 border-r border-border border-b border-border/50 font-mono">
                   <div className="flex items-center gap-2">
                     {isStartState(state.id) && (
-                      <span className="text-blue text-xs">→</span>
+                      <span className="text-primary text-xs" title="Start State">→</span>
                     )}
-                    <span className={isAcceptState(state.id) ? 'text-green font-semibold' : 'text-text'}>
+                    <span className={isAcceptState(state.id) ? 'text-success font-semibold' : 'text-text-primary'}>
                       {state.id}
                     </span>
                     {isAcceptState(state.id) && (
-                      <span className="text-green text-xs">✓</span>
+                      <span className="text-success text-xs" title="Accept State">✓</span>
                     )}
                   </div>
                 </td>
@@ -65,10 +65,10 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
                   return (
                     <td
                       key={symbol}
-                      className="px-3 py-2 text-center border border-overlay0 font-mono text-text"
+                      className="px-4 py-3 text-center border-b border-border/50 font-mono text-text-primary"
                     >
                       {targets.length === 0 ? (
-                        <span className="text-subtext0">∅</span>
+                        <span className="text-text-tertiary">∅</span>
                       ) : targets.length === 1 ? (
                         targets[0]
                       ) : (
@@ -78,11 +78,11 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
                   )
                 })}
                 {hasEpsilon && (
-                  <td className="px-3 py-2 text-center border border-overlay0 font-mono text-text">
+                  <td className="px-4 py-3 text-center border-b border-border/50 font-mono text-text-primary">
                     {(() => {
                       const targets = getTransitions(state.id, null)
                       return targets.length === 0 ? (
-                        <span className="text-subtext0">∅</span>
+                        <span className="text-text-tertiary">∅</span>
                       ) : targets.length === 1 ? (
                         targets[0]
                       ) : (
@@ -97,13 +97,13 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
         </tbody>
       </table>
 
-      <div className="mt-3 px-2 text-xs text-subtext0 space-y-1">
+      <div className="mt-4 px-2 text-xs text-text-tertiary space-y-1">
         <div className="flex items-center gap-2">
-          <span className="text-blue">→</span>
+          <span className="text-primary">→</span>
           <span>Start state</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-green">✓</span>
+          <span className="text-success">✓</span>
           <span>Accept state</span>
         </div>
         <div className="flex items-center gap-2">
