@@ -45,67 +45,81 @@ function App() {
   }, [regex])
 
   return (
-    <div className="min-h-screen bg-base text-text">
-      <header className="border-b border-surface0 bg-mantle">
-        <div className="container mx-auto px-6 py-4">
-          <h1 className="text-3xl font-bold text-blue">RegexFSM</h1>
-          <p className="text-sm text-subtext0 mt-1">
-            Regular Expression and Finite State Machine Visualizer
-          </p>
+    <div className="min-h-screen bg-paper text-ink">
+      <header className="border-b-2 border-border-dark bg-gradient-to-b from-parchment to-paper">
+        <div className="container mx-auto px-8 py-8 animate-fade-in">
+          <div className="max-w-4xl">
+            <h1 className="text-5xl md:text-6xl font-display font-bold text-ink leading-tight">
+              RegexFSM
+            </h1>
+            <p className="text-lg text-ink-light mt-3 font-sans">
+              A Visual Exploration of Regular Expressions and Finite State Machines
+            </p>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <RegexInput value={regex} onChange={setRegex} error={error} />
-          <StringInput value={testString} onChange={setTestString} />
-        </div>
-
-        <div className="space-y-6">
-          <div className="p-4 bg-surface0 rounded-lg">
-            <div className="flex items-center gap-4 mb-4">
-              <span className="text-sm font-medium text-text">Simulate:</span>
-              <div className="flex gap-2">
-                <Button
-                  label="NFA"
-                  onClick={() => setSimulationMode('nfa')}
-                  variant={simulationMode === 'nfa' ? 'primary' : 'secondary'}
-                />
-                <Button
-                  label="DFA"
-                  onClick={() => setSimulationMode('dfa')}
-                  variant={simulationMode === 'dfa' ? 'primary' : 'secondary'}
-                />
-              </div>
+      <main className="container mx-auto px-8 py-12 max-w-7xl">
+        <section className="mb-16 animate-slide-up animate-delay-100">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <RegexInput value={regex} onChange={setRegex} error={error} />
             </div>
-
-            {simulationMode === 'nfa' && (
-              <SimulationPanel
-                automaton={nfa}
-                input={testString}
-                mode="nfa"
-                onHighlightChange={(states, edges) => {
-                  setNfaHighlightStates(states)
-                  setNfaHighlightEdges(edges)
-                }}
-              />
-            )}
-
-            {simulationMode === 'dfa' && (
-              <SimulationPanel
-                automaton={dfa}
-                input={testString}
-                mode="dfa"
-                onHighlightChange={(states, edges) => {
-                  setDfaHighlightStates(states)
-                  setDfaHighlightEdges(edges)
-                }}
-              />
-            )}
+            <div>
+              <StringInput value={testString} onChange={setTestString} />
+            </div>
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div className="h-[600px]">
+        <div className="space-y-12">
+          <section className="animate-slide-up animate-delay-200">
+            <div className="bg-parchment border-2 border-border rounded-sm p-8 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
+                <h2 className="text-2xl font-display font-semibold text-ink">
+                  Simulation Mode
+                </h2>
+                <div className="flex gap-3">
+                  <Button
+                    label="NFA"
+                    onClick={() => setSimulationMode('nfa')}
+                    variant={simulationMode === 'nfa' ? 'primary' : 'secondary'}
+                  />
+                  <Button
+                    label="DFA"
+                    onClick={() => setSimulationMode('dfa')}
+                    variant={simulationMode === 'dfa' ? 'primary' : 'secondary'}
+                  />
+                </div>
+              </div>
+
+              {simulationMode === 'nfa' && (
+                <SimulationPanel
+                  automaton={nfa}
+                  input={testString}
+                  mode="nfa"
+                  onHighlightChange={(states, edges) => {
+                    setNfaHighlightStates(states)
+                    setNfaHighlightEdges(edges)
+                  }}
+                />
+              )}
+
+              {simulationMode === 'dfa' && (
+                <SimulationPanel
+                  automaton={dfa}
+                  input={testString}
+                  mode="dfa"
+                  onHighlightChange={(states, edges) => {
+                    setDfaHighlightStates(states)
+                    setDfaHighlightEdges(edges)
+                  }}
+                />
+              )}
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 xl:grid-cols-2 gap-8 animate-slide-up animate-delay-300">
+            <article className="h-[650px]">
               <AutomatonView
                 automaton={nfa}
                 title="NFA (Nondeterministic Finite Automaton)"
@@ -113,9 +127,9 @@ function App() {
                 highlightStates={simulationMode === 'nfa' ? nfaHighlightStates : []}
                 highlightEdges={simulationMode === 'nfa' ? nfaHighlightEdges : []}
               />
-            </div>
+            </article>
 
-            <div className="h-[600px]">
+            <article className="h-[650px]">
               <AutomatonView
                 automaton={dfa}
                 title="DFA (Deterministic Finite Automaton)"
@@ -123,34 +137,60 @@ function App() {
                 highlightStates={simulationMode === 'dfa' ? dfaHighlightStates : []}
                 highlightEdges={simulationMode === 'dfa' ? dfaHighlightEdges : []}
               />
-            </div>
-          </div>
+            </article>
+          </section>
         </div>
 
         {nfa && dfa && (
-          <div className="mt-6 p-4 bg-surface0 rounded-lg">
-            <h3 className="text-lg font-semibold text-text mb-2">Summary</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <div className="text-subtext0">NFA States</div>
-                <div className="text-2xl font-bold text-blue">{nfa.states.length}</div>
-              </div>
-              <div>
-                <div className="text-subtext0">NFA Transitions</div>
-                <div className="text-2xl font-bold text-blue">{nfa.transitions.length}</div>
-              </div>
-              <div>
-                <div className="text-subtext0">DFA States</div>
-                <div className="text-2xl font-bold text-green">{dfa.states.length}</div>
-              </div>
-              <div>
-                <div className="text-subtext0">DFA Transitions</div>
-                <div className="text-2xl font-bold text-green">{dfa.transitions.length}</div>
+          <aside className="mt-16 animate-slide-up animate-delay-400">
+            <div className="border-t-2 border-border-dark pt-8">
+              <h3 className="text-2xl font-display font-semibold text-ink mb-6">
+                Automaton Statistics
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div className="group">
+                  <div className="text-sm font-medium text-ink-lighter uppercase tracking-wide mb-2">
+                    NFA States
+                  </div>
+                  <div className="text-4xl font-display font-bold text-teal group-hover:text-teal-dark transition-colors">
+                    {nfa.states.length}
+                  </div>
+                </div>
+                <div className="group">
+                  <div className="text-sm font-medium text-ink-lighter uppercase tracking-wide mb-2">
+                    NFA Transitions
+                  </div>
+                  <div className="text-4xl font-display font-bold text-teal group-hover:text-teal-dark transition-colors">
+                    {nfa.transitions.length}
+                  </div>
+                </div>
+                <div className="group">
+                  <div className="text-sm font-medium text-ink-lighter uppercase tracking-wide mb-2">
+                    DFA States
+                  </div>
+                  <div className="text-4xl font-display font-bold text-terracotta group-hover:text-terracotta-dark transition-colors">
+                    {dfa.states.length}
+                  </div>
+                </div>
+                <div className="group">
+                  <div className="text-sm font-medium text-ink-lighter uppercase tracking-wide mb-2">
+                    DFA Transitions
+                  </div>
+                  <div className="text-4xl font-display font-bold text-terracotta group-hover:text-terracotta-dark transition-colors">
+                    {dfa.transitions.length}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </aside>
         )}
       </main>
+
+      <footer className="border-t border-border mt-20 py-8">
+        <div className="container mx-auto px-8 text-center text-sm text-ink-lighter">
+          <p>An educational tool for understanding formal language theory</p>
+        </div>
+      </footer>
     </div>
   )
 }
