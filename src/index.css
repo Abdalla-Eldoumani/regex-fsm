@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  line-height: 1.6;
   font-weight: 400;
 
-  color-scheme: dark;
-  color: #cdd6f4;
-  background-color: #1e1e2e;
+  color-scheme: light;
+  color: #1A1A1A;
+  background-color: #FFFCF5;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -29,4 +29,22 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+@layer utilities {
+  .animate-delay-100 {
+    animation-delay: 100ms;
+  }
+  .animate-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animate-delay-300 {
+    animation-delay: 300ms;
+  }
+  .animate-delay-400 {
+    animation-delay: 400ms;
+  }
+  .animate-delay-500 {
+    animation-delay: 500ms;
+  }
 }
