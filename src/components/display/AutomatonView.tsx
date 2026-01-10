@@ -1,7 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Automaton } from '@/core/automata/types'
-import { AutomatonGraph } from '@/visualization/renderer'
+import { AutomatonGraph, AutomatonGraphHandle } from '@/visualization/renderer'
 import { Tabs } from '../common/Tabs'
+import { TransitionTable } from './TransitionTable'
+import { StateList } from './StateList'
+import { Button } from '../common/Button'
+import { exportAsPNG, exportAsSVG } from '@/visualization/export'
 
 interface AutomatonViewProps {
   automaton: Automaton | null
@@ -19,11 +23,30 @@ export function AutomatonView({
   highlightEdges = [],
 }: AutomatonViewProps) {
   const [activeTab, setActiveTab] = useState('graph')
+  const graphRef = useRef<AutomatonGraphHandle>(null)
 
   const tabs = [
     { id: 'graph', label: 'Graph' },
+    { id: 'table', label: 'Table' },
+    { id: 'states', label: 'States' },
     { id: 'info', label: 'Info' },
   ]
+
+  const handleExportPNG = () => {
+    const cy = graphRef.current?.getCytoscapeInstance()
+    if (cy) {
+      const filename = `${title.toLowerCase().replace(/\s+/g, '-')}.png`
+      exportAsPNG(cy, filename)
+    }
+  }
+
+  const handleExportSVG = () => {
+    const cy = graphRef.current?.getCytoscapeInstance()
+    if (cy) {
+      const filename = `${title.toLowerCase().replace(/\s+/g, '-')}.svg`
+      exportAsSVG(cy, filename)
+    }
+  }
 
   if (error) {
     return (
@@ -50,7 +73,23 @@ export function AutomatonView({
   return (
     <div className="flex flex-col h-full bg-surface0 rounded-lg overflow-hidden">
       <div className="px-4 pt-4 pb-2">
-        <h2 className="text-xl font-bold text-text mb-2">{title}</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+          <h2 className="text-xl font-bold text-text">{title}</h2>
+          {activeTab === 'graph' && (
+            <div className="flex gap-2">
+              <Button
+                label="PNG"
+                onClick={handleExportPNG}
+                variant="secondary"
+              />
+              <Button
+                label="SVG"
+                onClick={handleExportSVG}
+                variant="secondary"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
@@ -59,11 +98,23 @@ export function AutomatonView({
         {activeTab === 'graph' && (
           <div className="w-full h-full min-h-[400px] bg-base rounded border border-overlay0">
             <AutomatonGraph
+              ref={graphRef}
               automaton={automaton}
               highlightStates={highlightStates}
               highlightEdges={highlightEdges}
             />
           </div>
+        )}
+
+        {activeTab === 'table' && (
+          <TransitionTable
+            automaton={automaton}
+            highlightState={highlightStates[0]}
+          />
+        )}
+
+        {activeTab === 'states' && (
+          <StateList automaton={automaton} highlightStates={highlightStates} />
         )}
 
         {activeTab === 'info' && (
