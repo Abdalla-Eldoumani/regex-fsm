@@ -17,7 +17,6 @@ export function SimulationControls({
   canStep,
   canReset,
   currentStep,
-  totalSteps,
   onPlay,
   onPause,
   onStepForward,
@@ -25,67 +24,66 @@ export function SimulationControls({
   onReset,
   onComplete,
 }: SimulationControlsProps) {
+  const secondaryBtnClass = "px-4 py-2 bg-white border border-border rounded-lg text-sm font-medium text-text-secondary hover:text-primary hover:border-primary/50 hover:bg-primary-light/10 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-background disabled:border-border"
+  
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          onClick={onReset}
-          disabled={!canReset}
-          className="px-4 py-2.5 bg-canvas hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-ink border-2 border-border hover:border-border-dark transition-all font-medium"
-          title="Reset to start"
-        >
-          ⏮ Reset
-        </button>
+    <div className="flex flex-wrap items-center gap-3">
+      <button
+        onClick={onReset}
+        disabled={!canReset}
+        className={secondaryBtnClass}
+        title="Reset to start"
+      >
+        <span className="mr-1">⏮</span> Reset
+      </button>
 
-        <button
-          onClick={onStepBack}
-          disabled={currentStep === 0}
-          className="px-4 py-2.5 bg-canvas hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-ink border-2 border-border hover:border-border-dark transition-all font-medium"
-          title="Step back"
-        >
-          ◀ Back
-        </button>
+      <button
+        onClick={onStepBack}
+        disabled={currentStep === 0}
+        className={secondaryBtnClass}
+        title="Step back"
+      >
+        <span className="mr-1">◀</span> Back
+      </button>
 
-        <button
-          onClick={isRunning ? onPause : onPlay}
-          disabled={!canStep && !isRunning}
-          className={`px-6 py-2.5 rounded-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow-md ${
+      <button
+        onClick={isRunning ? onPause : onPlay}
+        disabled={!canStep && !isRunning}
+        className={`px-6 py-2 rounded-lg text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all flex items-center gap-2 min-w-[110px] justify-center transform active:scale-95 ${
             isRunning
-              ? 'bg-ochre hover:bg-ochre-dark text-paper'
-              : 'bg-teal hover:bg-teal-dark text-paper'
-          }`}
-          title={isRunning ? 'Pause' : 'Play'}
-        >
-          {isRunning ? '⏸ Pause' : '▶ Play'}
-        </button>
+              ? 'bg-secondary hover:bg-secondary-hover'
+              : 'bg-primary hover:bg-primary-hover'
+          } disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none`}
+        title={isRunning ? 'Pause' : 'Play'}
+      >
+        {isRunning ? (
+          <>
+            <span>⏸</span> Pause
+          </>
+        ) : (
+          <>
+            <span>▶</span> Play
+          </>
+        )}
+      </button>
 
-        <button
-          onClick={onStepForward}
-          disabled={!canStep}
-          className="px-4 py-2.5 bg-canvas hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-ink border-2 border-border hover:border-border-dark transition-all font-medium"
-          title="Step forward"
-        >
-          Forward ▶
-        </button>
+      <button
+        onClick={onStepForward}
+        disabled={!canStep}
+        className={secondaryBtnClass}
+        title="Step forward"
+      >
+        Forward <span className="ml-1">▶</span>
+      </button>
 
-        <button
-          onClick={onComplete}
-          disabled={!canStep}
-          className="px-4 py-2.5 bg-canvas hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed rounded-sm text-ink border-2 border-border hover:border-border-dark transition-all font-medium"
-          title="Run to completion"
-        >
-          ⏭ Complete
-        </button>
-      </div>
-
-      <div className="flex items-center gap-3 text-sm text-ink-light">
-        <div>
-          <span className="uppercase tracking-wide text-xs text-ink-lighter font-medium">Step:</span>{' '}
-          <span className="font-mono text-base text-ink font-semibold">{currentStep}</span>
-          <span className="text-ink-lighter"> / </span>
-          <span className="font-mono text-base text-ink font-semibold">{totalSteps - 1}</span>
-        </div>
-      </div>
+      <button
+        onClick={onComplete}
+        disabled={!canStep}
+        className={secondaryBtnClass}
+        title="Run to completion"
+      >
+        Finish <span className="ml-1">⏭</span>
+      </button>
     </div>
   )
 }
