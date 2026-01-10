@@ -115,14 +115,6 @@ regex-fsm/
 
 ## Development
 
-### Code Style
-
-- Concise, direct code without unnecessary comments
-- Comments explain WHY, not WHAT
-- Variable names: short but descriptive (`idx` not `index`)
-- Function names: verb-noun format (`parseRegex`, `buildNFA`)
-- No emojis or decorative elements in code
-
 ### TypeScript Guidelines
 
 - Strict mode enabled, no `any` types
