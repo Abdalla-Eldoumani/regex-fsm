@@ -47,6 +47,9 @@ export function nfaToDFA(nfa: NFA): DFA {
   dfaStates.set(startStateName, startClosure)
   worklist.push(startClosure)
 
+  const TRAP_STATE = '∅'
+  let trapStateNeeded = false
+
   while (worklist.length > 0) {
     const currentSet = worklist.pop()!
     const currentName = stateSetToString(currentSet)
@@ -55,7 +58,15 @@ export function nfaToDFA(nfa: NFA): DFA {
       const moveResult = move(nfa, currentSet, symbol)
       const targetClosure = epsilonClosure(nfa, Array.from(moveResult))
 
-      if (targetClosure.size === 0) continue
+      if (targetClosure.size === 0) {
+        trapStateNeeded = true
+        dfaTransitions.push({
+          from: currentName,
+          to: TRAP_STATE,
+          symbol,
+        })
+        continue
+      }
 
       let targetName = findExistingState(dfaStates, targetClosure)
 
@@ -68,6 +79,18 @@ export function nfaToDFA(nfa: NFA): DFA {
       dfaTransitions.push({
         from: currentName,
         to: targetName,
+        symbol,
+      })
+    }
+  }
+
+  if (trapStateNeeded) {
+    dfaStates.set(TRAP_STATE, new Set())
+
+    for (const symbol of nfa.alphabet) {
+      dfaTransitions.push({
+        from: TRAP_STATE,
+        to: TRAP_STATE,
         symbol,
       })
     }
