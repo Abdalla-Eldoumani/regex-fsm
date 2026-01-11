@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { Automaton } from '@/core/automata/types'
+import { SimulationResult } from '@/core/algorithms/simulate'
 import { AutomatonGraph, AutomatonGraphHandle } from '@/visualization/renderer'
 import { Tabs } from '../common/Tabs'
 import { TransitionTable } from './TransitionTable'
@@ -12,6 +13,7 @@ interface AutomatonViewProps {
   error?: string
   highlightStates?: string[]
   highlightEdges?: string[]
+  simulationResult?: SimulationResult | null
 }
 
 export function AutomatonView({
@@ -19,6 +21,7 @@ export function AutomatonView({
   error,
   highlightStates = [],
   highlightEdges = [],
+  simulationResult = null,
 }: AutomatonViewProps) {
   const [activeTab, setActiveTab] = useState('graph')
   const graphRef = useRef<AutomatonGraphHandle>(null)
@@ -81,13 +84,13 @@ export function AutomatonView({
           <div className="flex gap-2">
             <button
               onClick={handleExportPNG}
-              className="px-4 py-2 text-xs font-semibold text-text-secondary hover:text-primary border border-border hover:border-primary/50 bg-surface-hover hover:bg-surface-elevated rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95"
+              className="cursor-pointer px-4 py-2 text-xs font-semibold text-text-secondary hover:text-primary border border-border hover:border-primary/50 bg-surface-hover hover:bg-surface-elevated rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95"
             >
               PNG
             </button>
             <button
               onClick={handleExportSVG}
-              className="px-4 py-2 text-xs font-semibold text-text-secondary hover:text-secondary border border-border hover:border-secondary/50 bg-surface-hover hover:bg-surface-elevated rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95"
+              className="cursor-pointer px-4 py-2 text-xs font-semibold text-text-secondary hover:text-secondary border border-border hover:border-secondary/50 bg-surface-hover hover:bg-surface-elevated rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95"
             >
               SVG
             </button>
@@ -96,18 +99,16 @@ export function AutomatonView({
       </div>
 
       <div className="flex-1 overflow-hidden relative">
-        {activeTab === 'graph' && (
-          <div className="absolute inset-0 bg-gradient-to-br from-surface to-surface-hover">
-            <AutomatonGraph
-              ref={graphRef}
-              automaton={automaton}
-              highlightStates={highlightStates}
-              highlightEdges={highlightEdges}
-            />
-          </div>
-        )}
+        <div className={`absolute inset-0 bg-gradient-to-br from-surface to-surface-hover ${activeTab === 'graph' ? 'block' : 'hidden'}`}>
+          <AutomatonGraph
+            ref={graphRef}
+            automaton={automaton}
+            highlightStates={highlightStates}
+            highlightEdges={highlightEdges}
+          />
+        </div>
 
-        <div className="h-full overflow-auto">
+        <div className={`h-full overflow-auto ${activeTab === 'graph' ? 'hidden' : 'block'}`}>
           {activeTab === 'table' && (
             <div className="p-6">
               <TransitionTable
@@ -119,7 +120,7 @@ export function AutomatonView({
 
           {activeTab === 'states' && (
              <div className="p-6">
-               <StateList automaton={automaton} highlightStates={highlightStates} />
+               <StateList automaton={automaton} highlightStates={highlightStates} simulationResult={simulationResult} />
              </div>
           )}
 
