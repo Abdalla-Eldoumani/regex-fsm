@@ -1,0 +1,145 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#FAFAFA"/>
+
+  <!-- Subtle grid pattern -->
+  <defs>
+    <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#E4E4E7" opacity="0.3"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Gradient blobs for visual interest -->
+  <ellipse cx="200" cy="150" rx="180" ry="180" fill="#6366F1" opacity="0.08" filter="blur(40px)"/>
+  <ellipse cx="1000" cy="480" rx="200" ry="200" fill="#10B981" opacity="0.08" filter="blur(40px)"/>
+
+  <!-- Title Section -->
+  <text x="100" y="120" font-family="Inter, system-ui, sans-serif" font-size="72" font-weight="800" fill="#18181B">
+    RegexFSM
+  </text>
+  <text x="100" y="170" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="400" fill="#71717A">
+    Visualize Regular Expressions & Finite Automata
+  </text>
+
+  <!-- Example Regex -->
+  <g transform="translate(100, 220)">
+    <rect width="360" height="70" rx="12" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="2"/>
+    <text x="24" y="28" font-family="JetBrains Mono, monospace" font-size="16" font-weight="600" fill="#71717A">
+      Regex
+    </text>
+    <text x="24" y="52" font-family="JetBrains Mono, monospace" font-size="24" font-weight="700" fill="#18181B">
+      (a|b)*abb
+    </text>
+  </g>
+
+  <!-- Arrow -->
+  <g transform="translate(490, 240)">
+    <line x1="0" y1="15" x2="60" y2="15" stroke="#6366F1" stroke-width="3"/>
+    <path d="M60 15 L50 10 L50 20 Z" fill="#6366F1"/>
+  </g>
+
+  <!-- Simple Automaton Visualization -->
+  <g transform="translate(580, 220)">
+    <!-- Background card -->
+    <rect width="520" height="280" rx="16" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="2"/>
+
+    <!-- Title -->
+    <text x="24" y="32" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="700" fill="#18181B">
+      DFA Visualization
+    </text>
+
+    <!-- Start arrow -->
+    <line x1="40" y1="140" x2="80" y2="140" stroke="#6366F1" stroke-width="3"/>
+    <path d="M80 140 L72 136 L72 144 Z" fill="#6366F1"/>
+
+    <!-- State q0 (start state) -->
+    <circle cx="120" cy="140" r="32" fill="#EEF2FF" stroke="#6366F1" stroke-width="4"/>
+    <text x="120" y="146" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="700" fill="#4338CA" text-anchor="middle">
+      q0
+    </text>
+
+    <!-- Transition a,b -->
+    <path d="M 152 140 L 228 140" stroke="#A1A1AA" stroke-width="2.5" fill="none" marker-end="url(#arrowhead)"/>
+    <rect x="175" y="120" width="40" height="24" rx="6" fill="#FAFAFA" stroke="#E4E4E7" stroke-width="1"/>
+    <text x="195" y="136" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600" fill="#18181B" text-anchor="middle">
+      a,b
+    </text>
+
+    <!-- State q1 -->
+    <circle cx="260" cy="140" r="32" fill="#FFFFFF" stroke="#71717A" stroke-width="2.5"/>
+    <text x="260" y="146" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="700" fill="#18181B" text-anchor="middle">
+      q1
+    </text>
+
+    <!-- Transition a -->
+    <path d="M 292 140 L 368 140" stroke="#A1A1AA" stroke-width="2.5" fill="none" marker-end="url(#arrowhead)"/>
+    <rect x="315" y="120" width="30" height="24" rx="6" fill="#FAFAFA" stroke="#E4E4E7" stroke-width="1"/>
+    <text x="330" y="136" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600" fill="#18181B" text-anchor="middle">
+      a
+    </text>
+
+    <!-- State q2 (accept state) -->
+    <circle cx="400" cy="140" r="32" fill="#ECFDF5" stroke="#10B981" stroke-width="6"/>
+    <circle cx="400" cy="140" r="26" fill="none" stroke="#10B981" stroke-width="2"/>
+    <text x="400" y="146" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="700" fill="#047857" text-anchor="middle">
+      q2
+    </text>
+
+    <!-- Self-loop on q1 -->
+    <path d="M 260 108 Q 260 70 240 90 Q 220 110 230 130" stroke="#A1A1AA" stroke-width="2.5" fill="none" marker-end="url(#arrowhead)"/>
+    <rect x="238" y="72" width="20" height="24" rx="6" fill="#FAFAFA" stroke="#E4E4E7" stroke-width="1"/>
+    <text x="248" y="88" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600" fill="#18181B" text-anchor="middle">
+      b
+    </text>
+
+    <!-- Legend -->
+    <g transform="translate(24, 200)">
+      <circle cx="12" cy="12" r="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="3"/>
+      <text x="30" y="17" font-family="Inter, system-ui, sans-serif" font-size="14" fill="#71717A">
+        Start State
+      </text>
+
+      <circle cx="140" cy="12" r="8" fill="#ECFDF5" stroke="#10B981" stroke-width="3"/>
+      <circle cx="140" cy="12" r="5" fill="none" stroke="#10B981" stroke-width="1.5"/>
+      <text x="158" y="17" font-family="Inter, system-ui, sans-serif" font-size="14" fill="#71717A">
+        Accept State
+      </text>
+    </g>
+  </g>
+
+  <!-- Features -->
+  <g transform="translate(100, 530)">
+    <g>
+      <circle cx="8" cy="8" r="4" fill="#6366F1"/>
+      <text x="24" y="13" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="500" fill="#71717A">
+        Thompson's Construction
+      </text>
+    </g>
+    <g transform="translate(220, 0)">
+      <circle cx="8" cy="8" r="4" fill="#10B981"/>
+      <text x="24" y="13" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="500" fill="#71717A">
+        Subset Construction
+      </text>
+    </g>
+    <g transform="translate(420, 0)">
+      <circle cx="8" cy="8" r="4" fill="#F59E0B"/>
+      <text x="24" y="13" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="500" fill="#71717A">
+        Interactive Simulation
+      </text>
+    </g>
+    <g transform="translate(620, 0)">
+      <circle cx="8" cy="8" r="4" fill="#8B5CF6"/>
+      <text x="24" y="13" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="500" fill="#71717A">
+        Educational Tool
+      </text>
+    </g>
+  </g>
+
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#A1A1AA"/>
+    </marker>
+  </defs>
+</svg>
