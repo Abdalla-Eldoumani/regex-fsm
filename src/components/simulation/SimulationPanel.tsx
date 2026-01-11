@@ -25,6 +25,8 @@ export function SimulationPanel({
     isRunning,
     canStep,
     canReset,
+    speed,
+    setSpeed,
     stepForward,
     stepBack,
     reset,
@@ -42,7 +44,7 @@ export function SimulationPanel({
     }
   }, [currentStepData, onHighlightChange])
 
-  if (!automaton || !input) {
+  if (!automaton || input === null || input === undefined) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="w-16 h-16 mb-4 rounded-full bg-secondary-light flex items-center justify-center text-secondary">
@@ -54,6 +56,8 @@ export function SimulationPanel({
         <h3 className="text-lg font-medium text-text-primary mb-2">Ready to Simulate</h3>
         <div className="text-text-secondary max-w-sm">
           Enter a regex pattern and a test string to watch the automaton process the input step-by-step.
+          <br />
+          <span className="text-xs text-text-tertiary mt-2 inline-block">Tip: Empty string is allowed for testing patterns like a* or ε</span>
         </div>
       </div>
     )
@@ -127,6 +131,8 @@ export function SimulationPanel({
              canReset={canReset}
              currentStep={currentStep}
              totalSteps={totalSteps}
+             speed={speed}
+             onSpeedChange={setSpeed}
              onPlay={play}
              onPause={pause}
              onStepForward={stepForward}
