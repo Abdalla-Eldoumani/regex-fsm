@@ -28,7 +28,7 @@ export function SimulationControls({
   onReset,
   onComplete,
 }: SimulationControlsProps) {
-  const secondaryBtnClass = "px-4 py-2 bg-white border border-border rounded-lg text-sm font-medium text-text-secondary hover:text-primary hover:border-primary/50 hover:bg-primary-light/10 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-background disabled:border-border"
+  const secondaryBtnClass = "cursor-pointer px-4 py-2 bg-surface-hover border border-border rounded-lg text-sm font-medium text-text-secondary hover:text-primary hover:border-primary/50 hover:bg-primary-light/20 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-surface/50 disabled:border-border/50"
 
   const speedOptions = [
     { value: 2000, label: '0.5x' },
@@ -60,7 +60,7 @@ export function SimulationControls({
       <button
         onClick={isRunning ? onPause : onPlay}
         disabled={!canStep && !isRunning}
-        className={`px-6 py-2 rounded-lg text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all flex items-center gap-2 min-w-[110px] justify-center transform active:scale-95 ${
+        className={`cursor-pointer px-6 py-2 rounded-lg text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all flex items-center gap-2 min-w-[110px] justify-center transform active:scale-95 ${
             isRunning
               ? 'bg-secondary hover:bg-secondary-hover'
               : 'bg-primary hover:bg-primary-hover'
@@ -96,12 +96,12 @@ export function SimulationControls({
         Finish <span className="ml-1">⏭</span>
       </button>
 
-      <div className="flex items-center gap-2 ml-4 px-4 py-2 bg-surface rounded-lg border border-border">
+      <div className="flex items-center gap-2 ml-4 px-4 py-2 bg-surface-hover rounded-lg border border-border">
         <span className="text-sm font-medium text-text-secondary">Speed:</span>
         <select
           value={speed}
           onChange={(e) => onSpeedChange(Number(e.target.value))}
-          className="px-3 py-1 bg-white border border-border rounded text-sm font-medium text-text-primary hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+          className="px-3 py-1 bg-surface-elevated border border-border rounded text-sm font-medium text-text-primary hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer transition-all"
           title="Simulation speed"
         >
           {speedOptions.map((option) => (
