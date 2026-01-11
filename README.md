@@ -54,8 +54,6 @@ npm run preview
 
 ```bash
 npm test              # Run tests
-npm run test:ui       # Run tests with UI
-npm run test:coverage # Generate coverage report
 ```
 
 ## Usage
