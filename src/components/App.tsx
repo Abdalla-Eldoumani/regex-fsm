@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { parse } from '@/core/regex/parser'
 import { buildNFA } from '@/core/algorithms/thompson'
 import { nfaToDFA } from '@/core/algorithms/subset'
+import { simulateNFA, simulateDFA, SimulationResult } from '@/core/algorithms/simulate'
 import { NFA, DFA } from '@/core/automata/types'
 import { RegexInput } from './input/RegexInput'
 import { StringInput } from './input/StringInput'
@@ -19,6 +20,8 @@ function App() {
   const [dfaHighlightStates, setDfaHighlightStates] = useState<string[]>([])
   const [nfaHighlightEdges, setNfaHighlightEdges] = useState<string[]>([])
   const [dfaHighlightEdges, setDfaHighlightEdges] = useState<string[]>([])
+  const [nfaSimResult, setNfaSimResult] = useState<SimulationResult | null>(null)
+  const [dfaSimResult, setDfaSimResult] = useState<SimulationResult | null>(null)
 
   useEffect(() => {
     if (!regex) {
@@ -42,6 +45,34 @@ function App() {
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
     }
   }, [regex])
+
+  useEffect(() => {
+    if (!nfa || testString === null || testString === undefined) {
+      setNfaSimResult(null)
+      return
+    }
+
+    try {
+      const result = simulateNFA(nfa, testString)
+      setNfaSimResult(result)
+    } catch {
+      setNfaSimResult(null)
+    }
+  }, [nfa, testString])
+
+  useEffect(() => {
+    if (!dfa || testString === null || testString === undefined) {
+      setDfaSimResult(null)
+      return
+    }
+
+    try {
+      const result = simulateDFA(dfa, testString)
+      setDfaSimResult(result)
+    } catch {
+      setDfaSimResult(null)
+    }
+  }, [dfa, testString])
 
   return (
     <>
@@ -151,6 +182,7 @@ function App() {
                 error={error}
                 highlightStates={simulationMode === 'nfa' ? nfaHighlightStates : []}
                 highlightEdges={simulationMode === 'nfa' ? nfaHighlightEdges : []}
+                simulationResult={simulationMode === 'nfa' ? nfaSimResult : null}
               />
             </div>
           </article>
@@ -171,6 +203,7 @@ function App() {
                 error={error}
                 highlightStates={simulationMode === 'dfa' ? dfaHighlightStates : []}
                 highlightEdges={simulationMode === 'dfa' ? dfaHighlightEdges : []}
+                simulationResult={simulationMode === 'dfa' ? dfaSimResult : null}
               />
             </div>
           </article>
