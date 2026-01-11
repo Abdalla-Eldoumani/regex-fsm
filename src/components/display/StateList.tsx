@@ -1,13 +1,16 @@
 import { Automaton } from '@/core/automata/types'
+import { SimulationResult } from '@/core/algorithms/simulate'
 
 interface StateListProps {
   automaton: Automaton
   highlightStates?: string[]
+  simulationResult?: SimulationResult | null
 }
 
-export function StateList({ automaton, highlightStates = [] }: StateListProps) {
+export function StateList({ automaton, highlightStates = [], simulationResult = null }: StateListProps) {
   const isAcceptState = (state: string) => automaton.acceptStates.includes(state)
   const isStartState = (state: string) => state === automaton.startState
+  const isTrapState = (state: string) => state === '∅'
 
   const getOutgoingTransitions = (stateId: string) => {
     return automaton.transitions.filter(t => t.from === stateId)
@@ -17,8 +20,59 @@ export function StateList({ automaton, highlightStates = [] }: StateListProps) {
     return automaton.transitions.filter(t => t.to === stateId)
   }
 
+  const isSimulationComplete = simulationResult && simulationResult.steps.length > 0
+  const isRejected = isSimulationComplete && !simulationResult.accepted
+
+  const getRejectionReason = () => {
+    if (!isSimulationComplete || simulationResult.accepted) return ''
+
+    const lastStep = simulationResult.steps[simulationResult.steps.length - 1]
+    if (lastStep.nextStates.length === 0) {
+      return 'No valid transition found - reached trap state'
+    }
+
+    const hasAcceptState = lastStep.nextStates.some(state => automaton.acceptStates.includes(state))
+    if (!hasAcceptState) {
+      return 'Ended in non-accepting state'
+    }
+
+    return 'String not accepted'
+  }
+
   return (
     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+      {isRejected && (
+        <div className="p-4 bg-error-light border-2 border-error/30 rounded-xl animate-fade-in">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-error">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-error">String Rejected</h3>
+              <p className="text-sm text-error/80">{getRejectionReason()}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSimulationComplete && simulationResult.accepted && (
+        <div className="p-4 bg-success-light border-2 border-success/30 rounded-xl animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-success">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-success">String Accepted</h3>
+              <p className="text-sm text-success/80">The automaton successfully accepted this input</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {automaton.states.map(state => {
         const isHighlighted = highlightStates.includes(state.id)
         const outgoing = getOutgoingTransitions(state.id)
@@ -35,6 +89,7 @@ export function StateList({ automaton, highlightStates = [] }: StateListProps) {
           >
             <div className="flex items-center gap-3 mb-4">
               <div className={`w-10 h-10 flex items-center justify-center rounded-full font-mono font-bold text-lg ${
+                 isTrapState(state.id) ? 'bg-error text-white' :
                  isAcceptState(state.id) ? 'bg-success text-white' : 'bg-secondary-light text-text-primary'
               }`}>
                 {state.id}
@@ -48,6 +103,11 @@ export function StateList({ automaton, highlightStates = [] }: StateListProps) {
                 {isAcceptState(state.id) && (
                   <span className="px-2 py-0.5 bg-success-light border border-success/20 rounded-md text-xs text-success font-medium uppercase tracking-wider">
                     Accept
+                  </span>
+                )}
+                {isTrapState(state.id) && (
+                  <span className="px-2 py-0.5 bg-error-light border border-error/20 rounded-md text-xs text-error font-medium uppercase tracking-wider">
+                    Trap
                   </span>
                 )}
               </div>
