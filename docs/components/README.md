@@ -6,29 +6,146 @@ React components for the RegexFSM user interface.
 
 ```
 src/components/
-├── App.tsx              # Root application component
-├── common/              # Reusable UI components
-│   ├── Button.tsx      # Button component
-│   └── Tabs.tsx        # Tab navigation
-├── input/              # Input components
-│   ├── RegexInput.tsx  # Regex pattern input
-│   └── StringInput.tsx # Test string input
-├── display/            # Automaton display
-│   ├── AutomatonView.tsx      # Main automaton viewer
-│   ├── TransitionTable.tsx    # Transition function table
-│   └── StateList.tsx          # State list view
-├── simulation/         # Simulation controls
-│   ├── SimulationPanel.tsx    # Simulation orchestration
-│   ├── SimulationControls.tsx # Playback controls
-│   └── InputTape.tsx          # Visual input tape
-└── education/          # Educational content
-    ├── TheoryPanel.tsx        # Theory explanations
-    └── StepExplanation.tsx    # Step-by-step explanations
+├── App.tsx                     # Main application content
+├── Layout.tsx                  # Shared layout with header and routing
+├── ErrorBoundary.tsx           # Error boundary for React errors
+├── NotFound.tsx                # Generic 404 page
+├── NotFoundGithub.tsx          # GitHub-specific 404 page
+├── common/                     # Reusable UI components
+│   ├── Button.tsx              # Button component
+│   └── Tabs.tsx                # Tab navigation
+├── input/                      # Input components
+│   ├── RegexInput.tsx          # Regex pattern input
+│   └── StringInput.tsx         # Test string input
+├── display/                    # Automaton display
+│   ├── AutomatonView.tsx       # Main automaton viewer
+│   ├── TransitionTable.tsx     # Transition function table
+│   └── StateList.tsx           # State list view
+├── simulation/                 # Simulation controls
+│   ├── SimulationPanel.tsx     # Simulation orchestration
+│   ├── SimulationControls.tsx  # Playback controls
+│   └── InputTape.tsx           # Visual input tape
+└── education/                  # Educational content
+    ├── TheoryPanel.tsx         # Theory explanations
+    └── StepExplanation.tsx     # Step-by-step explanations
 ```
+
+## Layout Component
+
+**File**: `src/components/Layout.tsx`
+
+Shared layout component that wraps all routes with a consistent header and background.
+
+### Features
+
+- Sticky header with logo and navigation
+- Animated gradient background with grid pattern
+- React Router integration using `<Outlet />`
+- Responsive design with glassmorphism effects
+
+### Structure
+
+```typescript
+function Layout(): JSX.Element {
+  return (
+    <div className="min-h-screen bg-background text-text-primary">
+      {/* Animated background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {/* Grid pattern and gradient blobs */}
+      </div>
+
+      {/* Sticky header */}
+      <header className="sticky top-0 z-50">
+        <Link to="/">R Logo</Link>
+        <h1>RegexFSM</h1>
+        <Link to="/github">GitHub</Link>
+      </header>
+
+      {/* Route content */}
+      <Outlet />
+    </div>
+  )
+}
+```
+
+### Navigation
+
+- **Home**: Clicking R logo navigates to `/`
+- **GitHub**: Navigates to `/github` (shows NotFoundGithub page)
+
+## ErrorBoundary Component
+
+**File**: `src/components/ErrorBoundary.tsx`
+
+Class component that catches React errors in child components and displays a fallback UI.
+
+### Implementation
+
+```typescript
+class ErrorBoundary extends Component<Props, State> {
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo)
+  }
+}
+```
+
+### Fallback UI
+
+- Error icon and message
+- Error details in code block
+- "Reload Page" button
+- "Go Home" button
+
+### Usage
+
+Wraps the entire app in `src/main.tsx`:
+
+```typescript
+<ErrorBoundary>
+  <BrowserRouter>
+    {/* App content */}
+  </BrowserRouter>
+</ErrorBoundary>
+```
+
+## NotFound Component
+
+**File**: `src/components/NotFound.tsx`
+
+Generic 404 page for undefined routes.
+
+### Features
+
+- "404" heading with large font
+- "Lost in the automaton?" subheading
+- Error-themed design (red gradients)
+- Link back to home page
+
+## NotFoundGithub Component
+
+**File**: `src/components/NotFoundGithub.tsx`
+
+GitHub-specific 404 page indicating the repository is in private development.
+
+### Features
+
+- "Repository Not Public Yet" message
+- Explanation that the repository is currently private
+- LinkedIn links for:
+  - Abdalla ElDoumani
+  - Ibrahim Ahmed
+- Star animation background
+- Purple gradient theme
 
 ## App Component
 
 **File**: `src/components/App.tsx`
+
+Main content component for the home route (`/`).
 
 ### Responsibilities
 
@@ -79,18 +196,23 @@ useEffect(() => {
 }, [regex])
 ```
 
-### Layout Structure
+### Content Structure
+
+App component renders the main content (no header):
 
 ```
 App
-├── Header (Title and description)
-├── Input Row (RegexInput | StringInput)
-├── Simulation Panel
-│   └── SimulationPanel (NFA or DFA)
-└── Automaton Views
-    ├── AutomatonView (NFA)
-    └── AutomatonView (DFA)
+├── Main Section
+│   ├── Input Row (RegexInput | StringInput)
+│   ├── Simulation Panel
+│   │   └── SimulationPanel (NFA or DFA)
+│   └── Automaton Views
+│       ├── AutomatonView (NFA)
+│       └── AutomatonView (DFA)
+└── Footer
 ```
+
+The header is rendered by the Layout component, not App.
 
 ## Common Components
 
