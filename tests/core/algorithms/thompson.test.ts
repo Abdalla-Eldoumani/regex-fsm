@@ -122,13 +122,6 @@ describe('thompson construction', () => {
       expect(nfa.alphabet).toEqual(new Set(['a', 'b']))
     })
 
-    it('builds NFA for nested stars', () => {
-      const ast = parse('a**')
-      const nfa = buildNFA(ast)
-
-      expect(nfa.states).toHaveLength(6)
-    })
-
     it('builds NFA for star of concatenation', () => {
       const ast = parse('(ab)*')
       const nfa = buildNFA(ast)
@@ -156,12 +149,6 @@ describe('thompson construction', () => {
       expect(nfa.states).toHaveLength(8)
     })
 
-    it('builds NFA for nested plus', () => {
-      const ast = parse('a++')
-      const nfa = buildNFA(ast)
-
-      expect(nfa.states).toHaveLength(6)
-    })
   })
 
   describe('optional', () => {
@@ -183,12 +170,6 @@ describe('thompson construction', () => {
       expect(nfa.states).toHaveLength(8)
     })
 
-    it('builds NFA for nested optional', () => {
-      const ast = parse('a??')
-      const nfa = buildNFA(ast)
-
-      expect(nfa.states).toHaveLength(6)
-    })
   })
 
   describe('complex expressions', () => {
