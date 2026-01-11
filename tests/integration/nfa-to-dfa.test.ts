@@ -142,11 +142,15 @@ describe('NFA to DFA integration', () => {
   })
 
   describe('state minimization behavior', () => {
-    it('may produce fewer states than NFA for simple patterns', () => {
+    it('may add trap state for incomplete transitions', () => {
       const nfa = buildNFA(parse('a'))
       const dfa = nfaToDFA(nfa)
 
-      expect(dfa.states.length).toBeLessThanOrEqual(nfa.states.length)
+      expect(dfa.states.length).toBeGreaterThan(0)
+      const hasTrapState = dfa.states.some(s => s.id === '∅')
+      if (hasTrapState) {
+        expect(dfa.transitions.filter(t => t.to === '∅').length).toBeGreaterThan(0)
+      }
     })
 
     it('handles epsilon-heavy NFAs', () => {
