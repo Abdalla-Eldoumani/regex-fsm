@@ -18,7 +18,7 @@ export function StateList({ automaton, highlightStates = [] }: StateListProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
       {automaton.states.map(state => {
         const isHighlighted = highlightStates.includes(state.id)
         const outgoing = getOutgoingTransitions(state.id)
