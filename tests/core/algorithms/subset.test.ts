@@ -252,13 +252,13 @@ describe('subset construction', () => {
       }
     })
 
-    it('DFA state names contain NFA state IDs', () => {
+    it('DFA state names contain NFA state IDs or trap state', () => {
       const ast = parse('a|b')
       const nfa = buildNFA(ast)
       const dfa = nfaToDFA(nfa)
 
       for (const state of dfa.states) {
-        expect(state.id).toMatch(/^\{.*\}$/)
+        expect(state.id === '∅' || state.id.match(/^\{.*\}$/)).toBeTruthy()
       }
     })
   })
