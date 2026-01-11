@@ -49,22 +49,48 @@ export function getStylesheet(): StyleRule[] {
       },
     },
     {
+      selector: 'node[id = "__start_marker__"]',
+      style: {
+        width: 1,
+        height: 1,
+        'background-opacity': 0,
+        'border-width': 0,
+        label: '',
+      },
+    },
+    {
       selector: 'node[isStart]',
       style: {
         'border-color': colors.primary,
-        'border-width': 3,
+        'border-width': 5,
         'background-color': '#EEF2FF', // Very light indigo
         color: colors.primaryDark,
+        'shadow-blur': 12,
+        'shadow-color': colors.primary,
+        'shadow-opacity': 0.5,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
       },
     },
     {
       selector: 'node[isAccept]',
       style: {
-        'border-width': 6,
+        'border-width': 7,
         'border-style': 'double',
         'border-color': colors.success,
         'background-color': '#ECFDF5', // Very light emerald
         color: '#047857',
+        'padding': 8,
+      },
+    },
+    {
+      selector: 'node[id = "∅"]',
+      style: {
+        'border-style': 'dashed',
+        'border-color': colors.error,
+        'border-width': 3,
+        'background-color': '#FEF2F2', // Very light red
+        color: '#991B1B',
       },
     },
     // Simulation states
@@ -142,6 +168,19 @@ export function getStylesheet(): StyleRule[] {
         color: colors.highlight,
         'z-index': 10,
         'text-border-color': colors.highlight,
+      },
+    },
+    {
+      selector: 'edge.start-arrow',
+      style: {
+        width: 3,
+        'line-color': colors.primary,
+        'target-arrow-color': colors.primary,
+        'target-arrow-shape': 'triangle',
+        'arrow-scale': 1.5,
+        'curve-style': 'bezier',
+        label: '',
+        'z-index': 1,
       },
     },
   ]
