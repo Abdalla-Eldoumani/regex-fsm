@@ -256,6 +256,9 @@ function nfaToDFA(nfa: NFA): DFA {
   const worklist: string[][] = []
   const processed = new Set<string>()
 
+  const TRAP_STATE = '∅'
+  let trapStateNeeded = false
+
   // Initial DFA state is ε-closure of NFA start state
   const startSet = epsilonClosure([nfa.startState], nfa.transitions)
   const startStateId = setToStateId(startSet)
@@ -278,7 +281,16 @@ function nfaToDFA(nfa: NFA): DFA {
         nfa.transitions
       )
 
-      if (nextSet.length === 0) continue
+      if (nextSet.length === 0) {
+        // No valid transition - add transition to trap state
+        trapStateNeeded = true
+        dfaTransitions.push({
+          from: currentId,
+          to: TRAP_STATE,
+          symbol
+        })
+        continue
+      }
 
       const nextId = setToStateId(nextSet)
 
@@ -294,6 +306,20 @@ function nfaToDFA(nfa: NFA): DFA {
         worklist.push(nextSet)
         dfaStates.push({ id: nextId, label: nextId })
       }
+    }
+  }
+
+  // Add trap state if needed
+  if (trapStateNeeded) {
+    dfaStates.push({ id: TRAP_STATE, label: 'Trap' })
+
+    // Trap state has self-loops for all symbols
+    for (const symbol of alphabet) {
+      dfaTransitions.push({
+        from: TRAP_STATE,
+        to: TRAP_STATE,
+        symbol
+      })
     }
   }
 
@@ -314,6 +340,18 @@ function nfaToDFA(nfa: NFA): DFA {
   }
 }
 ```
+
+### DFA Completeness
+
+The implementation ensures the resulting DFA is **complete** (has a total transition function). Key points:
+
+- When `move(S, a)` results in an empty set, a transition to trap state `∅` is added
+- The trap state has self-loops for all alphabet symbols
+- Once in trap state, the DFA remains there for all subsequent input
+- This ensures every state has exactly |Σ| outgoing transitions
+- Simulation continues until all input is consumed, providing clear feedback on where/why rejection occurred
+
+**Visual Distinction**: Trap states are displayed with dashed red borders to distinguish them from regular states.
 
 ### Complexity
 
@@ -508,19 +546,24 @@ function parseRegex(input: string): RegexNode {
   function parseRepeat(): RegexNode {
     let node = parseAtom()
 
-    if (peek()?.type === 'star') {
-      consume('star')
-      return { type: 'star', child: node }
-    }
+    while (peek()?.type in ['star', 'plus', 'optional']) {
+      // Validation: Check if node is already a quantifier
+      if (node.type === 'star' || node.type === 'plus' || node.type === 'optional') {
+        throw new Error(
+          `Invalid regex: quantifier cannot follow quantifier at position ${peek()!.pos}`
+        )
+      }
 
-    if (peek()?.type === 'plus') {
-      consume('plus')
-      return { type: 'plus', child: node }
-    }
-
-    if (peek()?.type === 'optional') {
-      consume('optional')
-      return { type: 'optional', child: node }
+      if (peek()?.type === 'star') {
+        consume('star')
+        node = { type: 'star', child: node }
+      } else if (peek()?.type === 'plus') {
+        consume('plus')
+        node = { type: 'plus', child: node }
+      } else if (peek()?.type === 'optional') {
+        consume('optional')
+        node = { type: 'optional', child: node }
+      }
     }
 
     return node
@@ -548,11 +591,22 @@ function parseRegex(input: string): RegexNode {
 }
 ```
 
-### Error Handling
+### Error Handling and Validation
 
-The parser throws descriptive errors:
+The parser throws descriptive errors with position information:
+
+**Syntax Errors:**
 - "Unexpected token X at position Y"
 - "Expected ) but found end of input"
 - "Empty parentheses at position X"
 
-Position information helps users identify syntax errors.
+**Validation Errors:**
+- "Invalid regex: quantifier cannot follow quantifier at position X"
+
+**Consecutive Quantifier Detection:**
+The parser rejects invalid patterns like `a**`, `a*+`, `a?***` by checking if the current node is already a quantifier before applying another. This prevents semantically meaningless patterns and provides clear error messages.
+
+Examples of rejected patterns:
+- `a**` → "quantifier cannot follow quantifier at position 2"
+- `(a|b)*+` → "quantifier cannot follow quantifier at position 6"
+- `a?***` → "quantifier cannot follow quantifier at position 2"
