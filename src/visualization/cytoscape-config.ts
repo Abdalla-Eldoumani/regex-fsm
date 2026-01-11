@@ -51,6 +51,30 @@ export function automatonToCytoscape(automaton: Automaton): CytoscapeElements {
     }
   })
 
+  // Only add start arrow if there are states
+  if (automaton.states.length > 0) {
+    // Add invisible node for start arrow
+    nodes.push({
+      data: {
+        id: '__start_marker__',
+        label: '',
+        isStart: false,
+        isAccept: false,
+      },
+    })
+
+    // Add arrow pointing to start state
+    edges.push({
+      data: {
+        id: '__start_arrow__',
+        source: '__start_marker__',
+        target: automaton.startState,
+        label: '',
+      },
+      classes: 'start-arrow',
+    })
+  }
+
   return { nodes, edges }
 }
 
