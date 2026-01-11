@@ -1,7 +1,11 @@
 {
   "name": "regex-fsm",
-  "private": true,
+  "private": false,
   "version": "0.0.0",
+  "description": "Educational tool for visualizing regular expressions, NFAs, and DFAs",
+  "keywords": ["regex", "automata", "nfa", "dfa", "visualization", "education"],
+  "author": "Abdalla ElDoumani, Ibrahim Ahmed",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
