@@ -93,17 +93,23 @@ RegexFSM follows a layered architecture separating concerns into distinct module
 
 **Responsibilities**:
 - Convert automaton data structures to Cytoscape format
-- Apply visual styling (Catppuccin Mocha palette)
+- Add start arrow indicator (invisible marker node with visible arrow edge)
+- Apply visual styling (Indigo/Emerald color palette)
 - Compute graph layouts automatically
-- Highlight active states and transitions
+- Highlight active states and transitions during simulation
 - Export graphs as PNG or SVG
 
 **Key Files**:
 - `src/visualization/renderer.tsx` - AutomatonGraph React component
-- `src/visualization/cytoscape-config.ts` - Cytoscape setup and conversion
-- `src/visualization/styles.ts` - Visual styling definitions
+- `src/visualization/cytoscape-config.ts` - Cytoscape setup, conversion, and start arrow
+- `src/visualization/styles.ts` - Visual styling definitions (Indigo/Emerald theme)
 - `src/visualization/layout.ts` - Layout algorithm selection
 - `src/visualization/export.ts` - PNG/SVG export functions
+
+**Recent Enhancements**:
+- Start arrow indicator for clear initial state identification
+- Enhanced state styling with visual distinction for start/accept/trap states
+- Graph layout persistence across tab switches using CSS visibility
 
 ## State Management
 
@@ -211,9 +217,15 @@ Subset construction is the standard algorithm for NFA to DFA conversion. While i
 
 Cytoscape.js provides automatic graph layout algorithms, interactive controls, and efficient canvas rendering. It handles the complexity of positioning nodes and routing edges automatically.
 
-### Why Catppuccin Mocha?
+### Why Indigo/Emerald Color Scheme?
 
-Catppuccin provides a cohesive, accessible color palette designed for developer tools. The Mocha variant (dark theme) reduces eye strain and makes syntax highlighting effective.
+The Indigo/Emerald theme provides a professional, accessible color palette with clear semantic meaning:
+- Indigo for start states and primary actions (representing "beginning")
+- Emerald for accept states (representing "success")
+- Red for trap/error states (representing "rejection")
+- Amber for active simulation steps (representing "current focus")
+
+This color scheme is WCAG 2.1 Level AA compliant for accessibility.
 
 ## Testing Strategy
 
