@@ -16,10 +16,10 @@ export function InputTape({ input, currentPosition }: InputTapeProps) {
   const cells = input.split('')
 
   return (
-    <div className="relative flex flex-col gap-4 py-8 overflow-hidden">
+    <div className="relative flex flex-col gap-4 py-8">
       <div className="absolute top-1/2 left-0 w-full h-1 bg-border/50 -translate-y-1/2 rounded-full" />
-      
-      <div className="flex items-center justify-center overflow-x-auto pb-4 pt-4 px-4 scrollbar-hide relative z-10">
+
+      <div className="flex items-center justify-center overflow-x-auto pb-12 pt-4 px-4 scrollbar-hide relative z-10">
         <div className="flex items-center gap-3">
           {cells.map((char, idx) => {
             const isConsumed = idx < currentPosition
