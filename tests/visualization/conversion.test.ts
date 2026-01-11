@@ -20,8 +20,10 @@ describe('automaton to cytoscape conversion', () => {
 
       const result = automatonToCytoscape(nfa)
 
-      expect(result.nodes).toHaveLength(2)
-      expect(result.edges).toHaveLength(1)
+      // Should have 2 states + 1 marker node = 3 nodes
+      expect(result.nodes).toHaveLength(3)
+      // Should have 1 transition + 1 start arrow = 2 edges
+      expect(result.edges).toHaveLength(2)
 
       expect(result.nodes[0].data.id).toBe('q0')
       expect(result.nodes[0].data.isStart).toBe(true)
@@ -31,9 +33,16 @@ describe('automaton to cytoscape conversion', () => {
       expect(result.nodes[1].data.isStart).toBe(false)
       expect(result.nodes[1].data.isAccept).toBe(true)
 
+      // Check the marker node
+      expect(result.nodes[2].data.id).toBe('__start_marker__')
+
       expect(result.edges[0].data.source).toBe('q0')
       expect(result.edges[0].data.target).toBe('q1')
       expect(result.edges[0].data.label).toBe('a')
+
+      // Check the start arrow
+      expect(result.edges[1].data.id).toBe('__start_arrow__')
+      expect(result.edges[1].data.target).toBe('q0')
     })
 
     it('converts NFA with epsilon transitions', () => {
@@ -73,8 +82,10 @@ describe('automaton to cytoscape conversion', () => {
 
       const result = automatonToCytoscape(dfa)
 
-      expect(result.nodes).toHaveLength(3)
-      expect(result.edges).toHaveLength(2)
+      // Should have 3 states + 1 marker node = 4 nodes
+      expect(result.nodes).toHaveLength(4)
+      // Should have 2 transitions + 1 start arrow = 3 edges
+      expect(result.edges).toHaveLength(3)
 
       const q1 = result.nodes.find(n => n.data.id === 'q1')
       const q2 = result.nodes.find(n => n.data.id === 'q2')
@@ -159,8 +170,9 @@ describe('automaton to cytoscape conversion', () => {
       const edgeIds = result.edges.map(e => e.data.id)
       const uniqueIds = new Set(edgeIds)
 
-      expect(edgeIds).toHaveLength(3)
-      expect(uniqueIds.size).toBe(3)
+      // Should have 3 transitions + 1 start arrow = 4 edges
+      expect(edgeIds).toHaveLength(4)
+      expect(uniqueIds.size).toBe(4)
     })
 
     it('handles empty automaton', () => {
