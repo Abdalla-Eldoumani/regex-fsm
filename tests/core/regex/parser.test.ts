@@ -98,15 +98,8 @@ describe('parser', () => {
       })
     })
 
-    it('parses multiple stars', () => {
-      const ast = parse('a**')
-      expect(ast).toEqual({
-        type: 'star',
-        child: {
-          type: 'star',
-          child: { type: 'symbol', value: 'a' },
-        },
-      })
+    it('rejects multiple stars', () => {
+      expect(() => parse('a**')).toThrow(/quantifier cannot follow quantifier/i)
     })
 
     it('parses star after concatenation', () => {
@@ -131,15 +124,8 @@ describe('parser', () => {
       })
     })
 
-    it('parses multiple plus operators', () => {
-      const ast = parse('a++')
-      expect(ast).toEqual({
-        type: 'plus',
-        child: {
-          type: 'plus',
-          child: { type: 'symbol', value: 'a' },
-        },
-      })
+    it('rejects multiple plus operators', () => {
+      expect(() => parse('a++')).toThrow(/quantifier cannot follow quantifier/i)
     })
 
     it('parses plus after concatenation', () => {
@@ -164,15 +150,8 @@ describe('parser', () => {
       })
     })
 
-    it('parses multiple question marks', () => {
-      const ast = parse('a??')
-      expect(ast).toEqual({
-        type: 'optional',
-        child: {
-          type: 'optional',
-          child: { type: 'symbol', value: 'a' },
-        },
-      })
+    it('rejects multiple question marks', () => {
+      expect(() => parse('a??')).toThrow(/quantifier cannot follow quantifier/i)
     })
 
     it('parses optional after concatenation', () => {
@@ -394,6 +373,60 @@ describe('parser', () => {
         },
         right: { type: 'symbol', value: 'b' },
       })
+    })
+  })
+
+  describe('invalid consecutive quantifiers', () => {
+    it('rejects star after star', () => {
+      expect(() => parse('a**')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects plus after star', () => {
+      expect(() => parse('a*+')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects optional after star', () => {
+      expect(() => parse('a*?')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects star after plus', () => {
+      expect(() => parse('a+*')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects plus after plus', () => {
+      expect(() => parse('a++')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects optional after plus', () => {
+      expect(() => parse('a+?')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects star after optional', () => {
+      expect(() => parse('a?*')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects plus after optional', () => {
+      expect(() => parse('a?+')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects optional after optional', () => {
+      expect(() => parse('a??')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects multiple consecutive quantifiers', () => {
+      expect(() => parse('a?***')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects many consecutive quantifiers', () => {
+      expect(() => parse('a*+?*')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects quantifiers in complex expression', () => {
+      expect(() => parse('ab**c')).toThrow(/quantifier cannot follow quantifier/i)
+    })
+
+    it('rejects quantifiers after grouped expression', () => {
+      expect(() => parse('(ab)**')).toThrow(/quantifier cannot follow quantifier/i)
     })
   })
 
