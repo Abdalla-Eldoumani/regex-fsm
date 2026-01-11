@@ -20,6 +20,14 @@ export function StringInput({ value, onChange, placeholder = 'abb' }: StringInpu
         className="w-full px-5 py-4 bg-background/80 backdrop-blur-sm border-2 border-border hover:border-border-hover rounded-xl font-mono text-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all shadow-inner shadow-primary/5"
         placeholder={placeholder}
       />
+      {value === '' && (
+        <div className="text-xs text-text-tertiary flex items-center gap-1">
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Testing with empty string (ε)
+        </div>
+      )}
     </div>
   )
 }
