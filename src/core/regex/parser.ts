@@ -76,6 +76,13 @@ class Parser {
     let node = this.parseAtom()
 
     while (this.match('STAR', 'PLUS', 'OPTIONAL')) {
+      // Check if the node is already a quantifier
+      if (node.type === 'star' || node.type === 'plus' || node.type === 'optional') {
+        throw new Error(
+          `Invalid regex: quantifier cannot follow quantifier at position ${this.current().pos}`
+        )
+      }
+
       const type = this.current().type
       this.advance()
 
