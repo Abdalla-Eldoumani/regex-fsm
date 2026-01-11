@@ -75,8 +75,9 @@ React components organized by function:
 Graph rendering using Cytoscape.js:
 
 - **Renderer** - AutomatonGraph component
-- **Styles** - Catppuccin Mocha color palette
-- **Layout** - Automatic layout algorithms
+- **Styles** - Indigo/Emerald color palette with enhanced state indicators
+- **Layout** - Automatic layout algorithms (Dagre, Cose)
+- **Start Arrow** - Clear visual indicator for initial state
 - **Export** - PNG and SVG export functionality
 
 ## Development Guidelines
@@ -105,11 +106,19 @@ Graph rendering using Cytoscape.js:
 All core algorithms have comprehensive test coverage:
 
 - Tokenizer: 56 tests
-- Parser: 68 tests
+- Parser: 81 tests (includes 13 validation tests for invalid patterns)
 - Epsilon closure: 18 tests
-- Thompson's construction: 40 tests
-- Subset construction: 32 tests
+- Thompson's construction: 37 tests
+- Subset construction: 32 tests (includes trap state verification)
 - Simulation: 88 tests
-- Visualization: 13 tests
+- Visualization: 13 tests (updated for start arrow)
+- Integration tests: 104 tests
+- Automata tests: 56 tests
 
-Total: 315 tests
+Total: 485 tests
+
+### Recent Test Additions
+
+- **Parser Validation**: Tests for consecutive quantifier detection (`a**`, `a*+`, etc.)
+- **Trap State Verification**: Tests ensuring trap states have self-loops and proper transitions
+- **Visualization Updates**: Tests account for start marker node and arrow in element counts
