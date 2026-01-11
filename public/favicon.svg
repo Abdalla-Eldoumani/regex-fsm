@@ -1,0 +1,36 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with subtle gradient -->
+  <rect width="32" height="32" rx="6" fill="url(#gradient)"/>
+
+  <!-- Define gradient -->
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Simple FSM representation: 3 connected states -->
+
+  <!-- Start state (left) -->
+  <circle cx="10" cy="16" r="3.5" fill="none" stroke="#FFFFFF" stroke-width="1.8"/>
+
+  <!-- Middle state -->
+  <circle cx="16" cy="16" r="3.5" fill="none" stroke="#FFFFFF" stroke-width="1.8"/>
+
+  <!-- Accept state (right) - double circle -->
+  <circle cx="22" cy="16" r="3.5" fill="none" stroke="#FFFFFF" stroke-width="1.8"/>
+  <circle cx="22" cy="16" r="2.2" fill="none" stroke="#FFFFFF" stroke-width="1.2"/>
+
+  <!-- Start arrow -->
+  <path d="M 3 16 L 6 16" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 6 16 L 4.5 15 L 4.5 17 Z" fill="#FFFFFF"/>
+
+  <!-- Transitions between states -->
+  <path d="M 13.5 16 L 12.5 16" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M 19.5 16 L 18.5 16" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Small arrows on transitions -->
+  <path d="M 12.5 16 L 13 15.5 L 13 16.5 Z" fill="#FFFFFF"/>
+  <path d="M 18.5 16 L 19 15.5 L 19 16.5 Z" fill="#FFFFFF"/>
+</svg>
