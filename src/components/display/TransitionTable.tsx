@@ -19,6 +19,7 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
 
   const isAcceptState = (state: string) => automaton.acceptStates.includes(state)
   const isStartState = (state: string) => state === automaton.startState
+  const isTrapState = (state: string) => state === '∅'
 
   return (
     <div className="overflow-auto rounded-lg border border-border max-h-[600px]">
@@ -52,11 +53,17 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
                     {isStartState(state.id) && (
                       <span className="text-primary text-xs" title="Start State">→</span>
                     )}
-                    <span className={isAcceptState(state.id) ? 'text-success font-semibold' : 'text-text-primary'}>
+                    <span className={
+                      isTrapState(state.id) ? 'text-error font-semibold' :
+                      isAcceptState(state.id) ? 'text-success font-semibold' : 'text-text-primary'
+                    }>
                       {state.id}
                     </span>
                     {isAcceptState(state.id) && (
                       <span className="text-success text-xs" title="Accept State">✓</span>
+                    )}
+                    {isTrapState(state.id) && (
+                      <span className="text-error text-xs" title="Trap State">⊗</span>
                     )}
                   </div>
                 </td>
@@ -105,6 +112,10 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
         <div className="flex items-center gap-2">
           <span className="text-success">✓</span>
           <span>Accept state</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-error">⊗</span>
+          <span>Trap state (rejection sink)</span>
         </div>
         <div className="flex items-center gap-2">
           <span>∅</span>
