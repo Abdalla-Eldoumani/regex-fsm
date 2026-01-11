@@ -21,7 +21,7 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
   const isStartState = (state: string) => state === automaton.startState
 
   return (
-    <div className="overflow-auto rounded-lg border border-border">
+    <div className="overflow-auto rounded-lg border border-border max-h-[600px]">
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="bg-secondary-light/50">
