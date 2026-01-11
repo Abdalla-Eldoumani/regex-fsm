@@ -4,6 +4,8 @@ interface SimulationControlsProps {
   canReset: boolean
   currentStep: number
   totalSteps: number
+  speed: number
+  onSpeedChange: (speed: number) => void
   onPlay: () => void
   onPause: () => void
   onStepForward: () => void
@@ -17,6 +19,8 @@ export function SimulationControls({
   canStep,
   canReset,
   currentStep,
+  speed,
+  onSpeedChange,
   onPlay,
   onPause,
   onStepForward,
@@ -25,7 +29,14 @@ export function SimulationControls({
   onComplete,
 }: SimulationControlsProps) {
   const secondaryBtnClass = "px-4 py-2 bg-white border border-border rounded-lg text-sm font-medium text-text-secondary hover:text-primary hover:border-primary/50 hover:bg-primary-light/10 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-background disabled:border-border"
-  
+
+  const speedOptions = [
+    { value: 2000, label: '0.5x' },
+    { value: 1000, label: '1x' },
+    { value: 500, label: '2x' },
+    { value: 250, label: '4x' },
+  ]
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <button
@@ -84,6 +95,22 @@ export function SimulationControls({
       >
         Finish <span className="ml-1">⏭</span>
       </button>
+
+      <div className="flex items-center gap-2 ml-4 px-4 py-2 bg-surface rounded-lg border border-border">
+        <span className="text-sm font-medium text-text-secondary">Speed:</span>
+        <select
+          value={speed}
+          onChange={(e) => onSpeedChange(Number(e.target.value))}
+          className="px-3 py-1 bg-white border border-border rounded text-sm font-medium text-text-primary hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+          title="Simulation speed"
+        >
+          {speedOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   )
 }
