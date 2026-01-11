@@ -15,7 +15,7 @@ export function useSimulation({ automaton, input, mode }: UseSimulationOptions) 
   const [speed, setSpeed] = useState(1000)
 
   useEffect(() => {
-    if (!automaton || !input) {
+    if (!automaton || input === null || input === undefined) {
       setResult(null)
       setCurrentStep(0)
       setIsRunning(false)
