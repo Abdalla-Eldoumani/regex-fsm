@@ -9,9 +9,12 @@ RegexFSM is an educational web application that visualizes the relationship betw
 ## Features
 
 - **Regex to NFA**: Convert regular expressions to NFAs using Thompson's construction
-- **NFA to DFA**: Convert NFAs to DFAs using subset construction
+- **NFA to DFA**: Convert NFAs to DFAs using subset construction with complete trap states
 - **Interactive Simulation**: Step through string acceptance with visual highlighting
 - **Multiple Views**: Graph, transition table, state list, and summary views
+- **Clear Visual Indicators**: Start state arrows, double borders for accept states, dashed borders for trap states
+- **Detailed Feedback**: Explicit rejection/acceptance messages with reasons
+- **Regex Validation**: Rejects invalid patterns with clear error messages
 - **Educational Content**: Theory panels and step-by-step explanations
 - **Export**: Download graphs as PNG or SVG
 
@@ -21,7 +24,7 @@ RegexFSM is an educational web application that visualizes the relationship betw
 - React 18+
 - Vite
 - Cytoscape.js
-- Tailwind CSS (Catppuccin Mocha palette)
+- Tailwind CSS (Indigo/Emerald theme)
 - Vitest
 
 ## Quick Start
@@ -124,15 +127,17 @@ regex-fsm/
 
 ### Testing
 
-All core algorithms have comprehensive test coverage (315 tests total):
+All core algorithms have comprehensive test coverage (485 tests total):
 
 - Tokenizer: 56 tests
-- Parser: 68 tests
+- Parser: 81 tests (includes 13 new validation tests)
 - Epsilon closure: 18 tests
-- Thompson's construction: 40 tests
-- Subset construction: 32 tests
+- Thompson's construction: 37 tests
+- Subset construction: 32 tests (includes trap state tests)
 - Simulation: 88 tests
-- Visualization: 13 tests
+- Visualization: 13 tests (updated for start arrow)
+- Integration tests: 104 tests
+- Automata tests: 56 tests
 
 Run tests before committing: `npm test`
 
@@ -154,8 +159,8 @@ MIT License - See LICENSE file for details
 ## Acknowledgments
 
 - Algorithm implementations based on standard textbooks in formal language theory
-- Color palette: [Catppuccin](https://github.com/catppuccin/catppuccin)
 - Graph rendering: [Cytoscape.js](https://js.cytoscape.org/)
+- UI components: [React](https://react.dev/) with [Tailwind CSS](https://tailwindcss.com/)
 
 ## Authors
 
