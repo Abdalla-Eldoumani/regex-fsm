@@ -249,8 +249,8 @@ Time complexity: O(n × t) where n is state count, t is transition count.
 ### Main Algorithm
 
 ```typescript
-function nfaToDFA(nfa: NFA): DFA {
-  const alphabet = Array.from(nfa.alphabet)
+function nfaToDFA(nfa: NFA, customAlphabet?: Set<string>): DFA {
+  const alphabet = customAlphabet || nfa.alphabet
   const dfaStates: DFAState[] = []
   const dfaTransitions: Transition[] = []
   const worklist: string[][] = []
@@ -336,7 +336,7 @@ function nfaToDFA(nfa: NFA): DFA {
     transitions: dfaTransitions,
     startState: startStateId,
     acceptStates,
-    alphabet: nfa.alphabet
+    alphabet: new Set(alphabet)
   }
 }
 ```
@@ -347,6 +347,36 @@ The implementation ensures the resulting DFA is **complete** (has a total transi
 
 - When `move(S, a)` results in an empty set, a transition to trap state `∅` is added
 - The trap state has self-loops for all alphabet symbols
+- Every state has exactly |Σ| outgoing transitions (one for each symbol in the alphabet)
+- Ensures simulation continues until input is fully consumed, providing clear feedback on where/why rejection occurred
+
+### Custom Alphabet Support
+
+The `nfaToDFA` function accepts an optional `customAlphabet` parameter:
+
+```typescript
+const nfa = buildNFA(parse('ab'))
+const customAlphabet = new Set(['a', 'b', 'c'])
+const dfa = nfaToDFA(nfa, customAlphabet)
+```
+
+**Use Cases:**
+1. **Pre-defined Alphabet**: User specifies alphabet before entering regex
+2. **Test String Expansion**: Automatically includes test string symbols to ensure trap states appear for invalid symbols
+3. **Complete DFA Visualization**: Shows all possible transitions, making trap states visible
+
+**Example:**
+- Regex: `ab`
+- Custom alphabet: `{a, b, c}`
+- Result: DFA includes transitions for 'c' leading to trap state `∅`
+- Without custom alphabet: 'c' wouldn't appear in transition table
+
+**Implementation:**
+```typescript
+const alphabet = customAlphabet || nfa.alphabet
+```
+
+If `customAlphabet` is provided, it's used; otherwise, the NFA's alphabet is used.
 - Once in trap state, the DFA remains there for all subsequent input
 - This ensures every state has exactly |Σ| outgoing transitions
 - Simulation continues until all input is consumed, providing clear feedback on where/why rejection occurred
