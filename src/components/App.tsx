@@ -6,11 +6,13 @@ import { simulateNFA, simulateDFA, SimulationResult } from '@/core/algorithms/si
 import { NFA, DFA } from '@/core/automata/types'
 import { RegexInput } from './input/RegexInput'
 import { StringInput } from './input/StringInput'
+import { PatternBuilder } from './input/PatternBuilder'
 import { AutomatonView } from './display/AutomatonView'
 import { SimulationPanel } from './simulation/SimulationPanel'
 
 function App() {
   const [regex, setRegex] = useState('')
+  const [alphabet, setAlphabet] = useState('')
   const [testString, setTestString] = useState('')
   const [nfa, setNfa] = useState<NFA | null>(null)
   const [dfa, setDfa] = useState<DFA | null>(null)
@@ -34,7 +36,20 @@ function App() {
     try {
       const ast = parse(regex)
       const generatedNfa = buildNFA(ast)
-      const generatedDfa = nfaToDFA(generatedNfa)
+
+      let effectiveAlphabet: Set<string> | undefined
+      if (alphabet.trim()) {
+        effectiveAlphabet = new Set(alphabet.trim().split(''))
+      } else {
+        effectiveAlphabet = new Set(generatedNfa.alphabet)
+        if (testString) {
+          for (const char of testString) {
+            effectiveAlphabet.add(char)
+          }
+        }
+      }
+
+      const generatedDfa = nfaToDFA(generatedNfa, effectiveAlphabet)
 
       setNfa(generatedNfa)
       setDfa(generatedDfa)
@@ -44,7 +59,7 @@ function App() {
       setDfa(null)
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
     }
-  }, [regex])
+  }, [regex, alphabet, testString])
 
   useEffect(() => {
     if (!nfa || testString === null || testString === undefined) {
@@ -74,6 +89,10 @@ function App() {
     }
   }, [dfa, testString])
 
+  const handlePatternInsert = (pattern: string) => {
+    setRegex(pattern)
+  }
+
   return (
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 relative z-10">
@@ -88,7 +107,10 @@ function App() {
                   <h2 className="text-xl font-display font-bold text-text-primary">Pattern</h2>
                 </div>
                 <p className="text-sm text-text-secondary mb-5 ml-3.5">Enter a regular expression to generate the automata.</p>
-                <RegexInput value={regex} onChange={setRegex} error={error} />
+                <div className="space-y-4">
+                  <PatternBuilder onInsert={handlePatternInsert} />
+                  <RegexInput value={regex} onChange={setRegex} alphabet={alphabet} onAlphabetChange={setAlphabet} error={error} />
+                </div>
               </div>
             </div>
             <div className="space-y-6">
@@ -180,6 +202,7 @@ function App() {
                 automaton={nfa}
                 title=""
                 error={error}
+                mode="nfa"
                 highlightStates={simulationMode === 'nfa' ? nfaHighlightStates : []}
                 highlightEdges={simulationMode === 'nfa' ? nfaHighlightEdges : []}
                 simulationResult={simulationMode === 'nfa' ? nfaSimResult : null}
@@ -201,6 +224,7 @@ function App() {
                 automaton={dfa}
                 title=""
                 error={error}
+                mode="dfa"
                 highlightStates={simulationMode === 'dfa' ? dfaHighlightStates : []}
                 highlightEdges={simulationMode === 'dfa' ? dfaHighlightEdges : []}
                 simulationResult={simulationMode === 'dfa' ? dfaSimResult : null}
