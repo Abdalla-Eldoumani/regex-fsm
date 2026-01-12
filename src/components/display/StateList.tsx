@@ -40,7 +40,7 @@ export function StateList({ automaton, highlightStates = [], simulationResult = 
   }
 
   return (
-    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+    <div className="space-y-4 max-h-[600px] min-h-[400px] overflow-y-auto pr-2">
       {isRejected && (
         <div className="p-4 bg-error-light border-2 border-error/30 rounded-xl animate-fade-in">
           <div className="flex items-center gap-3 mb-2">
@@ -87,12 +87,15 @@ export function StateList({ automaton, highlightStates = [], simulationResult = 
                 : 'bg-background border-border hover:border-border-hover'
             }`}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 flex items-center justify-center rounded-full font-mono font-bold text-lg ${
-                 isTrapState(state.id) ? 'bg-error text-white' :
-                 isAcceptState(state.id) ? 'bg-success text-white' : 'bg-secondary-light text-text-primary'
-              }`}>
-                {state.id}
+            <div className="flex items-center gap-3 mb-4 overflow-hidden">
+              <div
+                className={`w-10 h-10 flex items-center justify-center rounded-full font-mono font-bold text-sm flex-shrink-0 ${
+                  isTrapState(state.id) ? 'bg-error text-white' :
+                  isAcceptState(state.id) ? 'bg-success text-white' : 'bg-secondary-light text-text-primary'
+                }`}
+                title={state.id}
+              >
+                <span className="truncate max-w-[2rem]">{state.id}</span>
               </div>
               <div className="flex gap-2">
                 {isStartState(state.id) && (
