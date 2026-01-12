@@ -5,6 +5,7 @@ import { AutomatonGraph, AutomatonGraphHandle } from '@/visualization/renderer'
 import { Tabs } from '../common/Tabs'
 import { TransitionTable } from './TransitionTable'
 import { StateList } from './StateList'
+import { SimulationModal } from '../simulation/SimulationModal'
 import { exportAsPNG, exportAsSVG } from '@/visualization/export'
 
 interface AutomatonViewProps {
@@ -14,6 +15,7 @@ interface AutomatonViewProps {
   highlightStates?: string[]
   highlightEdges?: string[]
   simulationResult?: SimulationResult | null
+  mode?: 'nfa' | 'dfa'
 }
 
 export function AutomatonView({
@@ -22,9 +24,27 @@ export function AutomatonView({
   highlightStates = [],
   highlightEdges = [],
   simulationResult = null,
+  mode = 'nfa',
 }: AutomatonViewProps) {
   const [activeTab, setActiveTab] = useState('graph')
+  const [isSimulationModalOpen, setIsSimulationModalOpen] = useState(false)
+  const [modalHighlightStates, setModalHighlightStates] = useState<string[]>([])
+  const [modalHighlightEdges, setModalHighlightEdges] = useState<string[]>([])
   const graphRef = useRef<AutomatonGraphHandle>(null)
+
+  const handleModalHighlightChange = (states: string[], edges: string[]) => {
+    setModalHighlightStates(states)
+    setModalHighlightEdges(edges)
+  }
+
+  const handleCloseModal = () => {
+    setIsSimulationModalOpen(false)
+    setModalHighlightStates([])
+    setModalHighlightEdges([])
+  }
+
+  const effectiveHighlightStates = isSimulationModalOpen ? modalHighlightStates : highlightStates
+  const effectiveHighlightEdges = isSimulationModalOpen ? modalHighlightEdges : highlightEdges
 
   const tabs = [
     { id: 'graph', label: 'Graph' },
@@ -80,22 +100,34 @@ export function AutomatonView({
       <div className="px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-surface/80 backdrop-blur-md sticky top-0 z-10">
         <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
-        {activeTab === 'graph' && (
-          <div className="flex gap-2">
-            <button
-              onClick={handleExportPNG}
-              className="cursor-pointer px-4 py-2 text-xs font-semibold text-text-secondary hover:text-primary border border-border hover:border-primary/50 bg-surface-hover hover:bg-surface-elevated rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95"
-            >
-              PNG
-            </button>
-            <button
-              onClick={handleExportSVG}
-              className="cursor-pointer px-4 py-2 text-xs font-semibold text-text-secondary hover:text-secondary border border-border hover:border-secondary/50 bg-surface-hover hover:bg-surface-elevated rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95"
-            >
-              SVG
-            </button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsSimulationModalOpen(true)}
+            className="cursor-pointer px-4 py-2 text-xs font-semibold text-white bg-gradient-to-br from-primary to-primary-hover hover:from-primary-hover hover:to-primary border border-primary/50 rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95 flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+            </svg>
+            Simulate
+          </button>
+
+          {activeTab === 'graph' && (
+            <>
+              <button
+                onClick={handleExportPNG}
+                className="cursor-pointer px-4 py-2 text-xs font-semibold text-text-secondary hover:text-primary border border-border hover:border-primary/50 bg-surface-hover hover:bg-surface-elevated rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95"
+              >
+                PNG
+              </button>
+              <button
+                onClick={handleExportSVG}
+                className="cursor-pointer px-4 py-2 text-xs font-semibold text-text-secondary hover:text-secondary border border-border hover:border-secondary/50 bg-surface-hover hover:bg-surface-elevated rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95"
+              >
+                SVG
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden relative">
@@ -103,8 +135,8 @@ export function AutomatonView({
           <AutomatonGraph
             ref={graphRef}
             automaton={automaton}
-            highlightStates={highlightStates}
-            highlightEdges={highlightEdges}
+            highlightStates={effectiveHighlightStates}
+            highlightEdges={effectiveHighlightEdges}
           />
         </div>
 
@@ -180,6 +212,16 @@ export function AutomatonView({
           )}
         </div>
       </div>
+
+      {automaton && (
+        <SimulationModal
+          automaton={automaton}
+          mode={mode}
+          isOpen={isSimulationModalOpen}
+          onClose={handleCloseModal}
+          onHighlightChange={handleModalHighlightChange}
+        />
+      )}
     </div>
   )
 }
