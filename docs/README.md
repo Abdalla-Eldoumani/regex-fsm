@@ -58,15 +58,16 @@ The core module implements the fundamental algorithms and data structures:
 
 - **Regex Module** - Tokenizer and parser for regular expressions
 - **Automata Module** - NFA and DFA type definitions and utilities
-- **Algorithms Module** - Thompson's construction, subset construction, simulation
+- **Algorithms Module** - Thompson's construction, subset construction (with custom alphabet support), simulation
+- **Patterns Module** - Template library for natural language to regex conversion (10 templates across 5 categories)
 
 ### Components (`src/components/`)
 
 React components organized by function:
 
-- **Input** - RegexInput, StringInput
-- **Display** - AutomatonView, TransitionTable, StateList
-- **Simulation** - SimulationPanel, SimulationControls, InputTape
+- **Input** - RegexInput (with alphabet field), StringInput, PatternBuilder (interactive template selector)
+- **Display** - AutomatonView (with simulation modal), TransitionTable (improved scrolling), StateList (improved truncation)
+- **Simulation** - SimulationPanel, SimulationControls, SimulationModal (individual automaton testing), InputTape
 - **Education** - TheoryPanel, StepExplanation
 - **Common** - Button, Tabs
 
@@ -109,16 +110,19 @@ All core algorithms have comprehensive test coverage:
 - Parser: 81 tests (includes 13 validation tests for invalid patterns)
 - Epsilon closure: 18 tests
 - Thompson's construction: 37 tests
-- Subset construction: 32 tests (includes trap state verification)
+- Subset construction: 42 tests (includes 10 custom alphabet tests + trap state verification)
 - Simulation: 88 tests
+- Pattern templates: 42 tests (structure, categorization, regex generation)
 - Visualization: 13 tests (updated for start arrow)
 - Integration tests: 104 tests
 - Automata tests: 56 tests
 
-Total: 485 tests
+Total: 537 tests (all passing)
 
 ### Recent Test Additions
 
 - **Parser Validation**: Tests for consecutive quantifier detection (`a**`, `a*+`, etc.)
 - **Trap State Verification**: Tests ensuring trap states have self-loops and proper transitions
 - **Visualization Updates**: Tests account for start marker node and arrow in element counts
+- **Custom Alphabet**: 10 comprehensive tests for custom alphabet functionality (DFA completeness, trap state generation)
+- **Pattern Templates**: 42 tests covering template structure, categorization, and integration with parser
