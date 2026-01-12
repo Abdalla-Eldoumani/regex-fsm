@@ -8,15 +8,31 @@ RegexFSM is an educational web application that visualizes the relationship betw
 
 ## Features
 
+### Core Functionality
 - **Regex to NFA**: Convert regular expressions to NFAs using Thompson's construction
 - **NFA to DFA**: Convert NFAs to DFAs using subset construction with complete trap states
 - **Interactive Simulation**: Step through string acceptance with visual highlighting
 - **Multiple Views**: Graph, transition table, state list, and summary views
-- **Clear Visual Indicators**: Start state arrows, double borders for accept states, dashed borders for trap states
-- **Detailed Feedback**: Explicit rejection/acceptance messages with reasons
-- **Regex Validation**: Rejects invalid patterns with clear error messages
-- **Educational Content**: Theory panels and step-by-step explanations
 - **Export**: Download graphs as PNG or SVG
+
+### New Features
+- **Custom Alphabet Definition**: Pre-define the alphabet to see complete DFAs with all symbol transitions
+- **Pattern Builder**: Interactive UI to build regex patterns from natural language descriptions
+  - 10 predefined templates across 5 categories
+  - Live regex preview with one-click insertion
+  - Educational descriptions for each pattern
+- **Individual Simulation Modals**: Test strings directly on each automaton with dedicated simulation controls
+- **Auto Alphabet Expansion**: Automatically includes test string symbols in alphabet for trap state visibility
+
+### Visual Enhancements
+- **Clear Visual Indicators**: Start state arrows, double borders for accept states, dashed borders for trap states
+- **Improved Scrolling**: Proper overflow handling for tables and state lists
+- **Long State Name Support**: Truncation with tooltips for DFA states with long names
+- **Detailed Feedback**: Explicit rejection/acceptance messages with reasons
+
+### Validation & Testing
+- **Regex Validation**: Rejects invalid patterns (consecutive quantifiers, etc.) with clear error messages
+- **Comprehensive Test Suite**: 537 tests across 13 test files (all passing)
 
 ## Tech Stack
 
@@ -58,11 +74,16 @@ npm test              # Run tests
 
 ## Usage
 
-1. **Enter a regex**: Type a regular expression in the input field (e.g., `(a|b)*abb`)
-2. **View automata**: See the generated NFA and DFA in graph, table, or list form
-3. **Test strings**: Enter a test string and select NFA or DFA simulation
-4. **Step through**: Use controls to step through the simulation
-5. **Export**: Download graphs as PNG or SVG images
+1. **Build or enter a regex**:
+   - Use the Pattern Builder to select from predefined templates, OR
+   - Type a regular expression directly in the input field (e.g., `(a|b)*abb`)
+2. **Define alphabet** (optional): Specify the alphabet (e.g., `abc`) to see complete DFAs
+3. **View automata**: See the generated NFA and DFA in graph, table, or list form
+4. **Test strings**:
+   - Enter a test string in the main input, OR
+   - Click "Simulate" on any automaton to test in a modal
+5. **Step through**: Use controls to step through the simulation
+6. **Export**: Download graphs as PNG or SVG images
 
 ### Supported Regex Operators
 
@@ -99,11 +120,12 @@ regex-fsm/
 │   ├── core/               # Core algorithms and data structures
 │   │   ├── automata/       # NFA/DFA types and utilities
 │   │   ├── regex/          # Tokenizer and parser
-│   │   └── algorithms/     # Thompson, subset, simulation
+│   │   ├── algorithms/     # Thompson, subset, simulation
+│   │   └── patterns/       # Pattern template library
 │   ├── components/         # React UI components
-│   │   ├── input/          # RegexInput, StringInput
+│   │   ├── input/          # RegexInput, StringInput, PatternBuilder
 │   │   ├── display/        # AutomatonView, tables, lists
-│   │   ├── simulation/     # Simulation controls and display
+│   │   ├── simulation/     # Simulation controls, panels, modals
 │   │   ├── education/      # Theory and explanations
 │   │   └── common/         # Buttons, tabs, etc.
 │   ├── visualization/      # Cytoscape graph rendering
@@ -125,14 +147,15 @@ regex-fsm/
 
 ### Testing
 
-All core algorithms have comprehensive test coverage (485 tests total):
+All core algorithms have comprehensive test coverage (537 tests total):
 
 - Tokenizer: 56 tests
-- Parser: 81 tests (includes 13 new validation tests)
+- Parser: 81 tests (includes 13 validation tests for consecutive quantifiers)
 - Epsilon closure: 18 tests
 - Thompson's construction: 37 tests
-- Subset construction: 32 tests (includes trap state tests)
+- Subset construction: 42 tests (includes 10 custom alphabet tests + trap state tests)
 - Simulation: 88 tests
+- Pattern templates: 42 tests (structure, categorization, regex generation)
 - Visualization: 13 tests (updated for start arrow)
 - Integration tests: 104 tests
 - Automata tests: 56 tests
