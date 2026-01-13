@@ -18,10 +18,18 @@ RegexFSM is an educational web application that visualizes the relationship betw
 ### New Features
 - **Custom Alphabet Definition**: Pre-define the alphabet to see complete DFAs with all symbol transitions
 - **Pattern Builder**: Interactive UI to build regex patterns from natural language descriptions
-  - 10 predefined templates across 5 categories
+  - 23 predefined templates across 9 categories (basic, position, repetition, character, combination, length, counting, negation, ordering)
   - Live regex preview with one-click insertion
   - Educational descriptions for each pattern
-- **Individual Simulation Modals**: Test strings directly on each automaton with dedicated simulation controls
+  - Parser-compatible patterns for all templates
+- **Flexible Simulation Modes**: Choose NFA, DFA, or Both
+  - Single automaton mode expands to full width
+  - Both mode displays NFA and DFA side-by-side
+- **Fullscreen Simulation Modal**: Test strings in a fullscreen overlay with split-screen layout
+  - Live graph visualization on the left
+  - Simulation controls on the right
+  - Independent testing for each automaton
+- **Expandable Views**: Table and States tabs have dedicated expand buttons for fullscreen viewing
 - **Auto Alphabet Expansion**: Automatically includes test string symbols in alphabet for trap state visibility
 
 ### Visual Enhancements
@@ -32,7 +40,7 @@ RegexFSM is an educational web application that visualizes the relationship betw
 
 ### Validation & Testing
 - **Regex Validation**: Rejects invalid patterns (consecutive quantifiers, etc.) with clear error messages
-- **Comprehensive Test Suite**: 537 tests across 13 test files (all passing)
+- **Comprehensive Test Suite**: 540 tests across 13 test files (all passing)
 
 ## Tech Stack
 
@@ -147,7 +155,7 @@ regex-fsm/
 
 ### Testing
 
-All core algorithms have comprehensive test coverage (537 tests total):
+All core algorithms have comprehensive test coverage (540 tests total):
 
 - Tokenizer: 56 tests
 - Parser: 81 tests (includes 13 validation tests for consecutive quantifiers)
@@ -155,7 +163,7 @@ All core algorithms have comprehensive test coverage (537 tests total):
 - Thompson's construction: 37 tests
 - Subset construction: 42 tests (includes 10 custom alphabet tests + trap state tests)
 - Simulation: 88 tests
-- Pattern templates: 42 tests (structure, categorization, regex generation)
+- Pattern templates: 45 tests (structure, categorization, regex generation, parser compatibility)
 - Visualization: 13 tests (updated for start arrow)
 - Integration tests: 104 tests
 - Automata tests: 56 tests
