@@ -22,7 +22,7 @@ describe('pattern templates', () => {
         expect(template.description).toBeDefined()
         expect(typeof template.description).toBe('string')
         expect(template.category).toBeDefined()
-        expect(['basic', 'position', 'repetition', 'character', 'combination']).toContain(
+        expect(['basic', 'position', 'repetition', 'character', 'combination', 'length', 'counting', 'negation', 'ordering']).toContain(
           template.category
         )
         expect(template.buildRegex).toBeDefined()
@@ -94,6 +94,10 @@ describe('pattern templates', () => {
       expect(categorized.repetition).toBeDefined()
       expect(categorized.character).toBeDefined()
       expect(categorized.combination).toBeDefined()
+      expect(categorized.length).toBeDefined()
+      expect(categorized.counting).toBeDefined()
+      expect(categorized.negation).toBeDefined()
+      expect(categorized.ordering).toBeDefined()
     })
 
     it('all categories contain arrays', () => {
@@ -125,21 +129,21 @@ describe('pattern templates', () => {
         const template = getTemplateById('starts_with')
         expect(template).toBeDefined()
         const regex = template!.buildRegex('abc')
-        expect(regex).toBe('abc.*')
+        expect(regex).toBe('abc(a|b|c)*')
       })
 
       it('ends_with generates correct regex', () => {
         const template = getTemplateById('ends_with')
         expect(template).toBeDefined()
         const regex = template!.buildRegex('xyz')
-        expect(regex).toBe('.*xyz')
+        expect(regex).toBe('(a|b|c)*xyz')
       })
 
       it('contains generates correct regex', () => {
         const template = getTemplateById('contains')
         expect(template).toBeDefined()
         const regex = template!.buildRegex('test')
-        expect(regex).toBe('.*test.*')
+        expect(regex).toBe('(a|b|c)*test(a|b|c)*')
       })
     })
 
@@ -290,7 +294,7 @@ describe('pattern templates', () => {
       const template = getTemplateById('starts_with')
       expect(template).toBeDefined()
       const regex = template!.buildRegex('a b')
-      expect(regex).toBe('a b.*')
+      expect(regex).toBe('a b(a|b|c)*')
     })
   })
 
@@ -337,11 +341,27 @@ describe('pattern templates', () => {
       expect(() => parse(regex)).not.toThrow()
     })
 
-    it('note: position templates generate patterns with wildcards', () => {
-      // Position templates (starts_with, ends_with, contains) generate
-      // patterns like 'ab.*' which use '.' (any character wildcard)
-      // Our parser doesn't support '.' as it uses a simplified regex syntax
-      // These templates are still useful for educational/display purposes
+    it('generated regex can be parsed - starts_with', () => {
+      const template = getTemplateById('starts_with')
+      const regex = template!.buildRegex('a')
+      expect(() => parse(regex)).not.toThrow()
+    })
+
+    it('generated regex can be parsed - ends_with', () => {
+      const template = getTemplateById('ends_with')
+      const regex = template!.buildRegex('c')
+      expect(() => parse(regex)).not.toThrow()
+    })
+
+    it('generated regex can be parsed - contains', () => {
+      const template = getTemplateById('contains')
+      const regex = template!.buildRegex('ab')
+      expect(() => parse(regex)).not.toThrow()
+    })
+
+    it('note: all templates now use parser-compatible syntax', () => {
+      // Position templates now use (a|b|c)* instead of .* for wildcards
+      // All templates generate patterns compatible with our simplified parser
       expect(true).toBe(true)
     })
   })
