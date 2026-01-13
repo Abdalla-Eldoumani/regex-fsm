@@ -118,16 +118,19 @@ RegexFSM follows a layered architecture separating concerns into distinct module
 The `App` component maintains global application state:
 
 ```typescript
-- regex: string                    // Current regex input
-- testString: string               // Current test string
-- nfa: NFA | null                  // Generated NFA
-- dfa: DFA | null                  // Generated DFA
-- error: string                    // Parse/build errors
-- simulationMode: 'nfa' | 'dfa'    // Which automaton to simulate
-- nfaHighlightStates: string[]     // NFA states to highlight
-- dfaHighlightStates: string[]     // DFA states to highlight
-- nfaHighlightEdges: string[]      // NFA edges to highlight
-- dfaHighlightEdges: string[]      // DFA edges to highlight
+- regex: string                         // Current regex input
+- alphabet: string                      // Custom alphabet (optional)
+- testString: string                    // Current test string
+- nfa: NFA | null                       // Generated NFA
+- dfa: DFA | null                       // Generated DFA
+- error: string                         // Parse/build errors
+- simulationMode: 'nfa' | 'dfa' | 'both' // Which automaton(s) to display
+- nfaHighlightStates: string[]          // NFA states to highlight
+- dfaHighlightStates: string[]          // DFA states to highlight
+- nfaHighlightEdges: string[]           // NFA edges to highlight
+- dfaHighlightEdges: string[]           // DFA edges to highlight
+- nfaSimResult: SimulationResult | null // NFA simulation result
+- dfaSimResult: SimulationResult | null // DFA simulation result
 ```
 
 ### Simulation State
@@ -226,6 +229,59 @@ The Indigo/Emerald theme provides a professional, accessible color palette with 
 - Amber for active simulation steps (representing "current focus")
 
 This color scheme is WCAG 2.1 Level AA compliant for accessibility.
+
+## UI/UX Features
+
+### Flexible Simulation Modes
+
+The application supports three simulation display modes:
+- **NFA Mode**: Only NFA automaton displayed, takes full width
+- **DFA Mode**: Only DFA automaton displayed, takes full width
+- **Both Mode**: Both automatons displayed side-by-side (responsive grid)
+
+Implementation:
+- Mode selector with three buttons in simulation section
+- Dynamic grid layout: `grid-cols-1` (single) or `grid-cols-1 xl:grid-cols-2` (both)
+- Conditional rendering based on simulationMode state
+- Each automaton maintains independent simulation controls when in Both mode
+
+### Fullscreen Simulation Modal
+
+Each automaton has an individual "Simulate" button that opens a fullscreen modal:
+- **Split-Screen Layout**: Graph on left, controls on right (lg:grid-cols-2)
+- **Live Visualization**: AutomatonGraph updates during simulation
+- **Backdrop Blur**: 95% opacity black background with blur effect
+- **Independent State**: Modal simulation doesn't affect main simulation
+- **Highlight Propagation**: Highlights update parent view via callback
+
+Modal features:
+- Test string input
+- Full simulation controls (play, pause, step, reset)
+- Click backdrop or close button to dismiss
+- Responsive layout (stacks vertically on mobile)
+
+### Expandable Views
+
+Table and States tabs have dedicated expand buttons:
+- **Fullscreen Modal**: Opens table or state list in fullscreen overlay
+- **Improved Scrolling**: Increased max-height from 600px to 800px
+- **Better Visibility**: Dedicated fullscreen mode for complex automata with many states
+- **Easy Access**: Expand button appears when viewing Table or States tabs
+
+### Pattern Builder
+
+Interactive natural language to regex converter:
+- **23 Templates**: Across 9 categories (basic, position, repetition, character, combination, length, counting, negation, ordering)
+- **Dynamic Parameters**: Input fields adjust based on selected template
+- **Live Preview**: See generated regex before insertion
+- **Parser Compatible**: All templates generate patterns compatible with the simplified parser
+
+### Custom Alphabet Support
+
+Users can pre-define the alphabet:
+- **Complete DFAs**: Shows all symbol transitions including trap states
+- **Auto Expansion**: Automatically includes test string symbols when no custom alphabet defined
+- **Trap State Visibility**: Makes rejection paths explicit in DFA visualization
 
 ## Testing Strategy
 
