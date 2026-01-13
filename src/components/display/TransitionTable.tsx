@@ -22,7 +22,7 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
   const isTrapState = (state: string) => state === '∅'
 
   return (
-    <div className="overflow-x-auto overflow-y-auto rounded-lg border border-border max-h-[600px] min-h-[400px]">
+    <div className="overflow-x-auto overflow-y-auto rounded-lg border border-border max-h-[800px] min-h-[400px]">
       <table className="w-full border-collapse text-sm min-w-max">
         <thead>
           <tr className="bg-secondary-light/50">
