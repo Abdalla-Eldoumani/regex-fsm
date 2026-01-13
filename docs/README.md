@@ -59,15 +59,15 @@ The core module implements the fundamental algorithms and data structures:
 - **Regex Module** - Tokenizer and parser for regular expressions
 - **Automata Module** - NFA and DFA type definitions and utilities
 - **Algorithms Module** - Thompson's construction, subset construction (with custom alphabet support), simulation
-- **Patterns Module** - Template library for natural language to regex conversion (10 templates across 5 categories)
+- **Patterns Module** - Template library for natural language to regex conversion (23 templates across 9 categories)
 
 ### Components (`src/components/`)
 
 React components organized by function:
 
-- **Input** - RegexInput (with alphabet field), StringInput, PatternBuilder (interactive template selector)
-- **Display** - AutomatonView (with simulation modal), TransitionTable (improved scrolling), StateList (improved truncation)
-- **Simulation** - SimulationPanel, SimulationControls, SimulationModal (individual automaton testing), InputTape
+- **Input** - RegexInput (with alphabet field), StringInput, PatternBuilder (interactive template selector with 23 templates)
+- **Display** - AutomatonView (with fullscreen simulation modal and expandable views), TransitionTable (improved scrolling, expandable), StateList (improved truncation, rejection banners, expandable)
+- **Simulation** - SimulationPanel (flexible NFA/DFA/Both modes), SimulationControls, SimulationModal (fullscreen with split-screen layout), InputTape
 - **Education** - TheoryPanel, StepExplanation
 - **Common** - Button, Tabs
 
@@ -112,12 +112,12 @@ All core algorithms have comprehensive test coverage:
 - Thompson's construction: 37 tests
 - Subset construction: 42 tests (includes 10 custom alphabet tests + trap state verification)
 - Simulation: 88 tests
-- Pattern templates: 42 tests (structure, categorization, regex generation)
+- Pattern templates: 45 tests (structure, categorization, regex generation, parser compatibility)
 - Visualization: 13 tests (updated for start arrow)
 - Integration tests: 104 tests
 - Automata tests: 56 tests
 
-Total: 537 tests (all passing)
+Total: 540 tests (all passing)
 
 ### Recent Test Additions
 
@@ -125,4 +125,4 @@ Total: 537 tests (all passing)
 - **Trap State Verification**: Tests ensuring trap states have self-loops and proper transitions
 - **Visualization Updates**: Tests account for start marker node and arrow in element counts
 - **Custom Alphabet**: 10 comprehensive tests for custom alphabet functionality (DFA completeness, trap state generation)
-- **Pattern Templates**: 42 tests covering template structure, categorization, and integration with parser
+- **Pattern Templates**: 45 tests covering template structure, categorization, regex generation, and parser compatibility for all 23 templates
