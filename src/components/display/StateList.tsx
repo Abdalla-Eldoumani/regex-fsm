@@ -40,7 +40,7 @@ export function StateList({ automaton, highlightStates = [], simulationResult = 
   }
 
   return (
-    <div className="space-y-4 max-h-[600px] min-h-[400px] overflow-y-auto pr-2">
+    <div className="space-y-4 max-h-[800px] min-h-[400px] overflow-y-auto pr-2">
       {isRejected && (
         <div className="p-4 bg-error-light border-2 border-error/30 rounded-xl animate-fade-in">
           <div className="flex items-center gap-3 mb-2">
