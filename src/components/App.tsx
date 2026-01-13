@@ -17,7 +17,7 @@ function App() {
   const [nfa, setNfa] = useState<NFA | null>(null)
   const [dfa, setDfa] = useState<DFA | null>(null)
   const [error, setError] = useState<string>('')
-  const [simulationMode, setSimulationMode] = useState<'nfa' | 'dfa'>('nfa')
+  const [simulationMode, setSimulationMode] = useState<'nfa' | 'dfa' | 'both'>('nfa')
   const [nfaHighlightStates, setNfaHighlightStates] = useState<string[]>([])
   const [dfaHighlightStates, setDfaHighlightStates] = useState<string[]>([])
   const [nfaHighlightEdges, setNfaHighlightEdges] = useState<string[]>([])
@@ -145,7 +145,7 @@ function App() {
                       : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
                   }`}
                 >
-                  NFA Simulation
+                  NFA
                 </button>
                 <button
                   onClick={() => setSimulationMode('dfa')}
@@ -155,7 +155,17 @@ function App() {
                       : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
                   }`}
                 >
-                  DFA Simulation
+                  DFA
+                </button>
+                <button
+                  onClick={() => setSimulationMode('both')}
+                  className={`cursor-pointer px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    simulationMode === 'both'
+                      ? 'bg-gradient-to-br from-accent to-success shadow-lg text-background ring-2 ring-accent/50 scale-105'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+                  }`}
+                >
+                  Both
                 </button>
              </div>
            </div>
@@ -184,53 +194,65 @@ function App() {
                   }}
                 />
               )}
+
+              {simulationMode === 'both' && (
+                <div className="text-center py-8 text-text-secondary">
+                  <p className="text-lg">Both automatons are displayed below. Use the simulation controls on each to step through independently.</p>
+                </div>
+              )}
            </div>
         </section>
 
-        <section className="grid grid-cols-1 xl:grid-cols-2 gap-8 animate-slide-up animate-delay-300">
-          <article className="bg-surface/80 backdrop-blur-md rounded-3xl shadow-hard border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-primary/50 hover:shadow-glow-primary group">
-            <div className="p-5 border-b border-border bg-gradient-to-r from-primary/20 via-primary/10 to-transparent flex justify-between items-center backdrop-blur-sm relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-               <h3 className="font-display font-bold text-text-primary flex items-center gap-3 relative z-10">
-                 <span className="w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/50 animate-pulse"></span>
-                 <span className="text-lg">Nondeterministic Finite Automaton</span>
-               </h3>
-               <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-primary/20 border border-primary/40 text-primary font-bold shadow-inner relative z-10">NFA</span>
-            </div>
-            <div className="flex-1 relative bg-gradient-to-br from-background to-background-secondary">
-              <AutomatonView
-                automaton={nfa}
-                title=""
-                error={error}
-                mode="nfa"
-                highlightStates={simulationMode === 'nfa' ? nfaHighlightStates : []}
-                highlightEdges={simulationMode === 'nfa' ? nfaHighlightEdges : []}
-                simulationResult={simulationMode === 'nfa' ? nfaSimResult : null}
-              />
-            </div>
-          </article>
+        <section className={`grid gap-8 animate-slide-up animate-delay-300 ${
+          simulationMode === 'both' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'
+        }`}>
+          {(simulationMode === 'nfa' || simulationMode === 'both') && (
+            <article className="bg-surface/80 backdrop-blur-md rounded-3xl shadow-hard border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-primary/50 hover:shadow-glow-primary group">
+              <div className="p-5 border-b border-border bg-gradient-to-r from-primary/20 via-primary/10 to-transparent flex justify-between items-center backdrop-blur-sm relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                 <h3 className="font-display font-bold text-text-primary flex items-center gap-3 relative z-10">
+                   <span className="w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/50 animate-pulse"></span>
+                   <span className="text-lg">Nondeterministic Finite Automaton</span>
+                 </h3>
+                 <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-primary/20 border border-primary/40 text-primary font-bold shadow-inner relative z-10">NFA</span>
+              </div>
+              <div className="flex-1 relative bg-gradient-to-br from-background to-background-secondary">
+                <AutomatonView
+                  automaton={nfa}
+                  title=""
+                  error={error}
+                  mode="nfa"
+                  highlightStates={simulationMode === 'nfa' || simulationMode === 'both' ? nfaHighlightStates : []}
+                  highlightEdges={simulationMode === 'nfa' || simulationMode === 'both' ? nfaHighlightEdges : []}
+                  simulationResult={simulationMode === 'nfa' || simulationMode === 'both' ? nfaSimResult : null}
+                />
+              </div>
+            </article>
+          )}
 
-          <article className="bg-surface/80 backdrop-blur-md rounded-3xl shadow-hard border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-secondary/50 hover:shadow-glow-secondary group">
-             <div className="p-5 border-b border-border bg-gradient-to-r from-secondary/20 via-secondary/10 to-transparent flex justify-between items-center backdrop-blur-sm relative">
-               <div className="absolute inset-0 bg-gradient-to-r from-secondary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-               <h3 className="font-display font-bold text-text-primary flex items-center gap-3 relative z-10">
-                  <span className="w-3 h-3 rounded-full bg-secondary shadow-lg shadow-secondary/50 animate-pulse" style={{ animationDelay: '0.5s' }}></span>
-                  <span className="text-lg">Deterministic Finite Automaton</span>
-               </h3>
-               <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-secondary/20 border border-secondary/40 text-secondary font-bold shadow-inner relative z-10">DFA</span>
-            </div>
-            <div className="flex-1 relative bg-gradient-to-br from-background to-background-secondary">
-              <AutomatonView
-                automaton={dfa}
-                title=""
-                error={error}
-                mode="dfa"
-                highlightStates={simulationMode === 'dfa' ? dfaHighlightStates : []}
-                highlightEdges={simulationMode === 'dfa' ? dfaHighlightEdges : []}
-                simulationResult={simulationMode === 'dfa' ? dfaSimResult : null}
-              />
-            </div>
-          </article>
+          {(simulationMode === 'dfa' || simulationMode === 'both') && (
+            <article className="bg-surface/80 backdrop-blur-md rounded-3xl shadow-hard border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-secondary/50 hover:shadow-glow-secondary group">
+               <div className="p-5 border-b border-border bg-gradient-to-r from-secondary/20 via-secondary/10 to-transparent flex justify-between items-center backdrop-blur-sm relative">
+                 <div className="absolute inset-0 bg-gradient-to-r from-secondary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                 <h3 className="font-display font-bold text-text-primary flex items-center gap-3 relative z-10">
+                    <span className="w-3 h-3 rounded-full bg-secondary shadow-lg shadow-secondary/50 animate-pulse" style={{ animationDelay: '0.5s' }}></span>
+                    <span className="text-lg">Deterministic Finite Automaton</span>
+                 </h3>
+                 <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-secondary/20 border border-secondary/40 text-secondary font-bold shadow-inner relative z-10">DFA</span>
+              </div>
+              <div className="flex-1 relative bg-gradient-to-br from-background to-background-secondary">
+                <AutomatonView
+                  automaton={dfa}
+                  title=""
+                  error={error}
+                  mode="dfa"
+                  highlightStates={simulationMode === 'dfa' || simulationMode === 'both' ? dfaHighlightStates : []}
+                  highlightEdges={simulationMode === 'dfa' || simulationMode === 'both' ? dfaHighlightEdges : []}
+                  simulationResult={simulationMode === 'dfa' || simulationMode === 'both' ? dfaSimResult : null}
+                />
+              </div>
+            </article>
+          )}
         </section>
 
         {nfa && dfa && (
