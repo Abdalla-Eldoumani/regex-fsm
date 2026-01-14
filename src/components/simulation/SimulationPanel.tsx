@@ -57,7 +57,7 @@ export function SimulationPanel({
         <div className="text-text-secondary max-w-sm">
           Enter a regex pattern and a test string to watch the automaton process the input step-by-step.
           <br />
-          <span className="text-xs text-text-tertiary mt-2 inline-block">Tip: Empty string is allowed for testing patterns like a* or ε</span>
+          <span className="text-xs text-text-tertiary mt-2 inline-block">Tip: Empty string is allowed for testing patterns like a* or λ</span>
         </div>
       </div>
     )
@@ -175,7 +175,7 @@ export function SimulationPanel({
                      {currentStepData.symbol}
                    </span>
                 ) : (
-                   <span className="text-xs text-text-tertiary italic">ε (epsilon)</span>
+                   <span className="text-xs text-text-tertiary italic">λ (lambda)</span>
                 )}
               </div>
             </div>
