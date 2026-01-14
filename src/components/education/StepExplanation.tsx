@@ -31,21 +31,21 @@ export function StepExplanation({ step, mode, isComplete, accepted }: StepExplan
       }
     }
 
-    const symbol = step.symbol || 'ε'
+    const symbol = step.symbol || 'λ'
     const currentStates = Array.isArray(step.currentStates)
       ? step.currentStates
       : [step.currentStates]
 
     if (step.position === 0 && !step.symbol) {
       if (mode === 'nfa') {
-        return `Starting in state ${currentStates[0]}. Computing ε-closure: {${currentStates.join(', ')}}.`
+        return `Starting in state ${currentStates[0]}. Computing λ-closure: {${currentStates.join(', ')}}.`
       } else {
         return `Starting in state ${currentStates[0]}.`
       }
     }
 
     if (step.symbol === null) {
-      return `Following ε-transition. Current state set: {${currentStates.join(', ')}}.`
+      return `Following λ-transition. Current state set: {${currentStates.join(', ')}}.`
     }
 
     if (mode === 'nfa') {
