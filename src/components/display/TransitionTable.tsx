@@ -7,8 +7,8 @@ interface TransitionTableProps {
 
 export function TransitionTable({ automaton, highlightState }: TransitionTableProps) {
   const alphabet = Array.from(automaton.alphabet).sort()
-  const hasEpsilon = automaton.transitions.some(t => t.symbol === null)
-  const columns = hasEpsilon ? [...alphabet, 'ε'] : alphabet
+  const hasLambda = automaton.transitions.some(t => t.symbol === null)
+  const columns = hasLambda ? [...alphabet, 'λ'] : alphabet
 
   const getTransitions = (fromState: string, symbol: string | null): string[] => {
     const targets = automaton.transitions
@@ -87,7 +87,7 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
                     </td>
                   )
                 })}
-                {hasEpsilon && (
+                {hasLambda && (
                   <td className="px-4 py-3 text-center border-b border-border/50 font-mono text-text-primary">
                     {(() => {
                       const targets = getTransitions(state.id, null)
