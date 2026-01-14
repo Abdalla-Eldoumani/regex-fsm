@@ -159,7 +159,7 @@ All core algorithms have comprehensive test coverage (540 tests total):
 
 - Tokenizer: 56 tests
 - Parser: 81 tests (includes 13 validation tests for consecutive quantifiers)
-- Epsilon closure: 18 tests
+- Lambda closure: 18 tests
 - Thompson's construction: 37 tests
 - Subset construction: 42 tests (includes 10 custom alphabet tests + trap state tests)
 - Simulation: 88 tests
