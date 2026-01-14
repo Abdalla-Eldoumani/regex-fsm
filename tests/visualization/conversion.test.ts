@@ -45,7 +45,7 @@ describe('automaton to cytoscape conversion', () => {
       expect(result.edges[1].data.target).toBe('q0')
     })
 
-    it('converts NFA with epsilon transitions', () => {
+    it('converts NFA with lambda transitions', () => {
       const nfa: NFA = {
         states: [
           { id: 'q0' },
@@ -61,7 +61,7 @@ describe('automaton to cytoscape conversion', () => {
 
       const result = automatonToCytoscape(nfa)
 
-      expect(result.edges[0].data.label).toBe('ε')
+      expect(result.edges[0].data.label).toBe('λ')
     })
 
     it('converts DFA with multiple accept states', () => {
