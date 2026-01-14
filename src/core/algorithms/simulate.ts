@@ -1,5 +1,5 @@
 import { NFA, DFA } from '../automata/types'
-import { epsilonClosure } from './epsilon'
+import { lambdaClosure } from './lambda'
 
 export interface SimulationStep {
   position: number
@@ -28,7 +28,7 @@ function move(nfa: NFA, stateIds: Set<string>, symbol: string): Set<string> {
 export function simulateNFA(nfa: NFA, input: string): SimulationResult {
   const steps: SimulationStep[] = []
 
-  let currentStates = epsilonClosure(nfa, [nfa.startState])
+  let currentStates = lambdaClosure(nfa, [nfa.startState])
 
   steps.push({
     position: 0,
@@ -42,7 +42,7 @@ export function simulateNFA(nfa: NFA, input: string): SimulationResult {
     const prevStates = currentStates
 
     const moveResult = move(nfa, currentStates, symbol)
-    currentStates = epsilonClosure(nfa, Array.from(moveResult))
+    currentStates = lambdaClosure(nfa, Array.from(moveResult))
 
     steps.push({
       position: i + 1,
