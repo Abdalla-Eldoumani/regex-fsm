@@ -360,7 +360,7 @@ interface TransitionTableProps {
 
 **Table Structure**:
 - Rows: States
-- Columns: Input symbols (including ε if present)
+- Columns: Input symbols (including λ if present)
 - Cells: Target states (set notation for multiple targets)
 
 **Indicators**:
@@ -522,7 +522,7 @@ interface StepExplanationProps {
 **Explanation Types**:
 
 **Initialization**:
-- NFA: "Starting in state q0. Computing ε-closure: {q0, q1}."
+- NFA: "Starting in state q0. Computing λ-closure: {q0, q1}."
 - DFA: "Starting in state q0."
 
 **Reading Symbol**:
