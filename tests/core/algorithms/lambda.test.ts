@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { epsilonClosure } from '@/core/algorithms/epsilon'
+import { lambdaClosure } from '@/core/algorithms/lambda'
 import { NFA } from '@/core/automata/types'
 
-describe('epsilon closure', () => {
+describe('lambda closure', () => {
   describe('basic cases', () => {
-    it('returns input state if no epsilon transitions', () => {
+    it('returns input state if no lambda transitions', () => {
       const nfa: NFA = {
         states: [{ id: 'q0' }, { id: 'q1' }],
         transitions: [{ from: 'q0', to: 'q1', symbol: 'a' }],
@@ -13,11 +13,11 @@ describe('epsilon closure', () => {
         alphabet: new Set(['a']),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0']))
     })
 
-    it('returns multiple input states if no epsilon transitions', () => {
+    it('returns multiple input states if no lambda transitions', () => {
       const nfa: NFA = {
         states: [{ id: 'q0' }, { id: 'q1' }, { id: 'q2' }],
         transitions: [
@@ -29,7 +29,7 @@ describe('epsilon closure', () => {
         alphabet: new Set(['a', 'b']),
       }
 
-      const closure = epsilonClosure(nfa, ['q0', 'q2'])
+      const closure = lambdaClosure(nfa, ['q0', 'q2'])
       expect(closure).toEqual(new Set(['q0', 'q2']))
     })
 
@@ -42,13 +42,13 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, [])
+      const closure = lambdaClosure(nfa, [])
       expect(closure).toEqual(new Set())
     })
   })
 
-  describe('epsilon chains', () => {
-    it('follows single epsilon transition', () => {
+  describe('lambda chains', () => {
+    it('follows single lambda transition', () => {
       const nfa: NFA = {
         states: [{ id: 'q0' }, { id: 'q1' }],
         transitions: [{ from: 'q0', to: 'q1', symbol: null }],
@@ -57,11 +57,11 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0', 'q1']))
     })
 
-    it('follows chain of epsilon transitions', () => {
+    it('follows chain of lambda transitions', () => {
       const nfa: NFA = {
         states: [{ id: 'q0' }, { id: 'q1' }, { id: 'q2' }],
         transitions: [
@@ -73,11 +73,11 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0', 'q1', 'q2']))
     })
 
-    it('follows long chain of epsilon transitions', () => {
+    it('follows long chain of lambda transitions', () => {
       const nfa: NFA = {
         states: [
           { id: 'q0' },
@@ -97,13 +97,13 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0', 'q1', 'q2', 'q3', 'q4']))
     })
   })
 
-  describe('epsilon branching', () => {
-    it('follows multiple epsilon transitions from one state', () => {
+  describe('lambda branching', () => {
+    it('follows multiple lambda transitions from one state', () => {
       const nfa: NFA = {
         states: [{ id: 'q0' }, { id: 'q1' }, { id: 'q2' }],
         transitions: [
@@ -115,11 +115,11 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0', 'q1', 'q2']))
     })
 
-    it('follows branching and merging epsilon paths', () => {
+    it('follows branching and merging lambda paths', () => {
       const nfa: NFA = {
         states: [
           { id: 'q0' },
@@ -138,13 +138,13 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0', 'q1', 'q2', 'q3']))
     })
   })
 
-  describe('epsilon cycles', () => {
-    it('handles simple epsilon cycle without infinite loop', () => {
+  describe('lambda cycles', () => {
+    it('handles simple lambda cycle without infinite loop', () => {
       const nfa: NFA = {
         states: [{ id: 'q0' }, { id: 'q1' }],
         transitions: [
@@ -156,11 +156,11 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0', 'q1']))
     })
 
-    it('handles self-loop epsilon transition', () => {
+    it('handles self-loop lambda transition', () => {
       const nfa: NFA = {
         states: [{ id: 'q0' }],
         transitions: [{ from: 'q0', to: 'q0', symbol: null }],
@@ -169,7 +169,7 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0']))
     })
 
@@ -192,13 +192,13 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0', 'q1', 'q2', 'q3']))
     })
   })
 
   describe('mixed transitions', () => {
-    it('only follows epsilon transitions, not symbol transitions', () => {
+    it('only follows lambda transitions, not symbol transitions', () => {
       const nfa: NFA = {
         states: [{ id: 'q0' }, { id: 'q1' }, { id: 'q2' }],
         transitions: [
@@ -210,11 +210,11 @@ describe('epsilon closure', () => {
         alphabet: new Set(['a']),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0', 'q1']))
     })
 
-    it('follows epsilon paths among symbol transitions', () => {
+    it('follows lambda paths among symbol transitions', () => {
       const nfa: NFA = {
         states: [
           { id: 'q0' },
@@ -233,7 +233,7 @@ describe('epsilon closure', () => {
         alphabet: new Set(['a', 'b']),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0', 'q2', 'q3']))
     })
   })
@@ -256,7 +256,7 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0', 'q2'])
+      const closure = lambdaClosure(nfa, ['q0', 'q2'])
       expect(closure).toEqual(new Set(['q0', 'q1', 'q2', 'q3']))
     })
 
@@ -272,7 +272,7 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0', 'q1'])
+      const closure = lambdaClosure(nfa, ['q0', 'q1'])
       expect(closure).toEqual(new Set(['q0', 'q1', 'q2']))
     })
   })
@@ -287,7 +287,7 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q1'])
+      const closure = lambdaClosure(nfa, ['q1'])
       expect(closure).toEqual(new Set(['q1']))
     })
 
@@ -300,11 +300,11 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0']))
     })
 
-    it('handles fully connected epsilon graph', () => {
+    it('handles fully connected lambda graph', () => {
       const nfa: NFA = {
         states: [{ id: 'q0' }, { id: 'q1' }, { id: 'q2' }],
         transitions: [
@@ -320,7 +320,7 @@ describe('epsilon closure', () => {
         alphabet: new Set(),
       }
 
-      const closure = epsilonClosure(nfa, ['q0'])
+      const closure = lambdaClosure(nfa, ['q0'])
       expect(closure).toEqual(new Set(['q0', 'q1', 'q2']))
     })
   })

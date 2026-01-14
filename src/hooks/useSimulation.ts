@@ -30,7 +30,7 @@ export function useSimulation({ automaton, input, mode }: UseSimulationOptions) 
       setResult(simResult)
       setCurrentStep(0)
       setIsRunning(false)
-    } catch (err) {
+    } catch {
       setResult(null)
       setCurrentStep(0)
     }

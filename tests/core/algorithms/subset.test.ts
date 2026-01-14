@@ -327,4 +327,137 @@ describe('subset construction', () => {
       }
     })
   })
+
+  describe('custom alphabet', () => {
+    it('uses custom alphabet when provided', () => {
+      const ast = parse('ab')
+      const nfa = buildNFA(ast)
+      const customAlphabet = new Set(['a', 'b', 'c'])
+      const dfa = nfaToDFA(nfa, customAlphabet)
+
+      expect(dfa.alphabet).toEqual(customAlphabet)
+      expect(dfa.alphabet.has('c')).toBe(true)
+    })
+
+    it('creates trap state for symbols not in regex', () => {
+      const ast = parse('ab')
+      const nfa = buildNFA(ast)
+      const customAlphabet = new Set(['a', 'b', 'c'])
+      const dfa = nfaToDFA(nfa, customAlphabet)
+
+      const hasTrapState = dfa.states.some(s => s.id === '∅')
+      expect(hasTrapState).toBe(true)
+
+      const trapTransitions = dfa.transitions.filter(
+        t => t.from === '∅' && t.to === '∅'
+      )
+      expect(trapTransitions.length).toBe(customAlphabet.size)
+    })
+
+    it('creates transitions for all custom alphabet symbols', () => {
+      const ast = parse('a')
+      const nfa = buildNFA(ast)
+      const customAlphabet = new Set(['a', 'b', 'c'])
+      const dfa = nfaToDFA(nfa, customAlphabet)
+
+      for (const state of dfa.states) {
+        for (const symbol of customAlphabet) {
+          const hasTransition = dfa.transitions.some(
+            t => t.from === state.id && t.symbol === symbol
+          )
+          expect(hasTransition).toBe(true)
+        }
+      }
+    })
+
+    it('handles custom alphabet larger than NFA alphabet', () => {
+      const ast = parse('a|b')
+      const nfa = buildNFA(ast)
+      const customAlphabet = new Set(['a', 'b', 'c', 'd', 'e'])
+      const dfa = nfaToDFA(nfa, customAlphabet)
+
+      expect(dfa.alphabet.size).toBe(5)
+      expect(isDeterministic(dfa)).toBe(true)
+      expect(() => validateDFA(dfa)).not.toThrow()
+    })
+
+    it('handles custom alphabet with symbols from test string', () => {
+      const ast = parse('ab')
+      const nfa = buildNFA(ast)
+      const testString = 'abc'
+      const customAlphabet = new Set(testString.split(''))
+      const dfa = nfaToDFA(nfa, customAlphabet)
+
+      expect(dfa.alphabet).toEqual(new Set(['a', 'b', 'c']))
+      expect(isDeterministic(dfa)).toBe(true)
+    })
+
+    it('uses NFA alphabet when custom alphabet is undefined', () => {
+      const ast = parse('abc')
+      const nfa = buildNFA(ast)
+      const dfa = nfaToDFA(nfa, undefined)
+
+      expect(dfa.alphabet).toEqual(nfa.alphabet)
+    })
+
+    it('creates complete DFA with custom alphabet', () => {
+      const ast = parse('a*')
+      const nfa = buildNFA(ast)
+      const customAlphabet = new Set(['a', 'b'])
+      const dfa = nfaToDFA(nfa, customAlphabet)
+
+      for (const state of dfa.states) {
+        for (const symbol of customAlphabet) {
+          const transitionsForSymbol = dfa.transitions.filter(
+            t => t.from === state.id && t.symbol === symbol
+          )
+          expect(transitionsForSymbol.length).toBe(1)
+        }
+      }
+    })
+
+    it('trap state has self-loops for all custom alphabet symbols', () => {
+      const ast = parse('a')
+      const nfa = buildNFA(ast)
+      const customAlphabet = new Set(['a', 'b', 'c', 'd'])
+      const dfa = nfaToDFA(nfa, customAlphabet)
+
+      const trapState = dfa.states.find(s => s.id === '∅')
+      expect(trapState).toBeDefined()
+
+      const trapSelfLoops = dfa.transitions.filter(
+        t => t.from === '∅' && t.to === '∅'
+      )
+      expect(trapSelfLoops.length).toBe(customAlphabet.size)
+
+      for (const symbol of customAlphabet) {
+        const hasLoop = trapSelfLoops.some(t => t.symbol === symbol)
+        expect(hasLoop).toBe(true)
+      }
+    })
+
+    it('generates deterministic DFA with custom alphabet', () => {
+      const ast = parse('(a|b)*')
+      const nfa = buildNFA(ast)
+      const customAlphabet = new Set(['a', 'b', 'c'])
+      const dfa = nfaToDFA(nfa, customAlphabet)
+
+      const stateSymbolPairs = new Set<string>()
+      for (const t of dfa.transitions) {
+        const key = `${t.from}:${t.symbol}`
+        expect(stateSymbolPairs.has(key)).toBe(false)
+        stateSymbolPairs.add(key)
+      }
+    })
+
+    it('custom alphabet with single extra symbol', () => {
+      const ast = parse('ab')
+      const nfa = buildNFA(ast)
+      const customAlphabet = new Set(['a', 'b', 'c'])
+      const dfa = nfaToDFA(nfa, customAlphabet)
+
+      expect(dfa.alphabet.has('c')).toBe(true)
+      expect(dfa.states.some(s => s.id === '∅')).toBe(true)
+    })
+  })
 })

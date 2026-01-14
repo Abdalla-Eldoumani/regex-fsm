@@ -12,11 +12,11 @@ Thompson's construction converts a regular expression to an equivalent NFA recur
 
 ### Base Cases
 
-#### Empty String (ε)
+#### Empty String (λ)
 
 ```
-Input: ε
-Output: q0 --ε--> q1
+Input: λ
+Output: q0 --λ--> q1
         (start)  (accept)
 ```
 
@@ -67,7 +67,7 @@ Input: ab
 Steps:
 1. Build NFA1 for a
 2. Build NFA2 for b
-3. Connect accept(NFA1) to start(NFA2) with ε-transition
+3. Connect accept(NFA1) to start(NFA2) with λ-transition
 4. Result: start(NFA1) ... accept(NFA2)
 ```
 
@@ -77,7 +77,7 @@ if (node.type === 'concat') {
   const left = buildNFA(node.left)
   const right = buildNFA(node.right)
 
-  // Connect left's accept to right's start with ε
+  // Connect left's accept to right's start with λ
   const newTransitions = [
     ...left.transitions,
     ...right.transitions,
@@ -101,8 +101,8 @@ Input: a|b
 Steps:
 1. Build NFA1 for a
 2. Build NFA2 for b
-3. Create new start state with ε-transitions to start(NFA1) and start(NFA2)
-4. Create new accept state with ε-transitions from accept(NFA1) and accept(NFA2)
+3. Create new start state with λ-transitions to start(NFA1) and start(NFA2)
+4. Create new accept state with λ-transitions from accept(NFA1) and accept(NFA2)
 ```
 
 Implementation:
@@ -140,10 +140,10 @@ Input: a*
 Steps:
 1. Build NFA for a
 2. Create new start state (also accept)
-3. Add ε-transition from new start to old start
-4. Add ε-transition from old accept back to old start (loop)
-5. Add ε-transition from old accept to new accept
-6. Add ε-transition from new start to new accept (skip)
+3. Add λ-transition from new start to old start
+4. Add λ-transition from old accept back to old start (loop)
+5. Add λ-transition from old accept to new accept
+6. Add λ-transition from new start to new accept (skip)
 ```
 
 Implementation:
@@ -189,26 +189,26 @@ Subset construction (powerset construction) converts an NFA to an equivalent DFA
 
 ### Key Operations
 
-#### Epsilon Closure
+#### Lambda Closure
 
-**File**: `src/core/algorithms/epsilon.ts`
+**File**: `src/core/algorithms/lambda.ts`
 
-Computes all states reachable from a given set via ε-transitions only.
+Computes all states reachable from a given set via λ-transitions only.
 
 ```typescript
-function epsilonClosure(states: string[], transitions: Transition[]): string[] {
+function lambdaClosure(states: string[], transitions: Transition[]): string[] {
   const closure = new Set(states)
   const stack = [...states]
 
   while (stack.length > 0) {
     const state = stack.pop()!
 
-    // Find all ε-transitions from this state
-    const epsilonTransitions = transitions.filter(
+    // Find all λ-transitions from this state
+    const lambdaTransitions = transitions.filter(
       t => t.from === state && t.symbol === null
     )
 
-    for (const trans of epsilonTransitions) {
+    for (const trans of lambdaTransitions) {
       if (!closure.has(trans.to)) {
         closure.add(trans.to)
         stack.push(trans.to)
@@ -249,8 +249,8 @@ Time complexity: O(n × t) where n is state count, t is transition count.
 ### Main Algorithm
 
 ```typescript
-function nfaToDFA(nfa: NFA): DFA {
-  const alphabet = Array.from(nfa.alphabet)
+function nfaToDFA(nfa: NFA, customAlphabet?: Set<string>): DFA {
+  const alphabet = customAlphabet || nfa.alphabet
   const dfaStates: DFAState[] = []
   const dfaTransitions: Transition[] = []
   const worklist: string[][] = []
@@ -259,8 +259,8 @@ function nfaToDFA(nfa: NFA): DFA {
   const TRAP_STATE = '∅'
   let trapStateNeeded = false
 
-  // Initial DFA state is ε-closure of NFA start state
-  const startSet = epsilonClosure([nfa.startState], nfa.transitions)
+  // Initial DFA state is λ-closure of NFA start state
+  const startSet = lambdaClosure([nfa.startState], nfa.transitions)
   const startStateId = setToStateId(startSet)
 
   worklist.push(startSet)
@@ -275,8 +275,8 @@ function nfaToDFA(nfa: NFA): DFA {
 
     // For each input symbol
     for (const symbol of alphabet) {
-      // Compute move then ε-closure
-      const nextSet = epsilonClosure(
+      // Compute move then λ-closure
+      const nextSet = lambdaClosure(
         move(currentSet, symbol, nfa.transitions),
         nfa.transitions
       )
@@ -336,7 +336,7 @@ function nfaToDFA(nfa: NFA): DFA {
     transitions: dfaTransitions,
     startState: startStateId,
     acceptStates,
-    alphabet: nfa.alphabet
+    alphabet: new Set(alphabet)
   }
 }
 ```
@@ -347,6 +347,36 @@ The implementation ensures the resulting DFA is **complete** (has a total transi
 
 - When `move(S, a)` results in an empty set, a transition to trap state `∅` is added
 - The trap state has self-loops for all alphabet symbols
+- Every state has exactly |Σ| outgoing transitions (one for each symbol in the alphabet)
+- Ensures simulation continues until input is fully consumed, providing clear feedback on where/why rejection occurred
+
+### Custom Alphabet Support
+
+The `nfaToDFA` function accepts an optional `customAlphabet` parameter:
+
+```typescript
+const nfa = buildNFA(parse('ab'))
+const customAlphabet = new Set(['a', 'b', 'c'])
+const dfa = nfaToDFA(nfa, customAlphabet)
+```
+
+**Use Cases:**
+1. **Pre-defined Alphabet**: User specifies alphabet before entering regex
+2. **Test String Expansion**: Automatically includes test string symbols to ensure trap states appear for invalid symbols
+3. **Complete DFA Visualization**: Shows all possible transitions, making trap states visible
+
+**Example:**
+- Regex: `ab`
+- Custom alphabet: `{a, b, c}`
+- Result: DFA includes transitions for 'c' leading to trap state `∅`
+- Without custom alphabet: 'c' wouldn't appear in transition table
+
+**Implementation:**
+```typescript
+const alphabet = customAlphabet || nfa.alphabet
+```
+
+If `customAlphabet` is provided, it's used; otherwise, the NFA's alphabet is used.
 - Once in trap state, the DFA remains there for all subsequent input
 - This ensures every state has exactly |Σ| outgoing transitions
 - Simulation continues until all input is consumed, providing clear feedback on where/why rejection occurred
@@ -377,8 +407,8 @@ Simulates NFA execution by tracking a set of possible states at each step.
 function simulateNFA(nfa: NFA, input: string): SimulationResult {
   const steps: SimulationStep[] = []
 
-  // Initial states: ε-closure of start state
-  let currentStates = epsilonClosure([nfa.startState], nfa.transitions)
+  // Initial states: λ-closure of start state
+  let currentStates = lambdaClosure([nfa.startState], nfa.transitions)
 
   steps.push({
     position: 0,
@@ -392,9 +422,9 @@ function simulateNFA(nfa: NFA, input: string): SimulationResult {
   for (let i = 0; i < input.length; i++) {
     const symbol = input[i]
 
-    // Compute next states: ε-closure(move(current, symbol))
+    // Compute next states: λ-closure(move(current, symbol))
     const afterMove = move(currentStates, symbol, nfa.transitions)
-    const nextStates = epsilonClosure(afterMove, nfa.transitions)
+    const nextStates = lambdaClosure(afterMove, nfa.transitions)
 
     steps.push({
       position: i + 1,

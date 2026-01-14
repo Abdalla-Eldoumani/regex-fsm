@@ -142,7 +142,7 @@ export function getStylesheet(): StyleRule[] {
       },
     },
     {
-      selector: 'edge[label = "ε"]',
+      selector: 'edge[label = "λ"]',
       style: {
         'line-style': 'dashed',
         'line-dash-pattern': [6, 4],

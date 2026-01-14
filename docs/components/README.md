@@ -158,15 +158,18 @@ Main content component for the home route (`/`).
 
 ```typescript
 const [regex, setRegex] = useState('')
+const [alphabet, setAlphabet] = useState('')
 const [testString, setTestString] = useState('')
 const [nfa, setNfa] = useState<NFA | null>(null)
 const [dfa, setDfa] = useState<DFA | null>(null)
 const [error, setError] = useState<string>('')
-const [simulationMode, setSimulationMode] = useState<'nfa' | 'dfa'>('nfa')
+const [simulationMode, setSimulationMode] = useState<'nfa' | 'dfa' | 'both'>('nfa')
 const [nfaHighlightStates, setNfaHighlightStates] = useState<string[]>([])
 const [dfaHighlightStates, setDfaHighlightStates] = useState<string[]>([])
 const [nfaHighlightEdges, setNfaHighlightEdges] = useState<string[]>([])
 const [dfaHighlightEdges, setDfaHighlightEdges] = useState<string[]>([])
+const [nfaSimResult, setNfaSimResult] = useState<SimulationResult | null>(null)
+const [dfaSimResult, setDfaSimResult] = useState<SimulationResult | null>(null)
 ```
 
 ### Pipeline Effect
@@ -258,12 +261,14 @@ interface TabsProps {
 
 **File**: `src/components/input/RegexInput.tsx`
 
-Regex pattern input with validation and error display.
+Regex pattern input with validation, error display, and custom alphabet field.
 
 ```typescript
 interface RegexInputProps {
   value: string
   onChange: (value: string) => void
+  alphabet: string
+  onAlphabetChange: (value: string) => void
   error?: string
 }
 ```
@@ -273,6 +278,8 @@ interface RegexInputProps {
 - Error message display in red
 - Monospace font for pattern
 - Placeholder example: `(a+b)*abb`
+- **Custom Alphabet Field**: Optional alphabet input for complete DFA generation with trap states
+- Auto-detection when alphabet is empty (includes symbols from regex and test string)
 
 **Example**:
 ```typescript
@@ -353,7 +360,7 @@ interface TransitionTableProps {
 
 **Table Structure**:
 - Rows: States
-- Columns: Input symbols (including ε if present)
+- Columns: Input symbols (including λ if present)
 - Cells: Target states (set notation for multiple targets)
 
 **Indicators**:
@@ -515,7 +522,7 @@ interface StepExplanationProps {
 **Explanation Types**:
 
 **Initialization**:
-- NFA: "Starting in state q0. Computing ε-closure: {q0, q1}."
+- NFA: "Starting in state q0. Computing λ-closure: {q0, q1}."
 - DFA: "Starting in state q0."
 
 **Reading Symbol**:
@@ -581,9 +588,89 @@ useEffect(() => {
 }, [isRunning, currentStep, speed])
 ```
 
+## New UI/UX Features
+
+### Flexible Simulation Modes
+
+The application supports three simulation display modes controlled by a mode selector in the simulation section:
+
+**Modes**:
+- **NFA Mode**: Only NFA automaton displayed, takes full width
+- **DFA Mode**: Only DFA automaton displayed, takes full width
+- **Both Mode**: Both automatons displayed side-by-side with responsive grid (xl:grid-cols-2)
+
+**Implementation**:
+```typescript
+const [simulationMode, setSimulationMode] = useState<'nfa' | 'dfa' | 'both'>('nfa')
+
+// In render
+<section className={`grid gap-8 ${
+  simulationMode === 'both' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'
+}`}>
+  {(simulationMode === 'nfa' || simulationMode === 'both') && (
+    <AutomatonView automaton={nfa} mode="nfa" />
+  )}
+  {(simulationMode === 'dfa' || simulationMode === 'both') && (
+    <AutomatonView automaton={dfa} mode="dfa" />
+  )}
+</section>
+```
+
+### Fullscreen Simulation Modal
+
+Each AutomatonView has a "Simulate" button that opens a fullscreen modal overlay:
+
+**File**: `src/components/simulation/SimulationModal.tsx`
+
+**Features**:
+- **Split-Screen Layout**: Graph on left, controls on right (lg:grid-cols-2)
+- **Live Visualization**: AutomatonGraph component displays and updates during simulation
+- **Backdrop Blur**: 95% opacity background with blur effect
+- **Independent State**: Modal simulation doesn't affect main simulation
+- **Highlight Propagation**: Updates parent automaton view via onHighlightChange callback
+
+**Component API**:
+```typescript
+interface SimulationModalProps {
+  automaton: Automaton
+  mode: 'nfa' | 'dfa'
+  isOpen: boolean
+  onClose: () => void
+  onHighlightChange: (states: string[], edges: string[]) => void
+}
+```
+
+### Expandable Views
+
+Table and States tabs in AutomatonView have dedicated expand buttons:
+
+**Features**:
+- **Fullscreen Modal**: Opens table or state list in fullscreen overlay
+- **Improved Scrolling**: Max-height increased from 600px to 800px
+- **Better Visibility**: Dedicated fullscreen mode for complex automata with many states
+- **Easy Access**: Expand button appears when viewing Table or States tabs
+
+**Implementation**: Uses same modal pattern as simulation modal with conditional content rendering.
+
+### Pattern Builder
+
+Interactive natural language to regex converter with 23 templates across 9 categories:
+
+**File**: `src/components/input/PatternBuilder.tsx`
+
+**Features**:
+- **Collapsible Design**: Doesn't clutter UI when not in use
+- **Categorized Dropdown**: Templates organized into 9 categories
+- **Dynamic Parameters**: Input fields adjust based on selected template
+- **Live Preview**: See generated regex before insertion
+- **One-Click Insertion**: Inserts pattern into RegexInput
+- **Parser Compatible**: All templates generate patterns compatible with simplified parser
+
+**Categories**: basic, position, repetition, character, combination, length, counting, negation, ordering
+
 ## Styling
 
-All components use Tailwind CSS with Catppuccin Mocha color palette:
+All components use Tailwind CSS with Indigo/Emerald color theme (updated from Catppuccin Mocha):
 
 ```javascript
 // Catppuccin Mocha Colors

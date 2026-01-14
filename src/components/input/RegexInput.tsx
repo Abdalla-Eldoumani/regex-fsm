@@ -3,17 +3,42 @@ import { ChangeEvent } from 'react'
 interface RegexInputProps {
   value: string
   onChange: (value: string) => void
+  alphabet: string
+  onAlphabetChange: (value: string) => void
   error?: string
 }
 
-export function RegexInput({ value, onChange, error }: RegexInputProps) {
+export function RegexInput({ value, onChange, alphabet, onAlphabetChange, error }: RegexInputProps) {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value)
+  }
+
+  const handleAlphabetChange = (e: ChangeEvent<HTMLInputElement>) => {
+    onAlphabetChange(e.target.value)
   }
 
   return (
     <div className="flex flex-col gap-3">
       <div className="relative">
+        <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+          Alphabet (optional)
+        </label>
+        <input
+          type="text"
+          value={alphabet}
+          onChange={handleAlphabetChange}
+          className="w-full px-5 py-3 bg-background/80 backdrop-blur-sm border-2 rounded-xl font-mono text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-4 transition-all shadow-inner border-border hover:border-border-hover focus:ring-secondary/20 focus:border-secondary shadow-secondary/5"
+          placeholder="abc (leave empty for auto-detection)"
+        />
+        <p className="text-xs text-text-tertiary mt-1.5 ml-1">
+          Enter symbols without separators (e.g., "abc" or "01"). Leave empty to auto-detect from regex.
+        </p>
+      </div>
+
+      <div className="relative">
+        <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+          Regular Expression
+        </label>
         <input
           type="text"
           value={value}

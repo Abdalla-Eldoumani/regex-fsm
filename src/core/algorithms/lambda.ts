@@ -1,6 +1,6 @@
 import { NFA } from '../automata/types'
 
-export function epsilonClosure(nfa: NFA, stateIds: string[]): Set<string> {
+export function lambdaClosure(nfa: NFA, stateIds: string[]): Set<string> {
   const result = new Set<string>(stateIds)
   const stack = [...stateIds]
 

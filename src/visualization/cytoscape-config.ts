@@ -45,7 +45,7 @@ export function automatonToCytoscape(automaton: Automaton): CytoscapeElements {
         id: `e${i}`,
         source: t.from,
         target: t.to,
-        label: t.symbol ?? 'ε',
+        label: t.symbol ?? 'λ',
       },
       classes: isLoop ? 'loop' : '',
     }

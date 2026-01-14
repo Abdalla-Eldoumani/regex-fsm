@@ -7,8 +7,8 @@ interface TransitionTableProps {
 
 export function TransitionTable({ automaton, highlightState }: TransitionTableProps) {
   const alphabet = Array.from(automaton.alphabet).sort()
-  const hasEpsilon = automaton.transitions.some(t => t.symbol === null)
-  const columns = hasEpsilon ? [...alphabet, 'ε'] : alphabet
+  const hasLambda = automaton.transitions.some(t => t.symbol === null)
+  const columns = hasLambda ? [...alphabet, 'λ'] : alphabet
 
   const getTransitions = (fromState: string, symbol: string | null): string[] => {
     const targets = automaton.transitions
@@ -22,8 +22,8 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
   const isTrapState = (state: string) => state === '∅'
 
   return (
-    <div className="overflow-auto rounded-lg border border-border max-h-[600px]">
-      <table className="w-full border-collapse text-sm">
+    <div className="overflow-x-auto overflow-y-auto rounded-lg border border-border max-h-[800px] min-h-[400px]">
+      <table className="w-full border-collapse text-sm min-w-max">
         <thead>
           <tr className="bg-secondary-light/50">
             <th className="px-4 py-3 text-left border-b border-r border-border text-text-secondary font-semibold">
@@ -49,21 +49,24 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
             return (
               <tr key={state.id} className={`${rowClasses} transition-colors`}>
                 <td className="px-4 py-3 border-r border-border border-b border-border/50 font-mono">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 max-w-[200px]">
                     {isStartState(state.id) && (
-                      <span className="text-primary text-xs" title="Start State">→</span>
+                      <span className="text-primary text-xs flex-shrink-0" title="Start State">→</span>
                     )}
-                    <span className={
-                      isTrapState(state.id) ? 'text-error font-semibold' :
-                      isAcceptState(state.id) ? 'text-success font-semibold' : 'text-text-primary'
-                    }>
+                    <span
+                      className={`truncate ${
+                        isTrapState(state.id) ? 'text-error font-semibold' :
+                        isAcceptState(state.id) ? 'text-success font-semibold' : 'text-text-primary'
+                      }`}
+                      title={state.id}
+                    >
                       {state.id}
                     </span>
                     {isAcceptState(state.id) && (
-                      <span className="text-success text-xs" title="Accept State">✓</span>
+                      <span className="text-success text-xs flex-shrink-0" title="Accept State">✓</span>
                     )}
                     {isTrapState(state.id) && (
-                      <span className="text-error text-xs" title="Trap State">⊗</span>
+                      <span className="text-error text-xs flex-shrink-0" title="Trap State">⊗</span>
                     )}
                   </div>
                 </td>
@@ -84,7 +87,7 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
                     </td>
                   )
                 })}
-                {hasEpsilon && (
+                {hasLambda && (
                   <td className="px-4 py-3 text-center border-b border-border/50 font-mono text-text-primary">
                     {(() => {
                       const targets = getTransitions(state.id, null)

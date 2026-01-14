@@ -17,7 +17,7 @@ src/core/
 └── algorithms/       # Core algorithms
     ├── thompson.ts   # Thompson's construction (regex → NFA)
     ├── subset.ts     # Subset construction (NFA → DFA)
-    ├── epsilon.ts    # Epsilon closure computation
+    ├── lambda.ts    # Lambda closure computation
     └── simulate.ts   # Automaton simulation
 ```
 
@@ -42,7 +42,7 @@ Represents a transition between states.
 interface Transition {
   from: string      // Source state ID
   to: string        // Target state ID
-  symbol: string | null  // Input symbol (null = epsilon)
+  symbol: string | null  // Input symbol (null = lambda)
 }
 ```
 
@@ -56,13 +56,13 @@ interface NFA {
   transitions: Transition[]    // All transitions
   startState: string           // Start state ID
   acceptStates: string[]       // Accept state IDs
-  alphabet: Set<string>        // Input alphabet (no epsilon)
+  alphabet: Set<string>        // Input alphabet (no lambda)
 }
 ```
 
 **Properties**:
 - Can have multiple transitions for same symbol from a state
-- Can have epsilon transitions (symbol = null)
+- Can have lambda transitions (symbol = null)
 - Multiple states may be active simultaneously
 
 ### DFA
@@ -81,7 +81,7 @@ interface DFA {
 
 **Properties**:
 - Exactly one transition per symbol from each state
-- No epsilon transitions
+- No lambda transitions
 - Exactly one state active at any time
 
 ## Regex AST Types
@@ -155,7 +155,7 @@ tokenize('(a|b)*c')
 
 ### Special Cases
 
-- **Epsilon**: Represented as empty string or special character
+- **Lambda**: Represented as empty string or special character (λ or ε)
 - **Escape sequences**: `\*`, `\|`, `\(`, `\)` become literal symbols
 - **Whitespace**: Treated as symbols (no special meaning)
 
@@ -231,7 +231,7 @@ const nfa = buildNFA(ast)
 
 - **Linear size**: O(m) states for regex length m
 - **Structural**: One start state, one accept state
-- **Epsilon transitions**: Used for union and star operations
+- **Lambda transitions**: Used for union and star operations
 
 See [algorithms.md](../algorithms.md#thompsons-construction) for detailed algorithm description.
 
@@ -271,19 +271,19 @@ DFA states are named by the set of NFA states they represent:
 
 See [algorithms.md](../algorithms.md#subset-construction) for detailed algorithm description.
 
-## Epsilon Closure
+## Lambda Closure
 
-**File**: `src/core/algorithms/epsilon.ts`
+**File**: `src/core/algorithms/lambda.ts`
 
 ### Function Signature
 
 ```typescript
-function epsilonClosure(states: string[], transitions: Transition[]): string[]
+function lambdaClosure(states: string[], transitions: Transition[]): string[]
 ```
 
 ### Behavior
 
-Computes all states reachable from a given set via epsilon transitions only.
+Computes all states reachable from a given set via lambda transitions only.
 
 **Example**:
 ```typescript
@@ -292,7 +292,7 @@ const transitions = [
   { from: 'q0', to: 'q1', symbol: null },
   { from: 'q1', to: 'q2', symbol: null }
 ]
-const closure = epsilonClosure(states, transitions)
+const closure = lambdaClosure(states, transitions)
 // Returns ['q0', 'q1', 'q2']
 ```
 
@@ -429,7 +429,7 @@ All core modules have comprehensive test coverage:
   - Complex nested expressions
   - Error handling
 
-- **epsilon.test.ts**: 18 tests
+- **lambda.test.ts**: 18 tests
   - Simple paths, cycles, multiple paths
   - Empty inputs, disconnected graphs
 
@@ -438,7 +438,7 @@ All core modules have comprehensive test coverage:
   - Complex expressions, structural properties
 
 - **subset.test.ts**: 32 tests
-  - Simple conversions, epsilon handling
+  - Simple conversions, lambda handling
   - State count verification, accept states
 
 - **simulate.test.ts**: 88 tests
