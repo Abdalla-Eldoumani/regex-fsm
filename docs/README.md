@@ -40,7 +40,7 @@ npm run dev
 
 ```bash
 npm test          # Run all tests
-npm run test:ui   # Run tests with UI
+npm test -- --ui  # Run tests with Vitest UI
 ```
 
 ## Build Process
