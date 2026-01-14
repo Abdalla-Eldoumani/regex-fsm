@@ -32,7 +32,7 @@ export const patternTemplates: PatternTemplate[] = [
   {
     id: 'empty_string',
     name: 'Empty string',
-    description: 'Matches only the empty string (λ or ε)',
+    description: 'Matches only the empty string (λ)',
     category: 'basic',
     buildRegex: () => 'λ',
     parserCompatible: true,
