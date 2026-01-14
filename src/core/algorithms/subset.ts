@@ -1,5 +1,5 @@
 import { NFA, DFA, State, Transition } from '../automata/types'
-import { epsilonClosure } from './epsilon'
+import { lambdaClosure } from './lambda'
 
 function move(nfa: NFA, stateIds: Set<string>, symbol: string): Set<string> {
   const result = new Set<string>()
@@ -42,7 +42,7 @@ export function nfaToDFA(nfa: NFA, customAlphabet?: Set<string>): DFA {
   const dfaTransitions: Transition[] = []
   const worklist: Set<string>[] = []
 
-  const startClosure = epsilonClosure(nfa, [nfa.startState])
+  const startClosure = lambdaClosure(nfa, [nfa.startState])
   const startStateName = stateSetToString(startClosure)
   dfaStates.set(startStateName, startClosure)
   worklist.push(startClosure)
@@ -58,7 +58,7 @@ export function nfaToDFA(nfa: NFA, customAlphabet?: Set<string>): DFA {
 
     for (const symbol of alphabet) {
       const moveResult = move(nfa, currentSet, symbol)
-      const targetClosure = epsilonClosure(nfa, Array.from(moveResult))
+      const targetClosure = lambdaClosure(nfa, Array.from(moveResult))
 
       if (targetClosure.size === 0) {
         trapStateNeeded = true
