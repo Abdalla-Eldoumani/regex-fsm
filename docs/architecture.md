@@ -60,7 +60,7 @@ RegexFSM follows a layered architecture separating concerns into distinct module
 - Convert regex AST to NFA using Thompson's construction
 - Convert NFA to DFA using subset construction
 - Simulate automaton execution on input strings
-- Compute epsilon closures and move functions
+- Compute lambda closures and move functions
 
 **Key Files**:
 - `src/core/regex/tokenizer.ts` - Lexical analysis
