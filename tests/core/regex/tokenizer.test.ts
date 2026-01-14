@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import { tokenize } from '@/core/regex/tokenizer'
-import { Token } from '@/core/regex/ast'
 
 describe('tokenizer', () => {
   describe('single symbols', () => {

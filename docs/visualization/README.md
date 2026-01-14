@@ -158,7 +158,7 @@ const edges = automaton.transitions.map((t, i) => ({
     id: `e${i}`,
     source: t.from,
     target: t.to,
-    label: t.symbol === null ? 'ε' : t.symbol
+    label: t.symbol === null ? 'λ' : t.symbol
   }
 }))
 ```
@@ -167,7 +167,7 @@ const edges = automaton.transitions.map((t, i) => ({
 - `id`: Unique edge identifier
 - `source`: Source state ID
 - `target`: Target state ID
-- `label`: Transition symbol (ε for epsilon)
+- `label`: Transition symbol (λ for lambda)
 
 ### Highlight Support
 
@@ -363,7 +363,7 @@ export function selectLayout(automaton: Automaton): LayoutOptions {
 
 Currently always uses breadthfirst. Could be enhanced to:
 - Detect cycles and switch to COSE
-- Count epsilon transitions and adjust layout
+- Count lambda transitions and adjust layout
 - Allow user selection
 
 ## Export

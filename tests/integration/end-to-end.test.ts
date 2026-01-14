@@ -33,7 +33,6 @@ describe('end-to-end integration', () => {
     it('processes complex regex through entire pipeline', () => {
       const regex = '(a|b)*abb'
 
-      const tokens = tokenize(regex)
       const ast = parse(regex)
       const nfa = buildNFA(ast)
       const dfa = nfaToDFA(nfa)

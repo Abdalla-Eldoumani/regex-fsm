@@ -13,11 +13,11 @@ const theoryContent: Record<string, TheorySection[]> = {
   nfa: [
     {
       title: 'Definition',
-      content: 'A Nondeterministic Finite Automaton (NFA) is a 5-tuple (Q, Σ, δ, q₀, F) where Q is a finite set of states, Σ is the input alphabet, δ: Q × (Σ ∪ {ε}) → P(Q) is the transition function, q₀ ∈ Q is the start state, and F ⊆ Q is the set of accept states.',
+      content: 'A Nondeterministic Finite Automaton (NFA) is a 5-tuple (Q, Σ, δ, q₀, F) where Q is a finite set of states, Σ is the input alphabet, δ: Q × (Σ ∪ {λ}) → P(Q) is the transition function, q₀ ∈ Q is the start state, and F ⊆ Q is the set of accept states.',
     },
     {
       title: 'Properties',
-      content: 'NFAs can have multiple transitions for the same input symbol from a given state. They can have epsilon (ε) transitions that allow state changes without consuming input. An NFA accepts a string if at least one computation path leads to an accept state.',
+      content: 'NFAs can have multiple transitions for the same input symbol from a given state. They can have lambda (λ) transitions that allow state changes without consuming input. An NFA accepts a string if at least one computation path leads to an accept state.',
     },
     {
       title: 'Example',
@@ -31,7 +31,7 @@ const theoryContent: Record<string, TheorySection[]> = {
     },
     {
       title: 'Properties',
-      content: 'DFAs have exactly one transition for each symbol from each state. No epsilon transitions exist. For any input, exactly one computation path exists. DFAs are equivalent in power to NFAs but may require exponentially more states.',
+      content: 'DFAs have exactly one transition for each symbol from each state. No lambda transitions exist. For any input, exactly one computation path exists. DFAs are equivalent in power to NFAs but may require exponentially more states.',
     },
     {
       title: 'Example',
@@ -55,7 +55,7 @@ const theoryContent: Record<string, TheorySection[]> = {
   thompson: [
     {
       title: 'Definition',
-      content: 'Thompson\'s construction converts a regular expression to an equivalent NFA recursively. Base cases handle empty string and single symbols. Recursive cases combine sub-NFAs using epsilon transitions.',
+      content: 'Thompson\'s construction converts a regular expression to an equivalent NFA recursively. Base cases handle empty string and single symbols. Recursive cases combine sub-NFAs using lambda transitions.',
     },
     {
       title: 'Properties',
@@ -63,7 +63,7 @@ const theoryContent: Record<string, TheorySection[]> = {
     },
     {
       title: 'Example',
-      content: 'For regex ab|c: Build NFAs for a, b, and c. Concatenate a and b using epsilon transitions. Build union of (ab) and c using epsilon transitions from new start state.',
+      content: 'For regex ab|c: Build NFAs for a, b, and c. Concatenate a and b using lambda transitions. Build union of (ab) and c using lambda transitions from new start state.',
     },
   ],
   subset: [
@@ -73,7 +73,7 @@ const theoryContent: Record<string, TheorySection[]> = {
     },
     {
       title: 'Properties',
-      content: 'The algorithm computes epsilon closures and move operations. DFA start state is ε-closure of NFA start state. For each DFA state S and symbol a: new state is ε-closure(move(S, a)). DFA may have up to 2ⁿ states for n-state NFA.',
+      content: 'The algorithm computes lambda closures and move operations. DFA start state is λ-closure of NFA start state. For each DFA state S and symbol a: new state is λ-closure(move(S, a)). DFA may have up to 2ⁿ states for n-state NFA.',
     },
     {
       title: 'Example',
@@ -87,7 +87,7 @@ const theoryContent: Record<string, TheorySection[]> = {
     },
     {
       title: 'Properties',
-      content: 'NFA simulation: Initialize with ε-closure of start state. For each input symbol, compute move then ε-closure. Accept if any final state is in accept set. DFA simulation: Start at q₀. For each symbol, follow unique transition. Accept if final state is in F.',
+      content: 'NFA simulation: Initialize with λ-closure of start state. For each input symbol, compute move then λ-closure. Accept if any final state is in accept set. DFA simulation: Start at q₀. For each symbol, follow unique transition. Accept if final state is in F.',
     },
     {
       title: 'Example',

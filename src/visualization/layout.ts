@@ -29,9 +29,9 @@ export const coseLayout: LayoutOptions = {
 }
 
 export function selectLayout(automaton: Automaton): LayoutOptions {
-  const epsilonCount = automaton.transitions.filter(t => t.symbol === null).length
+  const lambdaCount = automaton.transitions.filter(t => t.symbol === null).length
   const ratio = automaton.transitions.length > 0
-    ? epsilonCount / automaton.transitions.length
+    ? lambdaCount / automaton.transitions.length
     : 0
 
   if (ratio > 0.3) return coseLayout
