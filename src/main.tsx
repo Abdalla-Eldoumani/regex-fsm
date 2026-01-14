@@ -9,6 +9,7 @@ const App = lazy(() => import('./components/App'))
 const NotFound = lazy(() => import('./components/NotFound'))
 const NotFoundGithub = lazy(() => import('./components/NotFoundGithub'))
 
+// eslint-disable-next-line react-refresh/only-export-components
 function LoadingFallback() {
   return (
     <div className="flex items-center justify-center min-h-screen">
