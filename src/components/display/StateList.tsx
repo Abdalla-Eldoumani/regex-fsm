@@ -129,7 +129,7 @@ export function StateList({ automaton, highlightStates = [], simulationResult = 
                       <div key={idx} className="flex items-center gap-2 text-sm">
                         <span className="text-text-secondary">On</span>
                         <code className="px-1.5 py-0.5 bg-secondary-light rounded border border-border text-text-primary font-mono text-xs">
-                          {t.symbol === null ? 'ε' : t.symbol}
+                          {t.symbol === null ? 'λ' : t.symbol}
                         </code>
                         <span className="text-text-tertiary">→</span>
                         <code className="px-1.5 py-0.5 bg-secondary-light rounded border border-border text-text-primary font-mono text-xs">
@@ -157,7 +157,7 @@ export function StateList({ automaton, highlightStates = [], simulationResult = 
                         </code>
                         <span className="text-text-secondary">on</span>
                         <code className="px-1.5 py-0.5 bg-secondary-light rounded border border-border text-text-primary font-mono text-xs">
-                          {t.symbol === null ? 'ε' : t.symbol}
+                          {t.symbol === null ? 'λ' : t.symbol}
                         </code>
                       </div>
                     ))}
