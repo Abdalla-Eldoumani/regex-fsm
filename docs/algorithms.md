@@ -640,3 +640,173 @@ Examples of rejected patterns:
 - `a**` → "quantifier cannot follow quantifier at position 2"
 - `(a|b)*+` → "quantifier cannot follow quantifier at position 6"
 - `a?***` → "quantifier cannot follow quantifier at position 2"
+
+## DFA Minimization
+
+**File**: `src/core/algorithms/minimize.ts`
+
+### Algorithm Overview
+
+Moore's partition refinement algorithm minimizes a DFA to the minimum number of states while preserving the accepted language.
+
+### Algorithm Steps
+
+1. **Remove unreachable states**: Find all states reachable from start state, discard the rest
+2. **Initial partition**: Separate accepting states from non-accepting states
+3. **Refine partitions**: For each partition, check if all states have identical transition behavior. If not, split the partition.
+4. **Repeat**: Continue refining until no more splits occur
+5. **Build minimal DFA**: Each final partition becomes one state
+
+### Implementation
+
+```typescript
+function minimizeDFA(dfa: DFA, useLetterNames: boolean = false): MinimizationResult {
+  // Remove unreachable states
+  const reachable = findReachableStates(dfa)
+  const reachableDFA = filterToReachable(dfa, reachable)
+
+  // Initial partition: accepting vs non-accepting
+  let partitions: Set<string>[] = [
+    new Set(nonAcceptingStates),
+    new Set(acceptingStates)
+  ]
+
+  // Refine until stable
+  let changed = true
+  while (changed) {
+    changed = false
+    const newPartitions: Set<string>[] = []
+
+    for (const partition of partitions) {
+      // Group states by transition signature
+      const groups = groupByTransitionSignature(partition, partitions)
+
+      if (groups.size > 1) changed = true
+      newPartitions.push(...groups.values())
+    }
+
+    partitions = newPartitions
+  }
+
+  // Build minimal DFA from partitions
+  return buildMinimalDFA(partitions, useLetterNames)
+}
+```
+
+### State Naming
+
+Two naming conventions are supported:
+- `useLetterNames = false`: q0, q1, q2, ...
+- `useLetterNames = true`: A, B, C, ... Z, AA, AB, ...
+
+### Properties
+
+- **Correctness**: Minimized DFA accepts exactly the same language
+- **Optimality**: Result has minimum possible states
+- **Determinism**: Output is a valid DFA
+
+## Avoidance DFA (KMP-based)
+
+**File**: `src/core/algorithms/avoidance.ts`
+
+### Algorithm Overview
+
+Builds a DFA that accepts all strings NOT containing a given substring. Uses the KMP (Knuth-Morris-Pratt) failure function for efficient construction.
+
+### Why This Algorithm?
+
+"Does not contain X" patterns cannot be directly expressed as simple regex for multi-character substrings. Instead, we build the DFA directly:
+
+1. Track how many characters of the forbidden pattern have been matched
+2. If full pattern is matched, enter trap/reject state
+3. Use KMP failure function to handle partial match fallbacks
+
+### Algorithm Steps
+
+```typescript
+function buildAvoidanceDFA(pattern: string, alphabet: Set<string>): AvoidanceDFAResult {
+  const n = pattern.length
+  const failure = computeFailureFunction(pattern)
+
+  // States: q0, q1, ..., q(n-1) are accepting (partial matches)
+  //         qn is trap/reject (full pattern matched)
+  const states = Array.from({ length: n + 1 }, (_, i) => ({
+    id: `q${i}`,
+    label: `q${i}`
+  }))
+
+  const transitions: Transition[] = []
+
+  for (let i = 0; i < n; i++) {
+    for (const c of alphabet) {
+      if (c === pattern[i]) {
+        // Character matches, advance to next state
+        transitions.push({ from: `q${i}`, to: `q${i + 1}`, symbol: c })
+      } else {
+        // Character doesn't match, use failure function
+        let fallback = failure[i]
+        while (fallback > 0 && pattern[fallback] !== c) {
+          fallback = failure[fallback]
+        }
+        if (pattern[fallback] === c) fallback++
+        transitions.push({ from: `q${i}`, to: `q${fallback}`, symbol: c })
+      }
+    }
+  }
+
+  // Trap state (qn) has self-loops for all symbols
+  for (const c of alphabet) {
+    transitions.push({ from: `q${n}`, to: `q${n}`, symbol: c })
+  }
+
+  return {
+    dfa: {
+      states,
+      transitions,
+      startState: 'q0',
+      acceptStates: states.slice(0, n).map(s => s.id), // All except trap
+      alphabet
+    },
+    description: `DFA accepting strings not containing "${pattern}"`
+  }
+}
+```
+
+### KMP Failure Function
+
+```typescript
+function computeFailureFunction(pattern: string): number[] {
+  const n = pattern.length
+  const failure = new Array(n).fill(0)
+
+  let k = 0
+  for (let i = 1; i < n; i++) {
+    while (k > 0 && pattern[k] !== pattern[i]) {
+      k = failure[k - 1]
+    }
+    if (pattern[k] === pattern[i]) k++
+    failure[i] = k
+  }
+
+  return failure
+}
+```
+
+### Example
+
+Pattern: "bba", Alphabet: {a, b}
+
+States:
+- q0: No match (accepts)
+- q1: Matched "b" (accepts)
+- q2: Matched "bb" (accepts)
+- q3: Matched "bba" (TRAP - rejects)
+
+Transitions:
+- q0 --a--> q0, q0 --b--> q1
+- q1 --a--> q0, q1 --b--> q2
+- q2 --a--> q3 (trap!), q2 --b--> q2
+- q3 --a--> q3, q3 --b--> q3
+
+Accepts: λ, a, b, aa, ab, ba, bb, aab, aba, bab, bbb, ...
+Rejects: bba, abba, bbab, bbaaa, ...
