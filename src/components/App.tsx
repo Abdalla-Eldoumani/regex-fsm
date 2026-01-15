@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { parse } from '@/core/regex/parser'
 import { buildNFA } from '@/core/algorithms/thompson'
 import { nfaToDFA } from '@/core/algorithms/subset'
 import { simulateNFA, simulateDFA, SimulationResult } from '@/core/algorithms/simulate'
+import { minimizeDFA } from '@/core/algorithms/minimize'
 import { NFA, DFA } from '@/core/automata/types'
 import { RegexInput } from './input/RegexInput'
 import { StringInput } from './input/StringInput'
 import { PatternBuilder } from './input/PatternBuilder'
+import { BuildButtons } from './input/BuildButtons'
 import { AutomatonView } from './display/AutomatonView'
 import { SimulationPanel } from './simulation/SimulationPanel'
 
@@ -24,8 +26,11 @@ function App() {
   const [dfaHighlightEdges, setDfaHighlightEdges] = useState<string[]>([])
   const [nfaSimResult, setNfaSimResult] = useState<SimulationResult | null>(null)
   const [dfaSimResult, setDfaSimResult] = useState<SimulationResult | null>(null)
+  const [autoBuild, setAutoBuild] = useState(true)
+  const [shouldMinimize, setShouldMinimize] = useState(true)
+  const [useLetterNames, setUseLetterNames] = useState(false)
 
-  useEffect(() => {
+  const buildAutomata = useCallback((buildType: 'nfa' | 'dfa' | 'both' = 'both') => {
     if (!regex) {
       setNfa(null)
       setDfa(null)
@@ -49,17 +54,32 @@ function App() {
         }
       }
 
-      const generatedDfa = nfaToDFA(generatedNfa, effectiveAlphabet)
+      if (buildType === 'nfa' || buildType === 'both') {
+        setNfa(generatedNfa)
+      }
 
-      setNfa(generatedNfa)
-      setDfa(generatedDfa)
+      if (buildType === 'dfa' || buildType === 'both') {
+        let generatedDfa = nfaToDFA(generatedNfa, effectiveAlphabet)
+        if (shouldMinimize) {
+          const minimized = minimizeDFA(generatedDfa, useLetterNames)
+          generatedDfa = minimized.dfa
+        }
+        setDfa(generatedDfa)
+      }
+
       setError('')
     } catch (err) {
-      setNfa(null)
-      setDfa(null)
+      if (buildType === 'nfa' || buildType === 'both') setNfa(null)
+      if (buildType === 'dfa' || buildType === 'both') setDfa(null)
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
     }
-  }, [regex, alphabet, testString])
+  }, [regex, alphabet, testString, shouldMinimize, useLetterNames])
+
+  useEffect(() => {
+    if (autoBuild) {
+      buildAutomata('both')
+    }
+  }, [regex, alphabet, testString, autoBuild, buildAutomata])
 
   useEffect(() => {
     if (!nfa || testString === null || testString === undefined) {
@@ -93,6 +113,22 @@ function App() {
     setRegex(pattern)
   }
 
+  const handleDirectDFA = (directDfa: DFA, alphabetStr: string) => {
+    // Set the DFA directly, clear NFA since this was built without regex
+    // Apply minimization if enabled
+    let finalDfa = directDfa
+    if (shouldMinimize) {
+      const minimized = minimizeDFA(directDfa, useLetterNames)
+      finalDfa = minimized.dfa
+    }
+    setDfa(finalDfa)
+    setNfa(null)
+    setAlphabet(alphabetStr)
+    setRegex('') // Clear regex since DFA was built directly
+    setError('')
+    setSimulationMode('dfa') // Switch to DFA mode since that's what we built
+  }
+
   return (
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 relative z-10">
@@ -108,7 +144,7 @@ function App() {
                 </div>
                 <p className="text-sm text-text-secondary mb-5 ml-3.5">Enter a regular expression to generate the automata.</p>
                 <div className="space-y-4">
-                  <PatternBuilder onInsert={handlePatternInsert} />
+                  <PatternBuilder onInsert={handlePatternInsert} onBuildDFA={handleDirectDFA} />
                   <RegexInput value={regex} onChange={setRegex} alphabet={alphabet} onAlphabetChange={setAlphabet} error={error} />
                 </div>
               </div>
@@ -121,6 +157,46 @@ function App() {
                 </div>
                 <p className="text-sm text-text-secondary mb-5 ml-3.5">Simulate how the machine processes input.</p>
                 <StringInput value={testString} onChange={setTestString} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-1.5 h-6 bg-gradient-to-b from-accent to-success rounded-full"></div>
+                  <h2 className="text-xl font-display font-bold text-text-primary">Build</h2>
+                </div>
+                <p className="text-sm text-text-secondary mb-5 ml-3.5">Generate automata from the pattern.</p>
+                <BuildButtons
+                  autoBuild={autoBuild}
+                  onAutoBuildChange={setAutoBuild}
+                  onBuildNFA={() => buildAutomata('nfa')}
+                  onBuildDFA={() => buildAutomata('dfa')}
+                  onBuildBoth={() => buildAutomata('both')}
+                  disabled={!regex}
+                />
+                <div className="mt-4 p-4 bg-background/50 rounded-xl border border-border space-y-3">
+                  <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">DFA Options</div>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={shouldMinimize}
+                      onChange={(e) => setShouldMinimize(e.target.checked)}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/50 cursor-pointer"
+                    />
+                    <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+                      Minimize DFA <span className="text-xs text-text-tertiary">(optimal states)</span>
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={useLetterNames}
+                      onChange={(e) => setUseLetterNames(e.target.checked)}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/50 cursor-pointer"
+                    />
+                    <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+                      Use letter names <span className="text-xs text-text-tertiary">(A, B, C vs q0, q1, q2)</span>
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
