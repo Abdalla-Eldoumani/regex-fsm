@@ -58,8 +58,8 @@ The core module implements the fundamental algorithms and data structures:
 
 - **Regex Module** - Tokenizer and parser for regular expressions
 - **Automata Module** - NFA and DFA type definitions and utilities
-- **Algorithms Module** - Thompson's construction, subset construction (with custom alphabet support), simulation
-- **Patterns Module** - Template library for natural language to regex conversion (23 templates across 9 categories)
+- **Algorithms Module** - Thompson's construction, subset construction, minimization, avoidance, simulation
+- **Patterns Module** - Template library for natural language to regex conversion (27 templates across 9 categories)
 
 ### Components (`src/components/`)
 
@@ -106,23 +106,25 @@ Graph rendering using Cytoscape.js:
 
 All core algorithms have comprehensive test coverage:
 
-- Tokenizer: 56 tests
-- Parser: 81 tests (includes 13 validation tests for invalid patterns)
-- Lambda closure: 18 tests
-- Thompson's construction: 37 tests
-- Subset construction: 42 tests (includes 10 custom alphabet tests + trap state verification)
-- Simulation: 88 tests
-- Pattern templates: 45 tests (structure, categorization, regex generation, parser compatibility)
-- Visualization: 13 tests (updated for start arrow)
-- Integration tests: 104 tests
-- Automata tests: 56 tests
+| Module | Tests |
+|--------|-------|
+| Tokenizer | 56 |
+| Parser | 81 |
+| Thompson | 37 |
+| Subset | 42 |
+| Minimize | 14 |
+| Avoidance | 21 |
+| Simulation | 88 |
+| Templates | 45 |
+| Integration | 104 |
+| Visualization | 13 |
+| Lambda closure | 18 |
+| Automata | 56 |
+| **Total** | **575** |
 
-Total: 540 tests (all passing)
-
-### Recent Test Additions
-
-- **Parser Validation**: Tests for consecutive quantifier detection (`a**`, `a*+`, etc.)
-- **Trap State Verification**: Tests ensuring trap states have self-loops and proper transitions
-- **Visualization Updates**: Tests account for start marker node and arrow in element counts
-- **Custom Alphabet**: 10 comprehensive tests for custom alphabet functionality (DFA completeness, trap state generation)
-- **Pattern Templates**: 45 tests covering template structure, categorization, regex generation, and parser compatibility for all 23 templates
+Test categories:
+- Parser validation (consecutive quantifiers)
+- Trap state verification (self-loops, transitions)
+- Custom alphabet (DFA completeness)
+- DFA minimization (equivalence preservation, naming options)
+- Avoidance DFA (KMP correctness, acceptance/rejection)
