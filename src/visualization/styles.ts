@@ -63,11 +63,11 @@ export function getStylesheet(): StyleRule[] {
       style: {
         'border-color': colors.primary,
         'border-width': 5,
-        'background-color': '#EEF2FF', // Very light indigo
+        'background-color': '#C7D2FE', // More prominent indigo (Indigo 200)
         color: colors.primaryDark,
-        'shadow-blur': 12,
+        'shadow-blur': 15,
         'shadow-color': colors.primary,
-        'shadow-opacity': 0.5,
+        'shadow-opacity': 0.6,
         'shadow-offset-x': 0,
         'shadow-offset-y': 0,
       },
@@ -78,9 +78,14 @@ export function getStylesheet(): StyleRule[] {
         'border-width': 7,
         'border-style': 'double',
         'border-color': colors.success,
-        'background-color': '#ECFDF5', // Very light emerald
+        'background-color': '#A7F3D0', // More prominent emerald (Emerald 200)
         color: '#047857',
         'padding': 8,
+        'shadow-blur': 10,
+        'shadow-color': colors.success,
+        'shadow-opacity': 0.4,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
       },
     },
     {
@@ -88,34 +93,63 @@ export function getStylesheet(): StyleRule[] {
       style: {
         'border-style': 'dashed',
         'border-color': colors.error,
-        'border-width': 3,
-        'background-color': '#FEF2F2', // Very light red
+        'border-width': 4,
+        'background-color': '#FECACA', // More prominent red (Red 200)
         color: '#991B1B',
+        'shadow-blur': 10,
+        'shadow-color': colors.error,
+        'shadow-opacity': 0.4,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
+      },
+    },
+    // Also match trap states by isTrap data attribute
+    {
+      selector: 'node[?isTrap]',
+      style: {
+        'border-style': 'dashed',
+        'border-color': colors.error,
+        'border-width': 4,
+        'background-color': '#FECACA', // More prominent red (Red 200)
+        color: '#991B1B',
+        'shadow-blur': 10,
+        'shadow-color': colors.error,
+        'shadow-opacity': 0.4,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
       },
     },
     // Simulation states
     {
       selector: 'node.active', // When the node is being processed
       style: {
-        'background-color': colors.highlight,
+        'background-color': '#FCD34D', // Bright amber/yellow (Amber 300)
         'border-color': colors.highlight,
-        'border-width': 0,
-        color: '#FFFFFF',
-        'transition-property': 'background-color, border-color',
+        'border-width': 3,
+        color: '#78350F', // Dark amber for contrast
+        'shadow-blur': 18,
+        'shadow-color': colors.highlight,
+        'shadow-opacity': 0.7,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
+        'transition-property': 'background-color, border-color, shadow-opacity',
         'transition-duration': 300,
+        scale: 1.05,
       },
     },
     {
       selector: 'node.current', // Current state in simulation
       style: {
-        'background-color': colors.primary,
-        'border-color': colors.primaryDark,
-        'border-width': 0,
-        color: '#FFFFFF',
-        'shadow-blur': 15,
-        'shadow-color': colors.primary,
-        'shadow-opacity': 0.4,
-        scale: 1.1,
+        'background-color': '#FBBF24', // Bright yellow (Amber 400)
+        'border-color': '#D97706', // Amber 600
+        'border-width': 4,
+        color: '#78350F', // Dark amber text for contrast
+        'shadow-blur': 20,
+        'shadow-color': '#F59E0B',
+        'shadow-opacity': 0.8,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
+        scale: 1.15,
       },
     },
     {
