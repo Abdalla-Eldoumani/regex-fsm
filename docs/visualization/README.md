@@ -7,12 +7,20 @@ Graph rendering and export functionality using Cytoscape.js.
 ```
 src/visualization/
 ├── renderer.tsx          # AutomatonGraph React component
-├── cytoscape-config.ts   # Cytoscape initialization and conversion
-├── styles.ts             # Visual styling (Catppuccin Mocha)
+├── cytoscape-config.ts   # Cytoscape initialization, conversion, start arrow
+├── styles.ts             # Visual styling (Indigo/Emerald palette)
 ├── layout.ts             # Layout algorithm configuration
 ├── export.ts             # PNG/SVG export functions
 └── animation.ts          # Animation utilities (placeholder)
 ```
+
+## Features
+
+- **Start Arrow**: Clear visual indicator for initial state
+- **State Legend**: Visual key showing state types (start, accept, trap, active)
+- **Enhanced Styling**: Indigo glow (start), emerald border (accept), red dashed (trap)
+- **Layout Persistence**: Graph positions preserved across tab switches
+- **Export**: PNG and SVG download functionality
 
 ## AutomatonGraph Component
 
@@ -182,7 +190,7 @@ cy.$id('e5').addClass('active')    // Highlight edge e5
 
 **File**: `src/visualization/styles.ts`
 
-Visual styling using Catppuccin Mocha color palette.
+Visual styling using Indigo/Emerald professional color palette.
 
 ### Color Palette
 
