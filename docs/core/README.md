@@ -14,11 +14,15 @@ src/core/
 │   ├── ast.ts        # AST node type definitions
 │   ├── tokenizer.ts  # Lexical analysis
 │   └── parser.ts     # Syntax analysis
-└── algorithms/       # Core algorithms
-    ├── thompson.ts   # Thompson's construction (regex → NFA)
-    ├── subset.ts     # Subset construction (NFA → DFA)
-    ├── lambda.ts    # Lambda closure computation
-    └── simulate.ts   # Automaton simulation
+├── algorithms/       # Core algorithms
+│   ├── thompson.ts   # Thompson's construction (regex → NFA)
+│   ├── subset.ts     # Subset construction (NFA → DFA)
+│   ├── minimize.ts   # DFA minimization (Moore's algorithm)
+│   ├── avoidance.ts  # KMP-based "does not contain" DFA
+│   ├── lambda.ts     # Lambda closure computation
+│   └── simulate.ts   # Automaton simulation
+└── patterns/         # Pattern templates
+    └── templates.ts  # 27 templates across 9 categories
 ```
 
 ## Automata Types
@@ -420,30 +424,16 @@ Computes states reachable from a set via a single symbol.
 
 All core modules have comprehensive test coverage:
 
-- **tokenizer.test.ts**: 56 tests
-  - Single symbols, operators, escape sequences
-  - Error cases, edge cases
-
-- **parser.test.ts**: 68 tests
-  - Operator precedence, parentheses
-  - Complex nested expressions
-  - Error handling
-
-- **lambda.test.ts**: 18 tests
-  - Simple paths, cycles, multiple paths
-  - Empty inputs, disconnected graphs
-
-- **thompson.test.ts**: 40 tests
-  - Base cases, all operators
-  - Complex expressions, structural properties
-
-- **subset.test.ts**: 32 tests
-  - Simple conversions, lambda handling
-  - State count verification, accept states
-
-- **simulate.test.ts**: 88 tests
-  - NFA acceptance/rejection
-  - DFA acceptance/rejection
-  - NFA/DFA equivalence
+| Test File | Tests | Coverage |
+|-----------|-------|----------|
+| tokenizer.test.ts | 56 | Symbols, operators, escape sequences |
+| parser.test.ts | 81 | Precedence, validation, error handling |
+| thompson.test.ts | 37 | Base cases, operators, structure |
+| subset.test.ts | 42 | Conversions, custom alphabet, trap states |
+| minimize.test.ts | 14 | Equivalence, naming, unreachable removal |
+| avoidance.test.ts | 21 | KMP correctness, acceptance/rejection |
+| lambda.test.ts | 18 | Paths, cycles, empty inputs |
+| simulate.test.ts | 88 | NFA/DFA acceptance, equivalence |
+| templates.test.ts | 45 | Structure, categorization, parser compat |
 
 Run tests with: `npm test`
