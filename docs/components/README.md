@@ -6,7 +6,7 @@ React components for the RegexFSM user interface.
 
 ```
 src/components/
-├── App.tsx                     # Main application content
+├── App.tsx                     # Main application (state, DFA options)
 ├── Layout.tsx                  # Shared layout with header and routing
 ├── ErrorBoundary.tsx           # Error boundary for React errors
 ├── NotFound.tsx                # Generic 404 page
@@ -16,7 +16,9 @@ src/components/
 │   └── Tabs.tsx                # Tab navigation
 ├── input/                      # Input components
 │   ├── RegexInput.tsx          # Regex pattern input
-│   └── StringInput.tsx         # Test string input
+│   ├── StringInput.tsx         # Test string input
+│   ├── PatternBuilder.tsx      # Template-based pattern builder
+│   └── BuildButtons.tsx        # Manual NFA/DFA build controls
 ├── display/                    # Automaton display
 │   ├── AutomatonView.tsx       # Main automaton viewer
 │   ├── TransitionTable.tsx     # Transition function table
