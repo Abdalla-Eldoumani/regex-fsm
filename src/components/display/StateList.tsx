@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Automaton } from '@/core/automata/types'
 import { SimulationResult } from '@/core/algorithms/simulate'
 
@@ -7,7 +8,7 @@ interface StateListProps {
   simulationResult?: SimulationResult | null
 }
 
-export function StateList({ automaton, highlightStates = [], simulationResult = null }: StateListProps) {
+export const StateList = memo(function StateList({ automaton, highlightStates = [], simulationResult = null }: StateListProps) {
   const isAcceptState = (state: string) => automaton.acceptStates.includes(state)
   const isStartState = (state: string) => state === automaton.startState
   const isTrapState = (state: string) => state === '∅'
@@ -190,4 +191,4 @@ export function StateList({ automaton, highlightStates = [], simulationResult = 
       </div>
     </div>
   )
-}
+})
