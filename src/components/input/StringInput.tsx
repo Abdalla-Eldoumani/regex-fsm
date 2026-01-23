@@ -1,4 +1,4 @@
-import { ChangeEvent } from 'react'
+import { ChangeEvent, memo } from 'react'
 
 interface StringInputProps {
   value: string
@@ -6,7 +6,7 @@ interface StringInputProps {
   placeholder?: string
 }
 
-export function StringInput({ value, onChange, placeholder = 'abb' }: StringInputProps) {
+export const StringInput = memo(function StringInput({ value, onChange, placeholder = 'abb' }: StringInputProps) {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value)
   }
@@ -30,4 +30,4 @@ export function StringInput({ value, onChange, placeholder = 'abb' }: StringInpu
       )}
     </div>
   )
-}
+})
