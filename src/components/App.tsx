@@ -5,7 +5,6 @@ import { DFA } from '@/core/automata/types'
 import { RegexInput } from './input/RegexInput'
 import { StringInput } from './input/StringInput'
 import { PatternBuilder } from './input/PatternBuilder'
-import { BuildButtons } from './input/BuildButtons'
 import { AutomatonView } from './display/AutomatonView'
 import { SimulationPanel } from './simulation/SimulationPanel'
 
@@ -121,22 +120,6 @@ function App() {
     setRegex(pattern)
   }, [])
 
-  const handleDirectDFA = (directDfa: DFA, alphabetStr: string) => {
-    // Set the DFA directly, clear NFA since this was built without regex
-    // Apply minimization if enabled
-    let finalDfa = directDfa
-    if (shouldMinimize) {
-      const minimized = minimizeDFA(directDfa, useLetterNames)
-      finalDfa = minimized.dfa
-    }
-    setDfa(finalDfa)
-    setNfa(null)
-    setAlphabet(alphabetStr)
-    setRegex('') // Clear regex since DFA was built directly
-    setError('')
-    setSimulationMode('dfa') // Switch to DFA mode since that's what we built
-  }
-
   return (
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 relative z-10">
@@ -152,7 +135,7 @@ function App() {
                 </div>
                 <p className="text-sm text-text-secondary mb-5 ml-3.5">Enter a regular expression to generate the automata.</p>
                 <div className="space-y-4">
-                  <PatternBuilder onInsert={handlePatternInsert} onBuildDFA={handleDirectDFA} />
+                  <PatternBuilder onInsert={handlePatternInsert} />
                   <RegexInput value={regex} onChange={setRegex} alphabet={alphabet} onAlphabetChange={setAlphabet} error={error} />
                 </div>
               </div>
