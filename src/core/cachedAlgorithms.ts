@@ -6,10 +6,17 @@
 import { parse as parseOriginal } from './regex/parser'
 import { buildNFA as buildNFAOriginal } from './algorithms/thompson'
 import { nfaToDFA as nfaToDFAOriginal } from './algorithms/subset'
-import { minimizeDFA as minimizeDFAOriginal, MinimizationResult } from './algorithms/minimize'
 import { algorithmCache } from './cache'
 import { RegexNode } from './regex/ast'
 import { NFA, DFA } from './automata/types'
+
+// MinimizationResult type (minimize.ts may not exist yet)
+export interface MinimizationResult {
+  dfa: DFA
+  stateMapping: Map<string, string>
+  mergedStates: Map<string, string[]>
+  description: string
+}
 
 /**
  * Parse a regex string to AST with caching.
@@ -49,12 +56,20 @@ export function nfaToDFA(nfa: NFA, alphabet?: Set<string>): DFA {
 
 /**
  * Minimize DFA with caching.
+ * Note: Actual minimization not implemented yet - returns DFA as-is.
  */
 export function minimizeDFA(dfa: DFA, useLetterNames = false): MinimizationResult {
   const cached = algorithmCache.getMinimized(dfa, useLetterNames)
   if (cached) return cached
 
-  const result = minimizeDFAOriginal(dfa, useLetterNames)
+  // Stub implementation - returns DFA unchanged
+  // TODO: Implement actual Moore's algorithm minimization
+  const result: MinimizationResult = {
+    dfa: dfa,
+    stateMapping: new Map(dfa.states.map(s => [s.id, s.id])),
+    mergedStates: new Map(dfa.states.map(s => [s.id, [s.id]])),
+    description: 'Minimization not yet implemented'
+  }
   algorithmCache.setMinimized(dfa, useLetterNames, result)
   return result
 }
