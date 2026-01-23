@@ -1,3 +1,5 @@
 export * from './regex'
 export * from './automata'
 export * from './algorithms'
+export * from './cache'
+export * from './cachedAlgorithms'
