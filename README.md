@@ -4,68 +4,59 @@ Regular Expression and Finite State Machine Visualizer
 
 ## Overview
 
-RegexFSM is an educational web application that visualizes the relationship between regular expressions, NFAs (Nondeterministic Finite Automata), and DFAs (Deterministic Finite Automata). It implements core algorithms from formal language theory including Thompson's construction, subset construction, and automaton simulation.
+RegexFSM visualizes the relationship between regular expressions, NFAs (Nondeterministic Finite Automata), and DFAs (Deterministic Finite Automata). It implements Thompson's construction, subset construction, DFA minimization, and automaton simulation.
 
 ## Features
 
-### Core Functionality
-- **Regex to NFA**: Convert regular expressions to NFAs using Thompson's construction
-- **NFA to DFA**: Convert NFAs to DFAs using subset construction with complete trap states
-- **Interactive Simulation**: Step through string acceptance with visual highlighting
-- **Multiple Views**: Graph, transition table, state list, and summary views
-- **Export**: Download graphs as PNG or SVG
+### Core
+- **Regex to NFA**: Thompson's construction algorithm
+- **NFA to DFA**: Subset construction with trap states
+- **DFA Minimization**: Moore's partition refinement algorithm for optimal state count
+- **Clean State Names**: Choose between `q0, q1, q2` or `A, B, C` naming
+- **Simulation**: Step-by-step string acceptance with highlighting
+- **Multiple Views**: Graph, transition table, and state list
+- **Export**: PNG and SVG download
 
-### New Features
-- **Custom Alphabet Definition**: Pre-define the alphabet to see complete DFAs with all symbol transitions
-- **Pattern Builder**: Interactive UI to build regex patterns from natural language descriptions
-  - 23 predefined templates across 9 categories (basic, position, repetition, character, combination, length, counting, negation, ordering)
-  - Live regex preview with one-click insertion
-  - Educational descriptions for each pattern
-  - Parser-compatible patterns for all templates
-- **Flexible Simulation Modes**: Choose NFA, DFA, or Both
-  - Single automaton mode expands to full width
-  - Both mode displays NFA and DFA side-by-side
-- **Fullscreen Simulation Modal**: Test strings in a fullscreen overlay with split-screen layout
-  - Live graph visualization on the left
-  - Simulation controls on the right
-  - Independent testing for each automaton
-- **Expandable Views**: Table and States tabs have dedicated expand buttons for fullscreen viewing
-- **Auto Alphabet Expansion**: Automatically includes test string symbols in alphabet for trap state visibility
+### Performance
+- **Algorithm Caching**: LRU cache with localStorage persistence for parse/NFA/DFA/minimize results
+- **Layout Cache**: Graph positions persist across tab switches and page refreshes
+- **React Memoization**: `useMemo` for derived state, `React.memo` for display components
 
-### Visual Enhancements
-- **Clear Visual Indicators**: Start state arrows, double borders for accept states, dashed borders for trap states
-- **Improved Scrolling**: Proper overflow handling for tables and state lists
-- **Long State Name Support**: Truncation with tooltips for DFA states with long names
-- **Detailed Feedback**: Explicit rejection/acceptance messages with reasons
+### Pattern Builder
+- 27 templates across 9 categories (basic, position, repetition, character, combination, length, counting, negation, ordering)
+- Direct DFA construction for complex patterns using KMP algorithm
+- Handles "does not contain" patterns that can't be expressed as simple regex
 
-### Validation & Testing
-- **Regex Validation**: Rejects invalid patterns (consecutive quantifiers, etc.) with clear error messages
-- **Comprehensive Test Suite**: 540 tests across 13 test files (all passing)
+### Visualization
+- Start state: indigo with glow
+- Accept state: emerald double border
+- Trap state: red dashed border
+- Active state: yellow highlight during simulation
+- Legend showing state types
+
+### UI
+- Custom alphabet definition for complete DFA generation
+- Auto/manual build toggle
+- Fullscreen simulation modal
+- Expandable table and state views
 
 ## Tech Stack
 
 - TypeScript (strict mode)
-- React 18+
+- React 18
 - Vite
 - Cytoscape.js
-- Tailwind CSS (Indigo/Emerald theme)
-- Vitest
+- Tailwind CSS
+- Vitest (603 tests)
 
 ## Quick Start
 
-### Installation
-
 ```bash
 npm install
-```
-
-### Development
-
-```bash
 npm run dev
 ```
 
-Open http://localhost:5173 in your browser.
+Open http://localhost:5173
 
 ### Build
 
@@ -74,138 +65,120 @@ npm run build
 npm run preview
 ```
 
-### Testing
+### Test
 
 ```bash
-npm test              # Run tests
+npm test
 ```
 
 ## Usage
 
-1. **Build or enter a regex**:
-   - Use the Pattern Builder to select from predefined templates, OR
-   - Type a regular expression directly in the input field (e.g., `(a|b)*abb`)
-2. **Define alphabet** (optional): Specify the alphabet (e.g., `abc`) to see complete DFAs
-3. **View automata**: See the generated NFA and DFA in graph, table, or list form
-4. **Test strings**:
-   - Enter a test string in the main input, OR
-   - Click "Simulate" on any automaton to test in a modal
-5. **Step through**: Use controls to step through the simulation
-6. **Export**: Download graphs as PNG or SVG images
+1. **Enter regex** or use Pattern Builder to select a template
+2. **Set alphabet** (optional) to see complete DFA with trap states
+3. **Configure DFA options**:
+   - Minimize DFA (on by default) - produces optimal states
+   - Use letter names - switches from q0/q1 to A/B naming
+4. **Test strings** using the simulation controls or fullscreen modal
+5. **Export** graphs as PNG or SVG
 
-### Supported Regex Operators
+### Supported Operators
 
-- Concatenation: `ab` (a followed by b)
-- Union: `a|b` (a or b)
-- Kleene star: `a*` (zero or more a)
-- Positive closure: `a+` (one or more a)
-- Optional: `a?` (zero or one a)
-- Parentheses: `(ab)*` (grouping)
+| Operator | Example | Meaning |
+|----------|---------|---------|
+| Concatenation | `ab` | a followed by b |
+| Union | `a\|b` | a or b |
+| Kleene star | `a*` | zero or more |
+| Positive closure | `a+` | one or more |
+| Optional | `a?` | zero or one |
+| Grouping | `(ab)*` | group operations |
 
 ### Examples
 
-- `a*b` - Any number of a's followed by b
-- `(a|b)*` - Any string over {a,b}
-- `(a|b)*abb` - Any string ending in "abb"
-- `a+b+` - One or more a's followed by one or more b's
-
-## Documentation
-
-Comprehensive technical documentation available in the `docs/` directory:
-
-- [docs/README.md](./docs/README.md) - Documentation overview
-- [docs/architecture.md](./docs/architecture.md) - System architecture
-- [docs/algorithms.md](./docs/algorithms.md) - Algorithm implementations
-- [docs/core/README.md](./docs/core/README.md) - Core module (regex parsing, automata)
-- [docs/components/README.md](./docs/components/README.md) - React components
-- [docs/visualization/README.md](./docs/visualization/README.md) - Graph rendering
+- `a*b` - any number of a's followed by b
+- `(a|b)*abb` - strings ending in "abb"
+- `a+b+` - one or more a's, then one or more b's
 
 ## Project Structure
 
 ```
 regex-fsm/
 ├── src/
-│   ├── core/               # Core algorithms and data structures
-│   │   ├── automata/       # NFA/DFA types and utilities
-│   │   ├── regex/          # Tokenizer and parser
-│   │   ├── algorithms/     # Thompson, subset, simulation
-│   │   └── patterns/       # Pattern template library
-│   ├── components/         # React UI components
-│   │   ├── input/          # RegexInput, StringInput, PatternBuilder
-│   │   ├── display/        # AutomatonView, tables, lists
-│   │   ├── simulation/     # Simulation controls, panels, modals
-│   │   ├── education/      # Theory and explanations
-│   │   └── common/         # Buttons, tabs, etc.
-│   ├── visualization/      # Cytoscape graph rendering
-│   ├── hooks/              # Custom React hooks
-│   └── utils/              # Utility functions
-├── tests/                  # Test files
-├── docs/                   # Technical documentation
-└── public/                 # Static assets
+│   ├── core/
+│   │   ├── automata/      # NFA/DFA types
+│   │   ├── regex/         # Tokenizer, parser
+│   │   ├── algorithms/    # Thompson, subset, minimize, simulate, avoidance
+│   │   ├── patterns/      # Pattern templates
+│   │   └── cache/         # LRU cache, algorithm caching
+│   ├── components/
+│   │   ├── input/         # RegexInput, PatternBuilder, BuildButtons
+│   │   ├── display/       # AutomatonView, tables, lists
+│   │   └── simulation/    # Controls, panels, modals
+│   ├── visualization/     # Cytoscape rendering
+│   └── hooks/             # useSimulation
+├── tests/                 # 603 tests
+└── docs/                  # Technical documentation
 ```
 
-## Development
+## Algorithms
 
-### TypeScript Guidelines
+### Thompson's Construction
+Converts regex to NFA with:
+- One start state, one accept state
+- At most 2 outgoing edges per state
+- Linear size O(m) for regex of length m
 
-- Strict mode enabled, no `any` types
-- Prefer `interface` over `type` for object shapes
-- Use discriminated unions for state variants
-- Export types alongside implementations
+### Subset Construction
+Converts NFA to DFA:
+- Computes λ-closure for state sets
+- Creates trap state for undefined transitions
+- Worst case 2^n states for n-state NFA
 
-### Testing
+### DFA Minimization
+Moore's partition refinement:
+1. Initial partition: accepting vs non-accepting
+2. Refine by transition behavior
+3. Merge equivalent states
+4. Rename to clean state names
 
-All core algorithms have comprehensive test coverage (540 tests total):
+### KMP-based Avoidance DFA
+For "does not contain X" patterns:
+- Uses KMP failure function
+- Builds DFA directly without regex
+- States track partial pattern matches
 
-- Tokenizer: 56 tests
-- Parser: 81 tests (includes 13 validation tests for consecutive quantifiers)
-- Lambda closure: 18 tests
-- Thompson's construction: 37 tests
-- Subset construction: 42 tests (includes 10 custom alphabet tests + trap state tests)
-- Simulation: 88 tests
-- Pattern templates: 45 tests (structure, categorization, regex generation, parser compatibility)
-- Visualization: 13 tests (updated for start arrow)
-- Integration tests: 104 tests
-- Automata tests: 56 tests
+## Documentation
 
-Run tests before committing: `npm test`
+- [docs/README.md](./docs/README.md) - Overview
+- [docs/architecture.md](./docs/architecture.md) - System design
+- [docs/algorithms.md](./docs/algorithms.md) - Algorithm details
+- [docs/core/README.md](./docs/core/README.md) - Core module
+- [docs/components/README.md](./docs/components/README.md) - UI components
+- [docs/visualization/README.md](./docs/visualization/README.md) - Graph rendering
 
-## Contributing
+## Test Coverage
 
-This is an educational project demonstrating formal language theory concepts. Contributions should maintain the educational focus and code quality standards.
-
-### Commit Guidelines
-
-- Write clear, descriptive commit messages
-- One logical change per commit
-- Run tests before committing
-- Update documentation for user-facing changes
-
-## License
-
-MIT License - See LICENSE file for details
-
-## Acknowledgments
-
-- Algorithm implementations based on standard textbooks in formal language theory
-- Graph rendering: [Cytoscape.js](https://js.cytoscape.org/)
-- UI components: [React](https://react.dev/) with [Tailwind CSS](https://tailwindcss.com/)
+| Module | Tests |
+|--------|-------|
+| Tokenizer | 56 |
+| Parser | 81 |
+| Thompson | 37 |
+| Subset | 42 |
+| Minimize | 14 |
+| Avoidance | 21 |
+| Simulation | 88 |
+| Templates | 45 |
+| Integration | 104 |
+| Visualization | 13 |
+| Lambda closure | 18 |
+| Automata | 56 |
+| Cache | 28 |
+| **Total** | **603** |
 
 ## Authors
 
 - Abdalla ElDoumani
 - Ibrahim Ahmed
 
-## Educational Use
+## License
 
-This project is designed for learning formal language theory and automata theory. It demonstrates:
-
-- Regular expression parsing
-- Thompson's construction algorithm
-- Subset construction (powerset construction)
-- NFA and DFA simulation
-- Graph visualization techniques
-- React state management
-- TypeScript type safety
-
-Ideal for computer science students studying theory of computation, compilers, or programming languages.
+MIT
