@@ -1,10 +1,12 @@
+import { memo } from 'react'
+
 interface InputTapeProps {
   input: string
   currentPosition: number
   accepted?: boolean | null
 }
 
-export function InputTape({ input, currentPosition }: InputTapeProps) {
+export const InputTape = memo(function InputTape({ input, currentPosition }: InputTapeProps) {
   if (!input) {
     return (
       <div className="flex items-center justify-center h-24 text-text-tertiary italic text-sm border-2 border-dashed border-border rounded-xl bg-background/50">
@@ -57,4 +59,4 @@ export function InputTape({ input, currentPosition }: InputTapeProps) {
       </div>
     </div>
   )
-}
+})
