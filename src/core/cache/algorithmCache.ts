@@ -1,7 +1,7 @@
 import { LRUCache } from './LRUCache'
 import { RegexNode } from '../regex/ast'
 import { NFA, DFA } from '../automata/types'
-import { parseKey, thompsonKey, subsetKey } from './keys'
+import { parseKey, thompsonKey, subsetKey, minimizeKey } from './keys'
 
 // MinimizationResult type defined locally (minimize.ts may not exist)
 interface MinimizationResult {
