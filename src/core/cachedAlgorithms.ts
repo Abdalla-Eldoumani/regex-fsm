@@ -92,6 +92,5 @@ export function getCacheStats() {
 export {
   parseOriginal,
   buildNFAOriginal,
-  nfaToDFAOriginal,
-  minimizeDFAOriginal
+  nfaToDFAOriginal
 }
