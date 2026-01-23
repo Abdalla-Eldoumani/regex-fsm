@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 interface SimulationControlsProps {
   isRunning: boolean
   canStep: boolean
@@ -14,7 +16,7 @@ interface SimulationControlsProps {
   onComplete: () => void
 }
 
-export function SimulationControls({
+export const SimulationControls = memo(function SimulationControls({
   isRunning,
   canStep,
   canReset,
@@ -113,4 +115,4 @@ export function SimulationControls({
       </div>
     </div>
   )
-}
+})
