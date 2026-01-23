@@ -117,23 +117,8 @@ function App() {
 
   const handlePatternInsert = useCallback((pattern: string) => {
     setDirectDfa(null) // Clear direct DFA when inserting pattern
-    setDirectAlphabet('')
     setRegex(pattern)
   }, [])
-
-  const handleDirectDFA = useCallback((inputDfa: DFA, alphabetStr: string) => {
-    // Set the DFA directly, clear NFA since this was built without regex
-    // Apply minimization if enabled
-    let finalDfa = inputDfa
-    if (shouldMinimize) {
-      const minimized = minimizeDFA(inputDfa, useLetterNames)
-      finalDfa = minimized.dfa
-    }
-    setDirectDfa(finalDfa)
-    setAlphabet(alphabetStr)
-    setRegex('') // Clear regex since DFA was built directly
-    setSimulationMode('dfa') // Switch to DFA mode since that's what we built
-  }, [shouldMinimize, useLetterNames])
 
   return (
     <>
