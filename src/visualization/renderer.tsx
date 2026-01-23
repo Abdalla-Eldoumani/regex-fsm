@@ -64,13 +64,10 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       // Use preset layout with cached positions
       layoutConfig = {
         name: 'preset',
-        positions: (node: { id: () => string }) => {
-          const pos = cachedPositions[node.id()]
-          return pos || { x: 0, y: 0 }
-        },
+        positions: cachedPositions,
         fit: true,
         padding: 30
-      }
+      } as LayoutOptions
     } else {
       layoutConfig = selectLayout(automaton)
     }
