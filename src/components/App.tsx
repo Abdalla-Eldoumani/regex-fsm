@@ -1,11 +1,10 @@
 import { useState, useMemo, useCallback } from 'react'
 import { parse, buildNFA, nfaToDFA, minimizeDFA } from '@/core/cachedAlgorithms'
 import { simulateNFA, simulateDFA, SimulationResult } from '@/core/algorithms/simulate'
-import { NFA, DFA } from '@/core/automata/types'
+import { DFA } from '@/core/automata/types'
 import { RegexInput } from './input/RegexInput'
 import { StringInput } from './input/StringInput'
 import { PatternBuilder } from './input/PatternBuilder'
-import { BuildButtons } from './input/BuildButtons'
 import { AutomatonView } from './display/AutomatonView'
 import { SimulationPanel } from './simulation/SimulationPanel'
 
@@ -24,7 +23,6 @@ function App() {
 
   // Direct DFA state (for pattern builder direct construction)
   const [directDfa, setDirectDfa] = useState<DFA | null>(null)
-  const [directAlphabet, setDirectAlphabet] = useState('')
 
   // Memoized automata computation - replaces useCallback + useEffect
   const { nfa, dfa, error } = useMemo(() => {
@@ -93,12 +91,11 @@ function App() {
   }, [dfa, testString])
 
   // Manual build function for non-auto mode
-  const buildAutomata = useCallback((buildType: 'nfa' | 'dfa' | 'both' = 'both') => {
+  const buildAutomata = useCallback(() => {
     if (!regex) return
 
     // Clear direct DFA when manually building
     setDirectDfa(null)
-    setDirectAlphabet('')
 
     // Force re-computation by clearing and re-setting regex
     // This is a workaround since useMemo handles the actual computation
@@ -133,7 +130,6 @@ function App() {
       finalDfa = minimized.dfa
     }
     setDirectDfa(finalDfa)
-    setDirectAlphabet(alphabetStr)
     setAlphabet(alphabetStr)
     setRegex('') // Clear regex since DFA was built directly
     setSimulationMode('dfa') // Switch to DFA mode since that's what we built
@@ -154,7 +150,7 @@ function App() {
                 </div>
                 <p className="text-sm text-text-secondary mb-5 ml-3.5">Enter a regular expression to generate the automata.</p>
                 <div className="space-y-4">
-                  <PatternBuilder onInsert={handlePatternInsert} onBuildDFA={handleDirectDFA} />
+                  <PatternBuilder onInsert={handlePatternInsert} />
                   <RegexInput value={regex} onChange={setRegex} alphabet={alphabet} onAlphabetChange={setAlphabet} error={error} />
                 </div>
               </div>
@@ -171,17 +167,31 @@ function App() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1.5 h-6 bg-gradient-to-b from-accent to-success rounded-full"></div>
-                  <h2 className="text-xl font-display font-bold text-text-primary">Build</h2>
+                  <h2 className="text-xl font-display font-bold text-text-primary">Options</h2>
                 </div>
-                <p className="text-sm text-text-secondary mb-5 ml-3.5">Generate automata from the pattern.</p>
-                <BuildButtons
-                  autoBuild={autoBuild}
-                  onAutoBuildChange={setAutoBuild}
-                  onBuildNFA={() => buildAutomata('nfa')}
-                  onBuildDFA={() => buildAutomata('dfa')}
-                  onBuildBoth={() => buildAutomata('both')}
-                  disabled={!regex}
-                />
+                <p className="text-sm text-text-secondary mb-5 ml-3.5">Configure automata generation.</p>
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={autoBuild}
+                      onChange={(e) => setAutoBuild(e.target.checked)}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/50 cursor-pointer"
+                    />
+                    <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+                      Auto-build <span className="text-xs text-text-tertiary">(build on regex change)</span>
+                    </span>
+                  </label>
+                  {!autoBuild && (
+                    <button
+                      onClick={buildAutomata}
+                      disabled={!regex}
+                      className="px-4 py-2 bg-primary text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-hover transition-colors"
+                    >
+                      Build Automata
+                    </button>
+                  )}
+                </div>
                 <div className="mt-4 p-4 bg-background/50 rounded-xl border border-border space-y-3">
                   <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">DFA Options</div>
                   <label className="flex items-center gap-3 cursor-pointer group">
