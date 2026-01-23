@@ -1,4 +1,4 @@
-import { ChangeEvent } from 'react'
+import { ChangeEvent, memo } from 'react'
 
 interface RegexInputProps {
   value: string
@@ -8,7 +8,7 @@ interface RegexInputProps {
   error?: string
 }
 
-export function RegexInput({ value, onChange, alphabet, onAlphabetChange, error }: RegexInputProps) {
+export const RegexInput = memo(function RegexInput({ value, onChange, alphabet, onAlphabetChange, error }: RegexInputProps) {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value)
   }
@@ -84,4 +84,4 @@ export function RegexInput({ value, onChange, alphabet, onAlphabetChange, error 
       </div>
     </div>
   )
-}
+})
