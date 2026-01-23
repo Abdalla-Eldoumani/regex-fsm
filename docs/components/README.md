@@ -174,31 +174,35 @@ const [nfaSimResult, setNfaSimResult] = useState<SimulationResult | null>(null)
 const [dfaSimResult, setDfaSimResult] = useState<SimulationResult | null>(null)
 ```
 
-### Pipeline Effect
+### Pipeline with useMemo
 
 ```typescript
-useEffect(() => {
-  if (!regex) {
-    setNfa(null)
-    setDfa(null)
-    setError('')
-    return
-  }
+const { nfa, dfa, error } = useMemo(() => {
+  if (directDfa) return { nfa: null, dfa: directDfa, error: '' }
+  if (!regex || !autoBuild) return { nfa: null, dfa: null, error: '' }
 
   try {
-    const ast = parse(regex)
-    const generatedNfa = buildNFA(ast)
-    const generatedDfa = nfaToDFA(generatedNfa)
+    const ast = parse(regex)  // Cached
+    const generatedNfa = buildNFA(ast)  // Cached
 
-    setNfa(generatedNfa)
-    setDfa(generatedDfa)
-    setError('')
+    // Build effective alphabet
+    const regexAlphabet = generatedNfa.alphabet
+    const customAlphabetSet = alphabet ? new Set(alphabet.split('')) : null
+    const testStringChars = new Set(testString.split(''))
+    const effectiveAlphabet = customAlphabetSet || new Set([...regexAlphabet, ...testStringChars])
+
+    let generatedDfa = nfaToDFA(generatedNfa, effectiveAlphabet)  // Cached
+
+    if (shouldMinimize) {
+      const result = minimizeDFA(generatedDfa, useLetterNames)  // Cached
+      generatedDfa = result.dfa
+    }
+
+    return { nfa: generatedNfa, dfa: generatedDfa, error: '' }
   } catch (err) {
-    setNfa(null)
-    setDfa(null)
-    setError(err instanceof Error ? err.message : 'Unknown error occurred')
+    return { nfa: null, dfa: null, error: err instanceof Error ? err.message : 'Unknown error' }
   }
-}, [regex])
+}, [regex, alphabet, testString, shouldMinimize, useLetterNames, autoBuild, directDfa])
 ```
 
 ### Content Structure
@@ -755,3 +759,21 @@ Lift state to nearest common ancestor:
 - Regex value: `App` component
 - Active tab: `AutomatonView` component
 - Expanded sections: `TheoryPanel` component
+
+### Memoization
+
+Display components wrapped with `React.memo` to prevent unnecessary re-renders:
+- `TransitionTable`
+- `StateList`
+- `InputTape`
+- `SimulationControls`
+- `RegexInput`
+- `StringInput`
+
+Derived state computed with `useMemo`:
+- NFA/DFA construction in `App.tsx`
+- Simulation results in `SimulationPanel.tsx`
+
+Stable handlers created with `useCallback`:
+- Highlight change handlers
+- Event callbacks passed to child components

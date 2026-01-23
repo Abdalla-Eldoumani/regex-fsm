@@ -60,6 +60,7 @@ The core module implements the fundamental algorithms and data structures:
 - **Automata Module** - NFA and DFA type definitions and utilities
 - **Algorithms Module** - Thompson's construction, subset construction, minimization, avoidance, simulation
 - **Patterns Module** - Template library for natural language to regex conversion (27 templates across 9 categories)
+- **Cache Module** - LRU cache with localStorage persistence for algorithm results and graph layouts
 
 ### Components (`src/components/`)
 
@@ -120,7 +121,8 @@ All core algorithms have comprehensive test coverage:
 | Visualization | 13 |
 | Lambda closure | 18 |
 | Automata | 56 |
-| **Total** | **575** |
+| Cache | 28 |
+| **Total** | **603** |
 
 Test categories:
 - Parser validation (consecutive quantifiers)
@@ -128,3 +130,4 @@ Test categories:
 - Custom alphabet (DFA completeness)
 - DFA minimization (equivalence preservation, naming options)
 - Avoidance DFA (KMP correctness, acceptance/rejection)
+- Cache (LRU eviction, key generation, localStorage persistence)

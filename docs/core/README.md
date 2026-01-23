@@ -21,6 +21,12 @@ src/core/
 │   ├── avoidance.ts  # KMP-based "does not contain" DFA
 │   ├── lambda.ts     # Lambda closure computation
 │   └── simulate.ts   # Automaton simulation
+├── cache/            # Caching layer
+│   ├── LRUCache.ts   # Generic LRU cache with configurable capacity
+│   ├── keys.ts       # Deterministic cache key generation
+│   ├── algorithmCache.ts  # Main cache manager with localStorage
+│   └── index.ts      # Public exports
+├── cachedAlgorithms.ts  # Cached wrappers for parse/buildNFA/nfaToDFA/minimizeDFA
 └── patterns/         # Pattern templates
     └── templates.ts  # 27 templates across 9 categories
 ```
@@ -435,5 +441,6 @@ All core modules have comprehensive test coverage:
 | lambda.test.ts | 18 | Paths, cycles, empty inputs |
 | simulate.test.ts | 88 | NFA/DFA acceptance, equivalence |
 | templates.test.ts | 45 | Structure, categorization, parser compat |
+| cache.test.ts | 28 | LRU eviction, key generation, persistence |
 
 Run tests with: `npm test`

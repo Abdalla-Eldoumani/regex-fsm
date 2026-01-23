@@ -8,7 +8,7 @@ RegexFSM follows a layered architecture separating concerns into distinct module
 ┌─────────────────────────────────────────┐
 │          UI Layer (React)               │
 │  - Input components                     │
-│  - Display components                   │
+│  - Display components (React.memo)      │
 │  - Simulation components                │
 │  - Education components                 │
 └───────────────┬─────────────────────────┘
@@ -17,7 +17,15 @@ RegexFSM follows a layered architecture separating concerns into distinct module
 │       Visualization Layer               │
 │  - Cytoscape rendering                  │
 │  - Graph layout                         │
+│  - Layout cache (position persistence)  │
 │  - Export functionality                 │
+└───────────────┬─────────────────────────┘
+                │
+┌───────────────▼─────────────────────────┐
+│          Cache Layer                    │
+│  - LRU cache with localStorage          │
+│  - Algorithm result caching             │
+│  - Automatic cache invalidation         │
 └───────────────┬─────────────────────────┘
                 │
 ┌───────────────▼─────────────────────────┐
@@ -70,6 +78,8 @@ RegexFSM follows a layered architecture separating concerns into distinct module
 - `src/core/algorithms/minimize.ts` - DFA minimization (Moore's algorithm)
 - `src/core/algorithms/avoidance.ts` - KMP-based avoidance DFA
 - `src/core/algorithms/simulate.ts` - Execution simulation
+- `src/core/cache/` - LRU cache and algorithm result caching
+- `src/core/cachedAlgorithms.ts` - Cached wrappers for parse/buildNFA/nfaToDFA/minimizeDFA
 
 ### Components Module
 
@@ -193,17 +203,39 @@ App
 
 ## Performance Considerations
 
+### Caching Strategy
+
+The application uses a multi-level caching approach:
+
+**Algorithm Cache** (`src/core/cache/`):
+- LRU cache with configurable max size (default: 50 entries)
+- localStorage persistence with version-based invalidation
+- Separate caches for parse, thompson, subset, and minimize results
+- Cache key generation from AST/automaton structure
+
+**Layout Cache** (`src/visualization/layoutCache.ts`):
+- Persists graph node positions across tab switches and page refreshes
+- 24-hour expiry, max 50 cached layouts
+- Cache key based on automaton structure
+
+**React Memoization** (`src/components/App.tsx`):
+- `useMemo` for derived state (NFA/DFA construction)
+- `useCallback` for stable handler references
+- `React.memo` on display components (TransitionTable, StateList, InputTape, SimulationControls)
+
 ### Automaton Construction
 
 - Thompson's NFA has O(m) states for regex length m
 - Subset construction worst case: O(2^n) DFA states for n NFA states
 - In practice, DFA state count is much lower than worst case
+- Repeated patterns return cached results instantly
 
 ### Visualization
 
 - Cytoscape reuses canvas for efficient rendering
 - Layout computation cached when automaton unchanged
 - Highlight updates avoid full re-render
+- Node positions restored from cache on tab switch
 
 ### Simulation
 

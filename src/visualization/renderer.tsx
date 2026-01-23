@@ -1,9 +1,10 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
-import cytoscape, { Core } from 'cytoscape'
+import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react'
+import cytoscape, { Core, LayoutOptions } from 'cytoscape'
 import { Automaton } from '@/core/automata/types'
 import { automatonToCytoscape } from './cytoscape-config'
 import { getStylesheet } from './styles'
 import { selectLayout } from './layout'
+import { layoutCache } from './layoutCache'
 
 export interface AutomatonGraphProps {
   automaton: Automaton
@@ -30,6 +31,19 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
   ) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const cyRef = useRef<Core | null>(null)
+    const automatonRef = useRef<Automaton | null>(null)
+
+    // Save positions to cache on drag end
+    const savePositions = useCallback(() => {
+      if (!cyRef.current || !automatonRef.current) return
+
+      const positions: Record<string, { x: number; y: number }> = {}
+      cyRef.current.nodes().forEach(node => {
+        const pos = node.position()
+        positions[node.id()] = { x: pos.x, y: pos.y }
+      })
+      layoutCache.setPositions(automatonRef.current, positions)
+    }, [])
 
     useImperativeHandle(ref, () => ({
       getCytoscapeInstance: () => cyRef.current,
@@ -38,15 +52,40 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
   useEffect(() => {
     if (!containerRef.current) return
 
+    automatonRef.current = automaton
     const elements = automatonToCytoscape(automaton)
     const allElements = [...elements.nodes, ...elements.edges]
+
+    // Check for cached positions
+    const cachedPositions = layoutCache.getPositions(automaton)
+    let layoutConfig: LayoutOptions
+
+    if (cachedPositions) {
+      // Use preset layout with cached positions
+      layoutConfig = {
+        name: 'preset',
+        positions: cachedPositions,
+        fit: true,
+        padding: 30
+      } as LayoutOptions
+    } else {
+      layoutConfig = selectLayout(automaton)
+    }
 
     cyRef.current = cytoscape({
       container: containerRef.current,
       elements: allElements,
       style: getStylesheet(),
-      layout: selectLayout(automaton),
+      layout: layoutConfig,
     })
+
+    // Save positions after initial layout completes
+    if (!cachedPositions) {
+      cyRef.current.one('layoutstop', savePositions)
+    }
+
+    // Save positions when nodes are dragged
+    cyRef.current.on('dragfree', 'node', savePositions)
 
     if (onNodeClick) {
       cyRef.current.on('tap', 'node', e => {
@@ -64,7 +103,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       cyRef.current?.destroy()
       cyRef.current = null
     }
-  }, [automaton, onNodeClick, onEdgeClick])
+  }, [automaton, onNodeClick, onEdgeClick, savePositions])
 
   useEffect(() => {
     if (!cyRef.current) return

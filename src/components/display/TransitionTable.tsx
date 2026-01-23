@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Automaton } from '@/core/automata/types'
 
 interface TransitionTableProps {
@@ -5,7 +6,7 @@ interface TransitionTableProps {
   highlightState?: string
 }
 
-export function TransitionTable({ automaton, highlightState }: TransitionTableProps) {
+export const TransitionTable = memo(function TransitionTable({ automaton, highlightState }: TransitionTableProps) {
   const alphabet = Array.from(automaton.alphabet).sort()
   const hasLambda = automaton.transitions.some(t => t.symbol === null)
   const columns = hasLambda ? [...alphabet, 'λ'] : alphabet
@@ -127,4 +128,4 @@ export function TransitionTable({ automaton, highlightState }: TransitionTablePr
       </div>
     </div>
   )
-}
+})

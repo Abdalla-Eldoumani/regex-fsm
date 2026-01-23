@@ -17,6 +17,11 @@ RegexFSM visualizes the relationship between regular expressions, NFAs (Nondeter
 - **Multiple Views**: Graph, transition table, and state list
 - **Export**: PNG and SVG download
 
+### Performance
+- **Algorithm Caching**: LRU cache with localStorage persistence for parse/NFA/DFA/minimize results
+- **Layout Cache**: Graph positions persist across tab switches and page refreshes
+- **React Memoization**: `useMemo` for derived state, `React.memo` for display components
+
 ### Pattern Builder
 - 27 templates across 9 categories (basic, position, repetition, character, combination, length, counting, negation, ordering)
 - Direct DFA construction for complex patterns using KMP algorithm
@@ -42,7 +47,7 @@ RegexFSM visualizes the relationship between regular expressions, NFAs (Nondeter
 - Vite
 - Cytoscape.js
 - Tailwind CSS
-- Vitest (575 tests)
+- Vitest (603 tests)
 
 ## Quick Start
 
@@ -102,14 +107,15 @@ regex-fsm/
 │   │   ├── automata/      # NFA/DFA types
 │   │   ├── regex/         # Tokenizer, parser
 │   │   ├── algorithms/    # Thompson, subset, minimize, simulate, avoidance
-│   │   └── patterns/      # Pattern templates
+│   │   ├── patterns/      # Pattern templates
+│   │   └── cache/         # LRU cache, algorithm caching
 │   ├── components/
 │   │   ├── input/         # RegexInput, PatternBuilder, BuildButtons
 │   │   ├── display/       # AutomatonView, tables, lists
 │   │   └── simulation/    # Controls, panels, modals
 │   ├── visualization/     # Cytoscape rendering
 │   └── hooks/             # useSimulation
-├── tests/                 # 575 tests
+├── tests/                 # 603 tests
 └── docs/                  # Technical documentation
 ```
 
@@ -165,7 +171,8 @@ For "does not contain X" patterns:
 | Visualization | 13 |
 | Lambda closure | 18 |
 | Automata | 56 |
-| **Total** | **575** |
+| Cache | 28 |
+| **Total** | **603** |
 
 ## Authors
 

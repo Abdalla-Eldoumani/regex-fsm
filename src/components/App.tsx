@@ -1,10 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
-import { parse } from '@/core/regex/parser'
-import { buildNFA } from '@/core/algorithms/thompson'
-import { nfaToDFA } from '@/core/algorithms/subset'
+import { useState, useMemo, useCallback } from 'react'
+import { parse, buildNFA, nfaToDFA, minimizeDFA } from '@/core/cachedAlgorithms'
 import { simulateNFA, simulateDFA, SimulationResult } from '@/core/algorithms/simulate'
-import { minimizeDFA } from '@/core/algorithms/minimize'
-import { NFA, DFA } from '@/core/automata/types'
+import { DFA } from '@/core/automata/types'
 import { RegexInput } from './input/RegexInput'
 import { StringInput } from './input/StringInput'
 import { PatternBuilder } from './input/PatternBuilder'
@@ -16,33 +13,34 @@ function App() {
   const [regex, setRegex] = useState('')
   const [alphabet, setAlphabet] = useState('')
   const [testString, setTestString] = useState('')
-  const [nfa, setNfa] = useState<NFA | null>(null)
-  const [dfa, setDfa] = useState<DFA | null>(null)
-  const [error, setError] = useState<string>('')
   const [simulationMode, setSimulationMode] = useState<'nfa' | 'dfa' | 'both'>('nfa')
   const [nfaHighlightStates, setNfaHighlightStates] = useState<string[]>([])
   const [dfaHighlightStates, setDfaHighlightStates] = useState<string[]>([])
   const [nfaHighlightEdges, setNfaHighlightEdges] = useState<string[]>([])
   const [dfaHighlightEdges, setDfaHighlightEdges] = useState<string[]>([])
-  const [nfaSimResult, setNfaSimResult] = useState<SimulationResult | null>(null)
-  const [dfaSimResult, setDfaSimResult] = useState<SimulationResult | null>(null)
   const [autoBuild, setAutoBuild] = useState(true)
   const [shouldMinimize, setShouldMinimize] = useState(true)
   const [useLetterNames, setUseLetterNames] = useState(false)
 
-  const buildAutomata = useCallback((buildType: 'nfa' | 'dfa' | 'both' = 'both') => {
-    if (!regex) {
-      setNfa(null)
-      setDfa(null)
-      setError('')
-      return
+  // Direct DFA state (for pattern builder direct construction)
+  const [directDfa, setDirectDfa] = useState<DFA | null>(null)
+
+  // Memoized automata computation - replaces useCallback + useEffect
+  const { nfa, dfa, error } = useMemo(() => {
+    // If we have a direct DFA (from pattern builder), use that
+    if (directDfa) {
+      return { nfa: null, dfa: directDfa, error: '' }
+    }
+
+    if (!regex || !autoBuild) {
+      return { nfa: null, dfa: null, error: '' }
     }
 
     try {
       const ast = parse(regex)
       const generatedNfa = buildNFA(ast)
 
-      let effectiveAlphabet: Set<string> | undefined
+      let effectiveAlphabet: Set<string>
       if (alphabet.trim()) {
         effectiveAlphabet = new Set(alphabet.trim().split(''))
       } else {
@@ -54,64 +52,74 @@ function App() {
         }
       }
 
-      if (buildType === 'nfa' || buildType === 'both') {
-        setNfa(generatedNfa)
+      let generatedDfa = nfaToDFA(generatedNfa, effectiveAlphabet)
+      if (shouldMinimize) {
+        const minimized = minimizeDFA(generatedDfa, useLetterNames)
+        generatedDfa = minimized.dfa
       }
 
-      if (buildType === 'dfa' || buildType === 'both') {
-        let generatedDfa = nfaToDFA(generatedNfa, effectiveAlphabet)
-        if (shouldMinimize) {
-          const minimized = minimizeDFA(generatedDfa, useLetterNames)
-          generatedDfa = minimized.dfa
-        }
-        setDfa(generatedDfa)
-      }
-
-      setError('')
+      return { nfa: generatedNfa, dfa: generatedDfa, error: '' }
     } catch (err) {
-      if (buildType === 'nfa' || buildType === 'both') setNfa(null)
-      if (buildType === 'dfa' || buildType === 'both') setDfa(null)
-      setError(err instanceof Error ? err.message : 'Unknown error occurred')
+      return {
+        nfa: null,
+        dfa: null,
+        error: err instanceof Error ? err.message : 'Unknown error occurred'
+      }
     }
-  }, [regex, alphabet, testString, shouldMinimize, useLetterNames])
+  }, [regex, alphabet, testString, shouldMinimize, useLetterNames, autoBuild, directDfa])
 
-  useEffect(() => {
-    if (autoBuild) {
-      buildAutomata('both')
-    }
-  }, [regex, alphabet, testString, autoBuild, buildAutomata])
-
-  useEffect(() => {
+  // Memoized simulation results
+  const nfaSimResult = useMemo<SimulationResult | null>(() => {
     if (!nfa || testString === null || testString === undefined) {
-      setNfaSimResult(null)
-      return
+      return null
     }
-
     try {
-      const result = simulateNFA(nfa, testString)
-      setNfaSimResult(result)
+      return simulateNFA(nfa, testString)
     } catch {
-      setNfaSimResult(null)
+      return null
     }
   }, [nfa, testString])
 
-  useEffect(() => {
+  const dfaSimResult = useMemo<SimulationResult | null>(() => {
     if (!dfa || testString === null || testString === undefined) {
-      setDfaSimResult(null)
-      return
+      return null
     }
-
     try {
-      const result = simulateDFA(dfa, testString)
-      setDfaSimResult(result)
+      return simulateDFA(dfa, testString)
     } catch {
-      setDfaSimResult(null)
+      return null
     }
   }, [dfa, testString])
 
-  const handlePatternInsert = (pattern: string) => {
+  // Manual build function for non-auto mode
+  const buildAutomata = useCallback(() => {
+    if (!regex) return
+
+    // Clear direct DFA when manually building
+    setDirectDfa(null)
+
+    // Force re-computation by clearing and re-setting regex
+    // This is a workaround since useMemo handles the actual computation
+    const currentRegex = regex
+    setRegex('')
+    setTimeout(() => setRegex(currentRegex), 0)
+  }, [regex])
+
+  // Memoized highlight handlers
+  const handleNfaHighlightChange = useCallback((states: string[], edges: string[]) => {
+    setNfaHighlightStates(states)
+    setNfaHighlightEdges(edges)
+  }, [])
+
+  const handleDfaHighlightChange = useCallback((states: string[], edges: string[]) => {
+    setDfaHighlightStates(states)
+    setDfaHighlightEdges(edges)
+  }, [])
+
+  const handlePatternInsert = useCallback((pattern: string) => {
+    setDirectDfa(null) // Clear direct DFA when inserting pattern
     setRegex(pattern)
-  }
+  }, [])
 
   const handleDirectDFA = (directDfa: DFA, alphabetStr: string) => {
     // Set the DFA directly, clear NFA since this was built without regex
@@ -161,17 +169,31 @@ function App() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1.5 h-6 bg-gradient-to-b from-accent to-success rounded-full"></div>
-                  <h2 className="text-xl font-display font-bold text-text-primary">Build</h2>
+                  <h2 className="text-xl font-display font-bold text-text-primary">Options</h2>
                 </div>
-                <p className="text-sm text-text-secondary mb-5 ml-3.5">Generate automata from the pattern.</p>
-                <BuildButtons
-                  autoBuild={autoBuild}
-                  onAutoBuildChange={setAutoBuild}
-                  onBuildNFA={() => buildAutomata('nfa')}
-                  onBuildDFA={() => buildAutomata('dfa')}
-                  onBuildBoth={() => buildAutomata('both')}
-                  disabled={!regex}
-                />
+                <p className="text-sm text-text-secondary mb-5 ml-3.5">Configure automata generation.</p>
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={autoBuild}
+                      onChange={(e) => setAutoBuild(e.target.checked)}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/50 cursor-pointer"
+                    />
+                    <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+                      Auto-build <span className="text-xs text-text-tertiary">(build on regex change)</span>
+                    </span>
+                  </label>
+                  {!autoBuild && (
+                    <button
+                      onClick={buildAutomata}
+                      disabled={!regex}
+                      className="px-4 py-2 bg-primary text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-hover transition-colors"
+                    >
+                      Build Automata
+                    </button>
+                  )}
+                </div>
                 <div className="mt-4 p-4 bg-background/50 rounded-xl border border-border space-y-3">
                   <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">DFA Options</div>
                   <label className="flex items-center gap-3 cursor-pointer group">
@@ -252,10 +274,7 @@ function App() {
                   automaton={nfa}
                   input={testString}
                   mode="nfa"
-                  onHighlightChange={(states, edges) => {
-                    setNfaHighlightStates(states)
-                    setNfaHighlightEdges(edges)
-                  }}
+                  onHighlightChange={handleNfaHighlightChange}
                 />
               )}
 
@@ -264,10 +283,7 @@ function App() {
                   automaton={dfa}
                   input={testString}
                   mode="dfa"
-                  onHighlightChange={(states, edges) => {
-                    setDfaHighlightStates(states)
-                    setDfaHighlightEdges(edges)
-                  }}
+                  onHighlightChange={handleDfaHighlightChange}
                 />
               )}
 
