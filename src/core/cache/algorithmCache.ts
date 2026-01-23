@@ -1,8 +1,15 @@
 import { LRUCache } from './LRUCache'
 import { RegexNode } from '../regex/ast'
 import { NFA, DFA } from '../automata/types'
-import { MinimizationResult } from '../algorithms/minimize'
-import { parseKey, thompsonKey, subsetKey, minimizeKey } from './keys'
+import { parseKey, thompsonKey, subsetKey } from './keys'
+
+// MinimizationResult type defined locally (minimize.ts may not exist)
+interface MinimizationResult {
+  dfa: DFA
+  stateMapping: Map<string, string>
+  mergedStates: Map<string, string[]>
+  description: string
+}
 
 // Cache version for invalidation on app updates
 const CACHE_VERSION = '1.0.0'
