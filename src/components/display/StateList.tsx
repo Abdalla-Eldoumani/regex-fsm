@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { Automaton } from '@/core/automata/types'
 import { SimulationResult } from '@/core/algorithms/simulate'
 
@@ -9,17 +9,28 @@ interface StateListProps {
 }
 
 export const StateList = memo(function StateList({ automaton, highlightStates = [], simulationResult = null }: StateListProps) {
-  const isAcceptState = (state: string) => automaton.acceptStates.includes(state)
+  const acceptSet = useMemo(() => new Set(automaton.acceptStates), [automaton.acceptStates])
+  const isAcceptState = (state: string) => acceptSet.has(state)
   const isStartState = (state: string) => state === automaton.startState
   const isTrapState = (state: string) => state === '∅'
 
-  const getOutgoingTransitions = (stateId: string) => {
-    return automaton.transitions.filter(t => t.from === stateId)
-  }
+  // Build outgoing/incoming indexes once
+  const { outgoingMap, incomingMap } = useMemo(() => {
+    const out = new Map<string, typeof automaton.transitions>()
+    const inc = new Map<string, typeof automaton.transitions>()
+    for (const t of automaton.transitions) {
+      const outList = out.get(t.from)
+      if (outList) outList.push(t)
+      else out.set(t.from, [t])
+      const incList = inc.get(t.to)
+      if (incList) incList.push(t)
+      else inc.set(t.to, [t])
+    }
+    return { outgoingMap: out, incomingMap: inc }
+  }, [automaton.transitions])
 
-  const getIncomingTransitions = (stateId: string) => {
-    return automaton.transitions.filter(t => t.to === stateId)
-  }
+  const getOutgoingTransitions = (stateId: string) => outgoingMap.get(stateId) ?? []
+  const getIncomingTransitions = (stateId: string) => incomingMap.get(stateId) ?? []
 
   const isSimulationComplete = simulationResult && simulationResult.steps.length > 0
   const isRejected = isSimulationComplete && !simulationResult.accepted
