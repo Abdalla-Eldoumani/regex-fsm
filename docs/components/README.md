@@ -16,7 +16,9 @@ src/components/
 │   └── Tabs.tsx                # Tab navigation
 ├── input/                      # Input components
 │   ├── RegexInput.tsx          # Regex pattern input
-│   └── StringInput.tsx         # Test string input
+│   ├── StringInput.tsx         # Test string input
+│   ├── PatternBuilder.tsx      # Template-based pattern builder
+│   └── BuildButtons.tsx        # Manual NFA/DFA build controls
 ├── display/                    # Automaton display
 │   ├── AutomatonView.tsx       # Main automaton viewer (useCallback highlights)
 │   ├── TransitionTable.tsx     # Transition function table (Map-indexed O(1) lookups)

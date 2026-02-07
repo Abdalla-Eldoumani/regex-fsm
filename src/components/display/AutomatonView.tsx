@@ -152,6 +152,28 @@ export function AutomatonView({
             highlightStates={effectiveHighlightStates}
             highlightEdges={effectiveHighlightEdges}
           />
+          {/* Legend */}
+          <div className="absolute bottom-4 left-4 p-3 bg-surface/95 backdrop-blur-sm border border-border rounded-xl shadow-lg text-xs">
+            <div className="font-bold text-text-secondary mb-2 uppercase tracking-wider text-[10px]">Legend</div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full border-[3px] border-[#6366F1] bg-[#C7D2FE] shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+                <span className="text-text-secondary">Start State</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full border-[4px] border-double border-[#10B981] bg-[#A7F3D0]"></div>
+                <span className="text-text-secondary">Accept State</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full border-[2px] border-dashed border-[#EF4444] bg-[#FECACA] shadow-[0_0_6px_rgba(239,68,68,0.4)]"></div>
+                <span className="text-text-secondary">Trap State</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full border-[2px] border-[#D97706] bg-[#FBBF24] shadow-[0_0_10px_rgba(245,158,11,0.7)]"></div>
+                <span className="text-text-secondary">Active (Simulation)</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className={`h-full overflow-auto ${activeTab === 'graph' ? 'hidden' : 'block'}`}>

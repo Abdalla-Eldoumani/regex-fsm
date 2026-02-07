@@ -153,6 +153,9 @@ The `App` component maintains global application state:
 - dfa: DFA | null                       // Generated DFA
 - error: string                         // Parse/build errors
 - simulationMode: 'nfa' | 'dfa' | 'both' // Which automaton(s) to display
+- shouldMinimize: boolean               // Apply DFA minimization (default: true)
+- useLetterNames: boolean               // Use A,B,C naming instead of q0,q1 (default: false)
+- autoBuild: boolean                    // Auto-build on regex change (default: true)
 - nfaHighlightStates: string[]          // NFA states to highlight
 - dfaHighlightStates: string[]          // DFA states to highlight
 - nfaHighlightEdges: string[]           // NFA edges to highlight
@@ -326,10 +329,19 @@ Table and States tabs have dedicated expand buttons:
 ### Pattern Builder
 
 Interactive natural language to regex converter:
-- **23 Templates**: Across 9 categories (basic, position, repetition, character, combination, length, counting, negation, ordering)
+- **27 Templates**: Across 9 categories (basic, position, repetition, character, combination, length, counting, negation, ordering)
 - **Dynamic Parameters**: Input fields adjust based on selected template
 - **Live Preview**: See generated regex before insertion
 - **Parser Compatible**: All templates generate patterns compatible with the simplified parser
+- **Direct DFA**: Complex patterns (e.g., "does not contain") can build DFA directly
+
+### DFA Options
+
+Configuration options for DFA generation:
+- **Minimize DFA**: Apply Moore's algorithm for optimal state count (default: on)
+- **Use Letter Names**: Switch from q0/q1/q2 to A/B/C naming (default: off)
+- **Auto-build Toggle**: Switch between automatic and manual build modes
+- **Build Buttons**: Explicit NFA/DFA build buttons in manual mode
 
 ### Custom Alphabet Support
 
