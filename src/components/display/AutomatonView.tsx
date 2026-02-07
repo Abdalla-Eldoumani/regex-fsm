@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Automaton } from '@/core/automata/types'
 import { SimulationResult } from '@/core/algorithms/simulate'
 import { AutomatonGraph, AutomatonGraphHandle } from '@/visualization/renderer'
@@ -33,10 +33,10 @@ export function AutomatonView({
   const [modalHighlightEdges, setModalHighlightEdges] = useState<string[]>([])
   const graphRef = useRef<AutomatonGraphHandle>(null)
 
-  const handleModalHighlightChange = (states: string[], edges: string[]) => {
+  const handleModalHighlightChange = useCallback((states: string[], edges: string[]) => {
     setModalHighlightStates(states)
     setModalHighlightEdges(edges)
-  }
+  }, [])
 
   const handleCloseModal = () => {
     setIsSimulationModalOpen(false)
@@ -98,7 +98,7 @@ export function AutomatonView({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-surface/80 backdrop-blur-md sticky top-0 z-10">
+      <div className="px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-surface sticky top-0 z-10">
         <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
         <div className="flex gap-2">
@@ -251,7 +251,7 @@ export function AutomatonView({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-border bg-surface/80 backdrop-blur-sm shadow-lg">
                   <div className="flex items-center gap-4">
-                    <div className="w-3 h-3 rounded-full bg-accent shadow-lg animate-pulse"></div>
+                    <div className="w-3 h-3 rounded-full bg-accent shadow-lg"></div>
                     <h2 className="text-2xl font-display font-bold text-text-primary">
                       {activeTab === 'table' ? 'Transition Table' : 'State List'}
                     </h2>
