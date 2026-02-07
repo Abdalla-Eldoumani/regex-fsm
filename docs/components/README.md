@@ -6,8 +6,8 @@ React components for the RegexFSM user interface.
 
 ```
 src/components/
-├── App.tsx                     # Main application content
-├── Layout.tsx                  # Shared layout with header and routing
+├── App.tsx                     # Main application content (debounced input, construction method selector)
+├── Layout.tsx                  # Shared layout with header (lightweight CSS, walkthrough toggle)
 ├── ErrorBoundary.tsx           # Error boundary for React errors
 ├── NotFound.tsx                # Generic 404 page
 ├── NotFoundGithub.tsx          # GitHub-specific 404 page
@@ -18,13 +18,18 @@ src/components/
 │   ├── RegexInput.tsx          # Regex pattern input
 │   └── StringInput.tsx         # Test string input
 ├── display/                    # Automaton display
-│   ├── AutomatonView.tsx       # Main automaton viewer
-│   ├── TransitionTable.tsx     # Transition function table
-│   └── StateList.tsx           # State list view
+│   ├── AutomatonView.tsx       # Main automaton viewer (useCallback highlights)
+│   ├── TransitionTable.tsx     # Transition function table (Map-indexed O(1) lookups)
+│   └── StateList.tsx           # State list view (Map-indexed O(1) lookups)
 ├── simulation/                 # Simulation controls
-│   ├── SimulationPanel.tsx     # Simulation orchestration
+│   ├── SimulationPanel.tsx     # Simulation orchestration (React.memo)
 │   ├── SimulationControls.tsx  # Playback controls
 │   └── InputTape.tsx           # Visual input tape
+├── walkthrough/                # Interactive walkthrough system
+│   ├── WalkthroughOverlay.tsx  # SVG mask spotlight with RAF-throttled positioning
+│   ├── WalkthroughTooltip.tsx  # Smart positioned tooltip with step navigation
+│   ├── WalkthroughToggle.tsx   # Header dropdown to start walkthroughs
+│   └── AlgorithmWalkthrough.tsx # Expandable algorithm step panel
 └── education/                  # Educational content
     ├── TheoryPanel.tsx         # Theory explanations
     └── StepExplanation.tsx     # Step-by-step explanations
@@ -38,10 +43,10 @@ Shared layout component that wraps all routes with a consistent header and backg
 
 ### Features
 
-- Sticky header with logo and navigation
-- Animated gradient background with grid pattern
+- Sticky header with logo, navigation, and walkthrough toggle dropdown
+- Lightweight background (no animated blobs or heavy backdrop-blur)
 - React Router integration using `<Outlet />`
-- Responsive design with glassmorphism effects
+- Responsive design
 
 ### Structure
 
@@ -158,8 +163,10 @@ Main content component for the home route (`/`).
 
 ```typescript
 const [regex, setRegex] = useState('')
+const [debouncedRegex, setDebouncedRegex] = useState('')  // 300ms debounce for computation
 const [alphabet, setAlphabet] = useState('')
 const [testString, setTestString] = useState('')
+const [constructionMethod, setConstructionMethod] = useState<'thompson' | 'asuDirect' | 'brzozowski'>('thompson')
 const [nfa, setNfa] = useState<NFA | null>(null)
 const [dfa, setDfa] = useState<DFA | null>(null)
 const [error, setError] = useState<string>('')
@@ -767,11 +774,13 @@ Display components wrapped with `React.memo` to prevent unnecessary re-renders:
 - `SimulationControls`
 - `RegexInput`
 - `StringInput`
+- `SimulationPanel`
 
 Derived state computed with `useMemo`:
-- NFA/DFA construction in `App.tsx`
-- Simulation results in `SimulationPanel.tsx`
+- NFA/DFA construction in `App.tsx` (uses `debouncedRegex`, not raw `regex`)
+- Transition indexes (Map-based) in `TransitionTable` and `StateList`
+- Alphabet, accept state sets, and column lists in display components
 
 Stable handlers created with `useCallback`:
-- Highlight change handlers
+- Highlight change handlers (in App.tsx and AutomatonView.tsx)
 - Event callbacks passed to child components
