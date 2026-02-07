@@ -16,6 +16,8 @@ src/core/
 │   └── parser.ts     # Syntax analysis
 ├── algorithms/       # Core algorithms
 │   ├── thompson.ts   # Thompson's construction (regex → NFA)
+│   ├── asuDirect.ts  # ASU direct construction (regex → DFA via syntax tree/followpos)
+│   ├── brzozowski.ts # Brzozowski derivative construction (regex → DFA via derivatives)
 │   ├── subset.ts     # Subset construction (NFA → DFA)
 │   ├── minimize.ts   # DFA minimization (Moore's algorithm)
 │   ├── avoidance.ts  # KMP-based "does not contain" DFA
@@ -23,8 +25,8 @@ src/core/
 │   └── simulate.ts   # Automaton simulation
 ├── cache/            # Caching layer
 │   ├── LRUCache.ts   # Generic LRU cache with configurable capacity
-│   ├── keys.ts       # Deterministic cache key generation
-│   ├── algorithmCache.ts  # Main cache manager with localStorage
+│   ├── keys.ts       # Deterministic cache key generation (djb2 hash)
+│   ├── algorithmCache.ts  # Main cache manager with dirty-flag saves and localStorage
 │   └── index.ts      # Public exports
 ├── cachedAlgorithms.ts  # Cached wrappers for parse/buildNFA/nfaToDFA/minimizeDFA
 └── patterns/         # Pattern templates
@@ -438,6 +440,8 @@ All core modules have comprehensive test coverage:
 | subset.test.ts | 42 | Conversions, custom alphabet, trap states |
 | minimize.test.ts | 14 | Equivalence, naming, unreachable removal |
 | avoidance.test.ts | 21 | KMP correctness, acceptance/rejection |
+| asuDirect.test.ts | 22 | Syntax tree annotation, followpos, DFA equivalence |
+| brzozowski.test.ts | 22 | Derivative computation, simplification, DFA equivalence |
 | lambda.test.ts | 18 | Paths, cycles, empty inputs |
 | simulate.test.ts | 88 | NFA/DFA acceptance, equivalence |
 | templates.test.ts | 45 | Structure, categorization, parser compat |

@@ -49,76 +49,86 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       getCytoscapeInstance: () => cyRef.current,
     }))
 
-  useEffect(() => {
-    if (!containerRef.current) return
+    // Instance lifecycle effect — only depends on automaton and savePositions
+    useEffect(() => {
+      if (!containerRef.current) return
 
-    automatonRef.current = automaton
-    const elements = automatonToCytoscape(automaton)
-    const allElements = [...elements.nodes, ...elements.edges]
+      automatonRef.current = automaton
+      const elements = automatonToCytoscape(automaton)
+      const allElements = [...elements.nodes, ...elements.edges]
 
-    // Check for cached positions
-    const cachedPositions = layoutCache.getPositions(automaton)
-    let layoutConfig: LayoutOptions
+      const cachedPositions = layoutCache.getPositions(automaton)
+      let layoutConfig: LayoutOptions
 
-    if (cachedPositions) {
-      // Use preset layout with cached positions
-      layoutConfig = {
-        name: 'preset',
-        positions: cachedPositions,
-        fit: true,
-        padding: 30
-      } as LayoutOptions
-    } else {
-      layoutConfig = selectLayout(automaton)
-    }
+      if (cachedPositions) {
+        layoutConfig = {
+          name: 'preset',
+          positions: cachedPositions,
+          fit: true,
+          padding: 30
+        } as LayoutOptions
+      } else {
+        layoutConfig = selectLayout(automaton)
+      }
 
-    cyRef.current = cytoscape({
-      container: containerRef.current,
-      elements: allElements,
-      style: getStylesheet(),
-      layout: layoutConfig,
-    })
-
-    // Save positions after initial layout completes
-    if (!cachedPositions) {
-      cyRef.current.one('layoutstop', savePositions)
-    }
-
-    // Save positions when nodes are dragged
-    cyRef.current.on('dragfree', 'node', savePositions)
-
-    if (onNodeClick) {
-      cyRef.current.on('tap', 'node', e => {
-        onNodeClick(e.target.id())
+      cyRef.current = cytoscape({
+        container: containerRef.current,
+        elements: allElements,
+        style: getStylesheet(),
+        layout: layoutConfig,
       })
-    }
 
-    if (onEdgeClick) {
-      cyRef.current.on('tap', 'edge', e => {
-        onEdgeClick(e.target.id())
+      if (!cachedPositions) {
+        cyRef.current.one('layoutstop', savePositions)
+      }
+
+      cyRef.current.on('dragfree', 'node', savePositions)
+
+      return () => {
+        cyRef.current?.destroy()
+        cyRef.current = null
+      }
+    }, [automaton, savePositions])
+
+    // Event listener effect — separate so callback changes don't recreate Cytoscape
+    useEffect(() => {
+      const cy = cyRef.current
+      if (!cy) return
+
+      const nodeHandler = (e: cytoscape.EventObject) => {
+        onNodeClick?.(e.target.id())
+      }
+      const edgeHandler = (e: cytoscape.EventObject) => {
+        onEdgeClick?.(e.target.id())
+      }
+
+      cy.on('tap', 'node', nodeHandler)
+      cy.on('tap', 'edge', edgeHandler)
+
+      return () => {
+        cy.off('tap', 'node', nodeHandler)
+        cy.off('tap', 'edge', edgeHandler)
+      }
+    }, [automaton, onNodeClick, onEdgeClick])
+
+    // Highlight effect — use batch mode for performance
+    useEffect(() => {
+      const cy = cyRef.current
+      if (!cy) return
+
+      cy.startBatch()
+      cy.nodes().removeClass('active')
+      cy.edges().removeClass('active')
+
+      highlightStates.forEach(stateId => {
+        cy.$id(stateId).addClass('active')
       })
-    }
 
-    return () => {
-      cyRef.current?.destroy()
-      cyRef.current = null
-    }
-  }, [automaton, onNodeClick, onEdgeClick, savePositions])
-
-  useEffect(() => {
-    if (!cyRef.current) return
-
-    cyRef.current.nodes().removeClass('active')
-    cyRef.current.edges().removeClass('active')
-
-    highlightStates.forEach(stateId => {
-      cyRef.current?.$id(stateId).addClass('active')
-    })
-
-    highlightEdges.forEach(edgeId => {
-      cyRef.current?.$id(edgeId).addClass('active')
-    })
-  }, [highlightStates, highlightEdges])
+      highlightEdges.forEach(edgeId => {
+        cy.$id(edgeId).addClass('active')
+      })
+      cy.endBatch()
+    }, [highlightStates, highlightEdges])
 
     return <div ref={containerRef} className="w-full h-full" />
   }

@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { Automaton } from '@/core/automata/types'
 
 interface TransitionTableProps {
@@ -7,18 +7,46 @@ interface TransitionTableProps {
 }
 
 export const TransitionTable = memo(function TransitionTable({ automaton, highlightState }: TransitionTableProps) {
-  const alphabet = Array.from(automaton.alphabet).sort()
-  const hasLambda = automaton.transitions.some(t => t.symbol === null)
-  const columns = hasLambda ? [...alphabet, 'λ'] : alphabet
+  const alphabet = useMemo(() => Array.from(automaton.alphabet).sort(), [automaton.alphabet])
+  const hasLambda = useMemo(() => automaton.transitions.some(t => t.symbol === null), [automaton.transitions])
+  const columns = useMemo(() => hasLambda ? [...alphabet, 'λ'] : alphabet, [alphabet, hasLambda])
+
+  // Build transition index: Map<fromState, Map<symbol|'λ', sortedTargets[]>>
+  const transitionIndex = useMemo(() => {
+    const idx = new Map<string, Map<string, Set<string>>>()
+    for (const t of automaton.transitions) {
+      const symKey = t.symbol ?? 'λ'
+      let fromMap = idx.get(t.from)
+      if (!fromMap) {
+        fromMap = new Map()
+        idx.set(t.from, fromMap)
+      }
+      let targets = fromMap.get(symKey)
+      if (!targets) {
+        targets = new Set()
+        fromMap.set(symKey, targets)
+      }
+      targets.add(t.to)
+    }
+    // Convert sets to sorted arrays
+    const result = new Map<string, Map<string, string[]>>()
+    for (const [from, fromMap] of idx) {
+      const sortedMap = new Map<string, string[]>()
+      for (const [sym, targets] of fromMap) {
+        sortedMap.set(sym, [...targets].sort())
+      }
+      result.set(from, sortedMap)
+    }
+    return result
+  }, [automaton.transitions])
 
   const getTransitions = (fromState: string, symbol: string | null): string[] => {
-    const targets = automaton.transitions
-      .filter(t => t.from === fromState && t.symbol === symbol)
-      .map(t => t.to)
-    return Array.from(new Set(targets)).sort()
+    const symKey = symbol ?? 'λ'
+    return transitionIndex.get(fromState)?.get(symKey) ?? []
   }
 
-  const isAcceptState = (state: string) => automaton.acceptStates.includes(state)
+  const acceptSet = useMemo(() => new Set(automaton.acceptStates), [automaton.acceptStates])
+  const isAcceptState = (state: string) => acceptSet.has(state)
   const isStartState = (state: string) => state === automaton.startState
   const isTrapState = (state: string) => state === '∅'
 

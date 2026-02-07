@@ -512,6 +512,152 @@ Both simulations correctly determine string acceptance:
 - DFA simulation accepts if the unique computation path leads to an accept state
 - NFA and DFA simulations produce identical acceptance results for the same language
 
+## DFA Minimization (Moore's Algorithm)
+
+**File**: `src/core/algorithms/minimize.ts`
+
+### Algorithm Overview
+
+Moore's partition refinement minimizes a DFA to the optimal number of states by merging equivalent states.
+
+### Steps
+
+1. Remove unreachable states from the DFA
+2. Create initial partition: accepting states vs non-accepting states
+3. Refine partitions: Split a partition if two states in the same partition have transitions to different partitions for the same symbol
+4. Repeat until no more splits occur
+5. Each partition becomes one state in the minimal DFA
+6. Rename states with clean names (q0, q1... or A, B, C...)
+
+### Properties
+
+- **Optimality**: Produces the DFA with the fewest possible states for the given language
+- **Language Preservation**: Minimized DFA accepts exactly the same language
+- **State Mapping**: Tracks which original states merged into each minimized state
+- **Naming Options**: User-selectable: numeric (q0, q1) or letter (A, B, C)
+
+## ASU Direct Construction (Regex → DFA)
+
+**File**: `src/core/algorithms/asuDirect.ts`
+
+### Algorithm Overview
+
+The ASU (Aho, Sethi, Ullman) direct construction builds a DFA directly from a regular expression without creating an intermediate NFA. It uses syntax tree annotation with position numbering.
+
+### Steps
+
+1. **Augment regex**: Convert `R` to `(R)#` where `#` is an end marker
+2. **Number positions**: Assign a unique position number to each leaf (symbol) in the syntax tree
+3. **Compute nullable**: For each node, determine if its language includes the empty string
+4. **Compute firstpos**: For each node, the set of positions that can match the first symbol
+5. **Compute lastpos**: For each node, the set of positions that can match the last symbol
+6. **Compute followpos**: For each position, the set of positions that can follow it in a match
+7. **Build DFA**: States are sets of positions; transitions use followpos
+
+### Key Functions
+
+```
+nullable(n):
+  - empty/λ  → true
+  - symbol   → false
+  - concat   → nullable(left) AND nullable(right)
+  - union    → nullable(left) OR nullable(right)
+  - star     → true
+  - plus     → nullable(child)
+
+firstpos(n):
+  - symbol(i) → {i}
+  - concat    → nullable(left) ? firstpos(left) ∪ firstpos(right) : firstpos(left)
+  - union     → firstpos(left) ∪ firstpos(right)
+  - star/plus → firstpos(child)
+
+lastpos(n):
+  - symbol(i) → {i}
+  - concat    → nullable(right) ? lastpos(left) ∪ lastpos(right) : lastpos(right)
+  - union     → lastpos(left) ∪ lastpos(right)
+  - star/plus → lastpos(child)
+
+followpos:
+  - For concat(c1, c2): for each i in lastpos(c1), followpos(i) ∪= firstpos(c2)
+  - For star/plus(c): for each i in lastpos(c), followpos(i) ∪= firstpos(c)
+```
+
+### Properties
+
+- **No intermediate NFA**: Goes directly from regex to DFA
+- **Efficient**: Often produces fewer states than Thompson + subset construction
+- **Position-based**: States are sets of position numbers, not sets of NFA states
+- **Trap state**: Added for completeness when transitions are undefined
+
+## Brzozowski Derivative Construction (Regex → DFA)
+
+**File**: `src/core/algorithms/brzozowski.ts`
+
+### Algorithm Overview
+
+Builds a DFA from a regular expression using Brzozowski derivatives. The derivative of a regex R with respect to a symbol `a` is a new regex that accepts exactly the strings `w` such that `aw` is in L(R).
+
+### Steps
+
+1. **Start state**: The original regex (simplified/normalized)
+2. **For each state (regex) and symbol**: Compute the derivative and simplify
+3. **State equivalence**: Two states are the same if their canonical string representations match
+4. **Accept states**: States whose language includes the empty string (nullable regexes)
+5. **Trap state**: Added as reject node for completeness
+
+### Derivative Rules
+
+```
+Da(∅)       = ∅
+Da(λ)       = ∅
+Da(a)       = λ
+Da(b)       = ∅  (b ≠ a)
+Da(R|S)     = Da(R) | Da(S)
+Da(RS)      = Da(R)·S | (if nullable(R)) Da(S)
+Da(R*)      = Da(R)·R*
+Da(R+)      = Da(R)·R*
+```
+
+### Simplification
+
+Derivatives are simplified/normalized after each step to ensure state convergence:
+- `∅|R = R|∅ = R`
+- `∅·R = R·∅ = ∅`
+- `λ·R = R·λ = R`
+- Canonical string representation for equivalence checking
+
+### Properties
+
+- **Elegant**: Each state is a regex, each transition computes a derivative
+- **No intermediate NFA**: Goes directly from regex to DFA
+- **Canonical forms**: Normalization ensures finite number of distinct states
+- **Theoretical significance**: Demonstrates that regular languages are closed under derivatives
+
+## KMP-based Avoidance DFA
+
+**File**: `src/core/algorithms/avoidance.ts`
+
+### Algorithm Overview
+
+Builds a DFA for "does not contain X" patterns directly using the KMP (Knuth-Morris-Pratt) failure function. This creates DFAs for patterns that are difficult to express as simple regular expressions.
+
+### Steps
+
+1. Create n+1 states for a pattern of length n
+2. States q0...q(n-1) are accepting (partial matches only)
+3. State qn is the trap/reject state (full pattern matched)
+4. Use KMP failure function for transitions:
+   - If pattern[i] === c: transition to qi+1
+   - Else: use failure function to find fallback state
+
+### Example
+
+Pattern: "bba", Alphabet: {a, b}
+- q0: no match started (accept)
+- q1: matched "b" (accept)
+- q2: matched "bb" (accept)
+- q3: matched "bba" → TRAP (reject all subsequent input)
+
 ## Regex Parsing
 
 **File**: `src/core/regex/parser.ts`

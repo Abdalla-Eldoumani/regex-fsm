@@ -150,7 +150,8 @@ describe('Cache Keys', () => {
       }
       const key = thompsonKey(ast)
       expect(key).toContain('thompson:')
-      expect(key).toContain('concat')
+      // Key is a hash, so just verify it's deterministic
+      expect(thompsonKey(ast)).toBe(key)
     })
   })
 
