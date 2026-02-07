@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
+import { WalkthroughProvider } from './components/walkthrough/WalkthroughProvider'
 import './index.css'
 
 const App = lazy(() => import('./components/App'))
@@ -25,15 +26,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<App />} />
-              <Route path="/github" element={<NotFoundGithub />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </Suspense>
+        <WalkthroughProvider>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<App />} />
+                <Route path="/github" element={<NotFoundGithub />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </Suspense>
+        </WalkthroughProvider>
       </BrowserRouter>
     </ErrorBoundary>
   </React.StrictMode>,
