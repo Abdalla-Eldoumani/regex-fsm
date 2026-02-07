@@ -31,7 +31,8 @@ RegexFSM follows a layered architecture separating concerns into distinct module
 ┌───────────────▼─────────────────────────┐
 │          Core Layer                     │
 │  - Regex parsing                        │
-│  - NFA/DFA construction                 │
+│  - NFA/DFA construction (Thompson,      │
+│    ASU Direct, Brzozowski)              │
 │  - Simulation algorithms                │
 └─────────────────────────────────────────┘
 ```
@@ -40,12 +41,24 @@ RegexFSM follows a layered architecture separating concerns into distinct module
 
 ### Regex to Automaton Pipeline
 
+**Thompson's Construction (default):**
 1. User enters regex string → `RegexInput` component
-2. String is tokenized → `tokenize(input)` in `src/core/regex/tokenizer.ts`
-3. Tokens are parsed into AST → `parse(input)` in `src/core/regex/parser.ts`
-4. AST is converted to NFA → `buildNFA(ast)` in `src/core/algorithms/thompson.ts`
-5. NFA is converted to DFA → `nfaToDFA(nfa)` in `src/core/algorithms/subset.ts`
-6. Both automata are displayed → `AutomatonView` components
+2. Input is debounced (300ms) before triggering computation
+3. String is tokenized → `tokenize(input)` in `src/core/regex/tokenizer.ts`
+4. Tokens are parsed into AST → `parse(input)` in `src/core/regex/parser.ts`
+5. AST is converted to NFA → `buildNFA(ast)` in `src/core/algorithms/thompson.ts`
+6. NFA is converted to DFA → `nfaToDFA(nfa)` in `src/core/algorithms/subset.ts`
+7. Both automata are displayed → `AutomatonView` components
+
+**ASU Direct Construction:**
+1-4. Same as above (parse to AST)
+5. AST is converted directly to DFA → `asuDirectToDFA(ast)` in `src/core/algorithms/asuDirect.ts`
+6. NFA panel shows informational message (no NFA produced)
+
+**Brzozowski Derivative Construction:**
+1-4. Same as above (parse to AST)
+5. AST is converted directly to DFA → `brzozowskiToDFA(ast)` in `src/core/algorithms/brzozowski.ts`
+6. NFA panel shows informational message (no NFA produced)
 
 ### Simulation Flow
 
@@ -73,10 +86,12 @@ RegexFSM follows a layered architecture separating concerns into distinct module
 **Key Files**:
 - `src/core/regex/tokenizer.ts` - Lexical analysis
 - `src/core/regex/parser.ts` - Syntax analysis
-- `src/core/algorithms/thompson.ts` - NFA construction
-- `src/core/algorithms/subset.ts` - DFA construction
+- `src/core/algorithms/thompson.ts` - NFA construction (Thompson's)
+- `src/core/algorithms/asuDirect.ts` - Direct regex-to-DFA (ASU syntax tree method)
+- `src/core/algorithms/brzozowski.ts` - Direct regex-to-DFA (Brzozowski derivatives)
+- `src/core/algorithms/subset.ts` - DFA construction (subset/powerset)
 - `src/core/algorithms/simulate.ts` - Execution simulation
-- `src/core/cache/` - LRU cache and algorithm result caching
+- `src/core/cache/` - LRU cache with dirty-flag saves and hash-based keys
 - `src/core/cachedAlgorithms.ts` - Cached wrappers for parse/buildNFA/nfaToDFA/minimizeDFA
 
 ### Components Module
@@ -94,7 +109,8 @@ RegexFSM follows a layered architecture separating concerns into distinct module
 - `src/components/App.tsx` - Main application component
 - `src/components/input/RegexInput.tsx` - Regex input with validation
 - `src/components/display/AutomatonView.tsx` - Automaton visualization wrapper
-- `src/components/simulation/SimulationPanel.tsx` - Simulation orchestration
+- `src/components/simulation/SimulationPanel.tsx` - Simulation orchestration (React.memo)
+- `src/components/walkthrough/` - Interactive walkthrough system (overlay, tooltip, toggle)
 - `src/components/education/TheoryPanel.tsx` - Educational theory content
 
 ### Visualization Module
@@ -129,9 +145,11 @@ The `App` component maintains global application state:
 
 ```typescript
 - regex: string                         // Current regex input
+- debouncedRegex: string                // Debounced regex (300ms) for computation
 - alphabet: string                      // Custom alphabet (optional)
 - testString: string                    // Current test string
-- nfa: NFA | null                       // Generated NFA
+- constructionMethod: 'thompson' | 'asuDirect' | 'brzozowski' // Algorithm selection
+- nfa: NFA | null                       // Generated NFA (null for direct methods)
 - dfa: DFA | null                       // Generated DFA
 - error: string                         // Parse/build errors
 - simulationMode: 'nfa' | 'dfa' | 'both' // Which automaton(s) to display
@@ -205,8 +223,9 @@ The application uses a multi-level caching approach:
 **Algorithm Cache** (`src/core/cache/`):
 - LRU cache with configurable max size (default: 50 entries)
 - localStorage persistence with version-based invalidation
+- Dirty-flag saves: only writes to localStorage when cache actually changed (5s debounce)
+- Hash-based cache keys using djb2 for shorter, faster comparisons
 - Separate caches for parse, thompson, subset, and minimize results
-- Cache key generation from AST/automaton structure
 
 **Layout Cache** (`src/visualization/layoutCache.ts`):
 - Persists graph node positions across tab switches and page refreshes
@@ -216,7 +235,7 @@ The application uses a multi-level caching approach:
 **React Memoization** (`src/components/App.tsx`):
 - `useMemo` for derived state (NFA/DFA construction)
 - `useCallback` for stable handler references
-- `React.memo` on display components (TransitionTable, StateList, InputTape, SimulationControls)
+- `React.memo` on display components (TransitionTable, StateList, InputTape, SimulationControls, SimulationPanel, RegexInput, StringInput)
 
 ### Automaton Construction
 
@@ -227,9 +246,10 @@ The application uses a multi-level caching approach:
 
 ### Visualization
 
-- Cytoscape reuses canvas for efficient rendering
+- Cytoscape instance lifecycle and event listeners split into separate useEffects
+- Callback changes (onNodeClick/onEdgeClick) no longer destroy/recreate the instance
+- Highlight updates wrapped in `cy.startBatch()`/`cy.endBatch()` for grouped style changes
 - Layout computation cached when automaton unchanged
-- Highlight updates avoid full re-render
 - Node positions restored from cache on tab switch
 
 ### Simulation
@@ -240,9 +260,12 @@ The application uses a multi-level caching approach:
 
 ## Design Decisions
 
-### Why Thompson's Construction?
+### Why Multiple Construction Methods?
 
-Thompson's algorithm produces structurally simple NFAs with exactly one start and accept state. This makes visualization clearer and debugging easier compared to other construction methods.
+The application supports three construction methods:
+- **Thompson's Construction** (default): Produces structurally simple NFAs with exactly one start and accept state. Best for visualization and understanding the regex → NFA → DFA pipeline.
+- **ASU Direct Construction**: Builds DFA directly from regex using syntax tree annotation. Demonstrates the position/followpos approach from Aho, Sethi, Ullman.
+- **Brzozowski Derivatives**: Builds DFA from regex using symbolic derivatives. Demonstrates an elegant theoretical approach where each state is itself a regex.
 
 ### Why Subset Construction?
 
