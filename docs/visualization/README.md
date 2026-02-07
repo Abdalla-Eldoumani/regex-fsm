@@ -70,7 +70,11 @@ if (cy) {
 
 ### Implementation Details
 
-#### Initialization
+The renderer uses three separate `useEffect` hooks to prevent unnecessary Cytoscape instance recreation:
+
+#### Effect 1: Instance Lifecycle
+
+Creates/destroys the Cytoscape instance. Only depends on `automaton` and `savePositions`.
 
 ```typescript
 useEffect(() => {
@@ -86,41 +90,52 @@ useEffect(() => {
     layout: selectLayout(automaton),
   })
 
-  // Event handlers
-  if (onNodeClick) {
-    cyRef.current.on('tap', 'node', e => {
-      onNodeClick(e.target.id())
-    })
-  }
-
   // Cleanup
   return () => {
     cyRef.current?.destroy()
     cyRef.current = null
   }
-}, [automaton, onNodeClick, onEdgeClick])
+}, [automaton, savePositions])
 ```
 
-#### Highlight Updates
+#### Effect 2: Event Listeners
 
-Highlights update without full re-render:
+Registers tap handlers. Changes to `onNodeClick`/`onEdgeClick` callbacks no longer destroy/recreate the instance — they just rebind event listeners.
 
 ```typescript
 useEffect(() => {
-  if (!cyRef.current) return
+  const cy = cyRef.current
+  if (!cy) return
 
-  // Clear all highlights
-  cyRef.current.nodes().removeClass('active')
-  cyRef.current.edges().removeClass('active')
+  const nodeHandler = (e: cytoscape.EventObject) => { onNodeClick?.(e.target.id()) }
+  const edgeHandler = (e: cytoscape.EventObject) => { onEdgeClick?.(e.target.id()) }
 
-  // Apply new highlights
-  highlightStates.forEach(stateId => {
-    cyRef.current?.$id(stateId).addClass('active')
-  })
+  cy.on('tap', 'node', nodeHandler)
+  cy.on('tap', 'edge', edgeHandler)
 
-  highlightEdges.forEach(edgeId => {
-    cyRef.current?.$id(edgeId).addClass('active')
-  })
+  return () => {
+    cy.off('tap', 'node', nodeHandler)
+    cy.off('tap', 'edge', edgeHandler)
+  }
+}, [automaton, onNodeClick, onEdgeClick])
+```
+
+#### Effect 3: Highlight Updates (Batched)
+
+Highlights update without full re-render, wrapped in `cy.startBatch()`/`cy.endBatch()` to prevent per-class-change style recalculations:
+
+```typescript
+useEffect(() => {
+  const cy = cyRef.current
+  if (!cy) return
+
+  cy.startBatch()
+  cy.nodes().removeClass('active')
+  cy.edges().removeClass('active')
+
+  highlightStates.forEach(stateId => { cy.$id(stateId).addClass('active') })
+  highlightEdges.forEach(edgeId => { cy.$id(edgeId).addClass('active') })
+  cy.endBatch()
 }, [highlightStates, highlightEdges])
 ```
 
@@ -538,8 +553,9 @@ useEffect(() => {
 
 ### Avoiding Re-renders
 
-- Cytoscape instance created once per automaton
-- Highlights updated without destroying/recreating
+- Cytoscape instance created once per automaton (split effect pattern)
+- Callback changes (onNodeClick/onEdgeClick) rebind listeners without destroying instance
+- Highlights wrapped in batch mode (`cy.startBatch()`/`cy.endBatch()`)
 - Layout computed once, cached by Cytoscape
 
 ### Layout Caching
