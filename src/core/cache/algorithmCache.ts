@@ -99,12 +99,25 @@ class AlgorithmCache {
   private subsetCache: LRUCache<string, DFA>
   private minimizeCache: LRUCache<string, MinimizationResult>
   private initialized = false
+  private dirty = false
+  private saveTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor() {
     this.parseCache = new LRUCache(50)
     this.thompsonCache = new LRUCache(50)
     this.subsetCache = new LRUCache(30) // Smaller - DFAs can be large
     this.minimizeCache = new LRUCache(30)
+  }
+
+  private scheduleSave(): void {
+    if (this.saveTimer) return
+    this.dirty = true
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = null
+      if (this.dirty) {
+        this.saveToStorage()
+      }
+    }, 5000)
   }
 
   private init(): void {
@@ -146,6 +159,7 @@ class AlgorithmCache {
   }
 
   saveToStorage(): void {
+    this.dirty = false
     try {
       const data: CacheState = {
         version: CACHE_VERSION,
@@ -169,6 +183,7 @@ class AlgorithmCache {
   setParsed(regex: string, ast: RegexNode): void {
     this.init()
     this.parseCache.set(parseKey(regex), ast)
+    this.scheduleSave()
   }
 
   // Thompson cache
@@ -180,6 +195,7 @@ class AlgorithmCache {
   setNFA(ast: RegexNode, nfa: NFA): void {
     this.init()
     this.thompsonCache.set(thompsonKey(ast), nfa)
+    this.scheduleSave()
   }
 
   // Subset cache
@@ -191,6 +207,7 @@ class AlgorithmCache {
   setDFA(nfa: NFA, alphabet: Set<string> | undefined, dfa: DFA): void {
     this.init()
     this.subsetCache.set(subsetKey(nfa, alphabet), dfa)
+    this.scheduleSave()
   }
 
   // Minimize cache
@@ -202,6 +219,7 @@ class AlgorithmCache {
   setMinimized(dfa: DFA, useLetterNames: boolean, result: MinimizationResult): void {
     this.init()
     this.minimizeCache.set(minimizeKey(dfa, useLetterNames), result)
+    this.scheduleSave()
   }
 
   // Clear all caches
@@ -228,12 +246,8 @@ class AlgorithmCache {
 // Singleton instance
 export const algorithmCache = new AlgorithmCache()
 
-// Save to storage periodically and on page unload
+// Save on page unload (debounced saves handle the rest)
 if (typeof window !== 'undefined') {
-  // Save every 30 seconds
-  setInterval(() => algorithmCache.saveToStorage(), 30000)
-
-  // Save on page unload
   window.addEventListener('beforeunload', () => {
     algorithmCache.saveToStorage()
   })
