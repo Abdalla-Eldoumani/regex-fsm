@@ -88,6 +88,12 @@ export function getCacheStats() {
   return algorithmCache.getStats()
 }
 
+// Direct regex-to-DFA algorithms (no caching needed - they're already fast)
+export { asuDirectDFA } from './algorithms/asuDirect'
+export type { ASUResult } from './algorithms/asuDirect'
+export { brzozowskiDFA } from './algorithms/brzozowski'
+export type { BrzozowskiResult } from './algorithms/brzozowski'
+
 // Re-export original algorithms with suffix for direct access
 export {
   parseOriginal,
