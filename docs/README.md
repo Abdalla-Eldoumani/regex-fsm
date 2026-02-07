@@ -58,7 +58,7 @@ The core module implements the fundamental algorithms and data structures:
 
 - **Regex Module** - Tokenizer and parser for regular expressions
 - **Automata Module** - NFA and DFA type definitions and utilities
-- **Algorithms Module** - Thompson's construction, subset construction, minimization, avoidance, simulation
+- **Algorithms Module** - Thompson's construction, subset construction, minimization, avoidance, ASU direct construction, Brzozowski derivatives, simulation
 - **Patterns Module** - Template library for natural language to regex conversion (27 templates across 9 categories)
 - **Cache Module** - LRU cache with localStorage persistence for algorithm results and graph layouts
 
@@ -67,8 +67,9 @@ The core module implements the fundamental algorithms and data structures:
 React components organized by function:
 
 - **Input** - RegexInput (with alphabet field), StringInput, PatternBuilder (interactive template selector with 23 templates)
-- **Display** - AutomatonView (with fullscreen simulation modal and expandable views), TransitionTable (improved scrolling, expandable), StateList (improved truncation, rejection banners, expandable)
-- **Simulation** - SimulationPanel (flexible NFA/DFA/Both modes), SimulationControls, SimulationModal (fullscreen with split-screen layout), InputTape
+- **Display** - AutomatonView (with fullscreen simulation modal and expandable views), TransitionTable (Map-indexed O(1) lookups), StateList (Map-indexed, rejection banners)
+- **Simulation** - SimulationPanel (React.memo, flexible NFA/DFA/Both modes), SimulationControls, SimulationModal (fullscreen with split-screen layout), InputTape
+- **Walkthrough** - WalkthroughOverlay (SVG spotlight), WalkthroughTooltip (smart positioning), WalkthroughToggle (header dropdown), AlgorithmWalkthrough (step panel)
 - **Education** - TheoryPanel, StepExplanation
 - **Common** - Button, Tabs
 
@@ -115,6 +116,8 @@ All core algorithms have comprehensive test coverage:
 | Subset | 42 |
 | Minimize | 14 |
 | Avoidance | 21 |
+| ASU Direct | 22 |
+| Brzozowski | 22 |
 | Simulation | 88 |
 | Templates | 45 |
 | Integration | 104 |
@@ -122,7 +125,7 @@ All core algorithms have comprehensive test coverage:
 | Lambda closure | 18 |
 | Automata | 56 |
 | Cache | 28 |
-| **Total** | **603** |
+| **Total** | **647** |
 
 Test categories:
 - Parser validation (consecutive quantifiers)
@@ -130,4 +133,6 @@ Test categories:
 - Custom alphabet (DFA completeness)
 - DFA minimization (equivalence preservation, naming options)
 - Avoidance DFA (KMP correctness, acceptance/rejection)
-- Cache (LRU eviction, key generation, localStorage persistence)
+- ASU Direct (syntax tree annotation, followpos, DFA equivalence)
+- Brzozowski (derivative computation, simplification, DFA equivalence)
+- Cache (LRU eviction, key generation, hash-based keys, localStorage persistence)
