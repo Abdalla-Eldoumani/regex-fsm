@@ -2,6 +2,17 @@ import { RegexNode } from '../regex/ast'
 import { NFA, DFA, Automaton } from '../automata/types'
 
 /**
+ * Fast string hash (djb2) for cache key generation.
+ */
+function hashStr(s: string): string {
+  let h = 5381
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) + h + s.charCodeAt(i)) | 0
+  }
+  return (h >>> 0).toString(36)
+}
+
+/**
  * Generate deterministic cache key for a regex AST.
  * Uses JSON serialization for consistency.
  */
@@ -11,18 +22,18 @@ export function astKey(ast: RegexNode): string {
 
 /**
  * Generate deterministic cache key for Thompson construction.
- * Input is the AST, output is NFA.
+ * Uses a hash of the AST string instead of the full JSON.
  */
 export function thompsonKey(ast: RegexNode): string {
-  return `thompson:${astKey(ast)}`
+  return `thompson:${hashStr(astKey(ast))}`
 }
 
 /**
  * Serialize an automaton to a stable string for cache key generation.
- * Handles Set<string> alphabet serialization.
+ * Uses hashing to keep keys short.
  */
 function serializeAutomaton(automaton: Automaton): string {
-  return JSON.stringify({
+  const raw = JSON.stringify({
     states: automaton.states.map(s => s.id).sort(),
     transitions: automaton.transitions
       .map(t => `${t.from}-${t.symbol ?? 'λ'}-${t.to}`)
@@ -31,6 +42,7 @@ function serializeAutomaton(automaton: Automaton): string {
     acceptStates: [...automaton.acceptStates].sort(),
     alphabet: [...automaton.alphabet].sort()
   })
+  return hashStr(raw)
 }
 
 /**
