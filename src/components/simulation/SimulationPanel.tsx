@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { memo, useEffect } from 'react'
 import { Automaton } from '@/core/automata/types'
 import { useSimulation } from '@/hooks/useSimulation'
 import { SimulationControls } from './SimulationControls'
@@ -12,7 +12,7 @@ interface SimulationPanelProps {
   onHighlightChange: (states: string[], edges: string[]) => void
 }
 
-export function SimulationPanel({
+export const SimulationPanel = memo(function SimulationPanel({
   automaton,
   input,
   mode,
@@ -184,4 +184,4 @@ export function SimulationPanel({
       </div>
     </div>
   )
-}
+})
