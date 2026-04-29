@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Redirect } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
 import { WalkthroughProvider } from './components/walkthrough/WalkthroughProvider'
@@ -8,7 +8,7 @@ import './index.css'
 
 const App = lazy(() => import('./components/App'))
 const NotFound = lazy(() => import('./components/NotFound'))
-const NotFoundGithub = lazy(() => import('./components/NotFoundGithub'))
+const GithubRedirect = lazy(() => import('./components/GithubRedirect'))
 
 // eslint-disable-next-line react-refresh/only-export-components
 function LoadingFallback() {
@@ -31,7 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Routes>
               <Route element={<Layout />}>
                 <Route path="/" element={<App />} />
-                <Route path="/github" element={<Redirect to={"https://github.com/Abdalla-Eldoumani/regex-fsm"} />} />
+                <Route path="/github" element={<GithubRedirect />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
