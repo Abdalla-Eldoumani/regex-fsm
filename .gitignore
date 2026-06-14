@@ -1,41 +1,30 @@
-# dependencies
-/node_modules
-/.pnp
+# Dependencies
+node_modules/
+.pnp
 .pnp.js
 
-# testing
-/coverage
+# Build output
+dist/
+*.tsbuildinfo
 
-# next.js
-/.next/
-/out/
+# Test and coverage output
+coverage/
+test-results/
+playwright-report/
+.playwright/
 
-# production
-/build
-/dist
+# Local environment
+.env
+.env.*
 
-# misc
+# Deploy
+.vercel
+
+# Editor and OS
+.vscode/
 .DS_Store
-*.pem
 
-# debug
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# local env files
-.env*.local
-.env
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-*TASKS.md
-*CLAUDE.md
-.vscode/
-todo.txt
-regex_and_FSMs.pdf
