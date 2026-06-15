@@ -25,6 +25,11 @@ export interface AutomatonGraphProps {
   highlightLinked?: string[]
   onNodeClick?: (nodeId: string) => void
   onEdgeClick?: (edgeId: string) => void
+  // Positional editor edge ids (BL-01). Same order as automaton.transitions
+  // (toAutomaton is a 1:1 map). When provided, these become the Cytoscape edge
+  // ids so onSelect reports the editor's own id and the panel match is exact
+  // after a deletion. Omitted on read-only panes, which keep the index ids.
+  edgeIds?: ReadonlyArray<string | undefined>
   // Additive edit props — all optional so existing call sites are unchanged.
   editable?: boolean
   onAddStateAt?: (x: number, y: number) => void
@@ -51,6 +56,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       highlightLinked = [],
       onNodeClick,
       onEdgeClick,
+      edgeIds,
       editable = false,
       onAddStateAt,
       onDrawEdge,
@@ -85,7 +91,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       if (!containerRef.current) return
 
       automatonRef.current = automaton
-      const elements = automatonToCytoscape(automaton)
+      const elements = automatonToCytoscape(automaton, edgeIds)
       const allElements = [...elements.nodes, ...elements.edges]
 
       const cachedPositions = layoutCache.getPositions(automaton)
@@ -131,7 +137,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
         cyRef.current?.destroy()
         cyRef.current = null
       }
-    }, [automaton, savePositions, editable])
+    }, [automaton, edgeIds, savePositions, editable])
 
     // Read-only event listener effect — separate so callback changes don't recreate
     // the Cytoscape instance. Also wires the select/unselect -> onSelect handler
