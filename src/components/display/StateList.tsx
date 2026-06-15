@@ -27,6 +27,7 @@ export const StateList = memo(function StateList({ automaton, highlightStates = 
       else inc.set(t.to, [t])
     }
     return { outgoingMap: out, incomingMap: inc }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- pre-existing; revisit under test in its owning phase (see .agent/TECH_DEBT.md)
   }, [automaton.transitions])
 
   const getOutgoingTransitions = (stateId: string) => outgoingMap.get(stateId) ?? []

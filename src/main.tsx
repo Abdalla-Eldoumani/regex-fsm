@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- app entry point: Fast Refresh of exports is moot here; the lazy() route consts and LoadingFallback are not refreshable components (see .agent/TECH_DEBT.md) */
 import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
@@ -10,7 +11,6 @@ const App = lazy(() => import('./components/App'))
 const NotFound = lazy(() => import('./components/NotFound'))
 const GithubRedirect = lazy(() => import('./components/GithubRedirect'))
 
-// eslint-disable-next-line react-refresh/only-export-components
 function LoadingFallback() {
   return (
     <div className="flex items-center justify-center min-h-screen">

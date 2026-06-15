@@ -28,6 +28,7 @@ export function PatternBuilder({ onInsert, onBuildDFA }: PatternBuilderProps) {
       if (paramValues.every((v) => v.trim() !== '')) {
         try {
           const regex = selectedTemplate.buildRegex(...paramValues)
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing setState-in-effect; refactor under test in its owning phase (see .agent/TECH_DEBT.md)
           setGeneratedRegex(regex)
         } catch {
           setGeneratedRegex('')

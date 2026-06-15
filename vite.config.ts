@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -12,15 +13,20 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'cytoscape-vendor': ['cytoscape'],
+        // Vite 8 (Rolldown) rejects the object form of manualChunks; the function
+        // form preserves the same two-vendor split. minify is dropped to use the
+        // Oxc default (esbuild minify is deprecated in Vite 8).
+        manualChunks(id) {
+          // Rolldown on Windows passes native backslash paths; normalize so the
+          // forward-slash substring tests work on all platforms.
+          const p = id.replace(/\\/g, '/')
+          if (p.includes('node_modules/react')) return 'react-vendor'
+          if (p.includes('node_modules/cytoscape')) return 'cytoscape-vendor'
         },
       },
     },
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
-    minify: 'esbuild',
     target: 'esnext',
   },
   test: {
