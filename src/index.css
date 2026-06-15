@@ -267,6 +267,22 @@ body {
              hero-node-glow var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
+/* The on-state ink label, faded in on the exact same per-beat opacity keyframe as
+   the amber overlay above so the dark --color-on-state label is visible only while
+   the node fill is lit. The base --color-text-hi label underneath carries the
+   resting neutral frames. This keeps the hero on the styles.ts label-on-fill rule
+   (ink on colored fills) instead of the sub-AA off-white-on-amber it had. */
+.hero-automaton .hero-node-label-ink {
+  opacity: 0;
+  animation: hero-node-beat-0 var(--hero-loop) var(--ease-in-out) infinite;
+}
+.hero-automaton .hero-node-label-ink[data-beat='1'] {
+  animation: hero-node-beat-1 var(--hero-loop) var(--ease-in-out) infinite;
+}
+.hero-automaton .hero-node-label-ink[data-beat='2'] {
+  animation: hero-node-beat-2 var(--hero-loop) var(--ease-in-out) infinite;
+}
+
 /* The tape head marker advancing across the cells, eased like edge traversal. */
 .hero-automaton .hero-head {
   animation: hero-head-advance var(--hero-loop) var(--ease-out-expo) infinite;
