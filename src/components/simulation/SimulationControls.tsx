@@ -30,7 +30,7 @@ export const SimulationControls = memo(function SimulationControls({
   onReset,
   onComplete,
 }: SimulationControlsProps) {
-  const secondaryBtnClass = "cursor-pointer px-4 py-2 bg-surface-hover border border-border rounded-lg text-sm font-medium text-text-secondary hover:text-primary hover:border-primary/50 hover:bg-primary-light/20 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-surface/50 disabled:border-border/50"
+  const secondaryBtnClass = "cursor-pointer px-4 min-h-[44px] bg-surface-raised border border-border rounded-lg text-sm font-medium text-text-mid hover:text-brand-hover hover:border-border-strong transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
 
   const speedOptions = [
     { value: 2000, label: '0.5x' },
@@ -62,11 +62,7 @@ export const SimulationControls = memo(function SimulationControls({
       <button
         onClick={isRunning ? onPause : onPlay}
         disabled={!canStep && !isRunning}
-        className={`cursor-pointer px-6 py-2 rounded-lg text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all flex items-center gap-2 min-w-[110px] justify-center transform active:scale-95 ${
-            isRunning
-              ? 'bg-secondary hover:bg-secondary-hover'
-              : 'bg-primary hover:bg-primary-hover'
-          } disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none`}
+        className={`cursor-pointer px-6 min-h-[44px] rounded-lg text-sm font-semibold text-on-brand shadow-sm transition-all flex items-center gap-2 min-w-[110px] justify-center active:scale-95 bg-brand hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none`}
         title={isRunning ? 'Pause' : 'Play'}
       >
         {isRunning ? (
@@ -98,12 +94,12 @@ export const SimulationControls = memo(function SimulationControls({
         Finish <span className="ml-1">⏭</span>
       </button>
 
-      <div className="flex items-center gap-2 ml-4 px-4 py-2 bg-surface-hover rounded-lg border border-border">
-        <span className="text-sm font-medium text-text-secondary">Speed:</span>
+      <div className="flex items-center gap-2 ml-4 px-4 min-h-[44px] bg-surface-raised rounded-lg border border-border">
+        <span className="text-sm font-medium text-text-mid">Speed:</span>
         <select
           value={speed}
           onChange={(e) => onSpeedChange(Number(e.target.value))}
-          className="px-3 py-1 bg-surface-elevated border border-border rounded text-sm font-medium text-text-primary hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer transition-all"
+          className="px-3 py-1 bg-surface-overlay border border-border rounded text-sm font-medium text-text-hi hover:border-border-strong focus:outline-none cursor-pointer transition-all"
           title="Simulation speed"
         >
           {speedOptions.map((option) => (
