@@ -3,8 +3,6 @@ import { useMemo } from 'react'
 import { useAutomatonEditor } from '@/hooks/useAutomatonEditor'
 import { AutomatonGraph } from '@/visualization/renderer'
 import { isDeterministic } from '@/core/automata/dfa'
-import { TooLargeError } from '@/core/automata/types'
-import { TooLargeNotice } from '@/components/common/TooLargeNotice'
 import { EditorPanel } from './EditorPanel'
 
 // Compute the structural badge text from the live automaton. This is NOT a
@@ -68,27 +66,22 @@ function IncompletenessWarning({ automaton }: { automaton: { states: Array<{ id:
 export function EditorView(): JSX.Element {
   const { working, automaton, dispatchers } = useAutomatonEditor()
 
-  // Memoised badge + any TooLargeError surfaced by a future on-demand
-  // construction. Currently isDeterministic never throws TooLargeError, but
-  // the guard here is belt-and-suspenders for SAFETY-01: any construction on
-  // the editor's automaton routes through the shared notice, not a re-inline.
-  // The error is derived in the same memo to avoid calling setState during
-  // render (prohibited by react-hooks/set-state-in-render).
-  const { badge, tooLarge } = useMemo(() => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const det = isDeterministic(automaton as any)
-      return { badge: computeBadge(automaton.transitions, det), tooLarge: null }
-    } catch (err) {
-      if (err instanceof TooLargeError) {
-        return {
-          badge: 'NFA',
-          tooLarge: { message: err.message, partial: err.partial } as { message: string; partial?: { states: number } },
-        }
-      }
-      return { badge: 'NFA', tooLarge: null }
-    }
-  }, [automaton])
+  // Memoised structural badge. The editor route runs no exponential construction
+  // (isDeterministic is a single linear pass that cannot throw TooLargeError), so
+  // there is no TooLargeNotice path here; the cap and notice fire on the routes
+  // that actually construct (home/regex, multi-view, closure, n2r). See WR-01.
+  const badge = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    () => computeBadge(automaton.transitions, isDeterministic(automaton as any)),
+    [automaton]
+  )
+
+  // Positional editor edge ids fed to the renderer so canvas selection round-trips
+  // through the editor id, not the array index (BL-01). Order matches
+  // automaton.transitions because toAutomaton is a 1:1 positional map. Memoised on
+  // working.transitions (a stable reference unless transitions change) so it does
+  // not add Cytoscape re-creations beyond the structural edits that already force one.
+  const edgeIds = useMemo(() => working.transitions.map(t => t.id), [working.transitions])
 
   const isEmpty = working.states.length === 0
 
@@ -106,13 +99,6 @@ export function EditorView(): JSX.Element {
         </div>
         <ValidityBadge label={badge} />
       </div>
-
-      {/* TooLargeNotice: replaces nothing — the editor graph remains interactive */}
-      {tooLarge && (
-        <div className="mb-4">
-          <TooLargeNotice message={tooLarge.message} partial={tooLarge.partial} />
-        </div>
-      )}
 
       {/* Main editor layout: graph beside panel on lg+; stacked + bottom-sheet on mobile */}
       <div className="flex flex-col lg:flex-row gap-4 min-h-0">
@@ -147,6 +133,7 @@ export function EditorView(): JSX.Element {
           )}
           <AutomatonGraph
             automaton={automaton}
+            edgeIds={edgeIds}
             editable
             onAddStateAt={dispatchers.addStateAt}
             onDrawEdge={dispatchers.drawEdge}

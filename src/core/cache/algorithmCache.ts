@@ -1,15 +1,8 @@
 import { LRUCache } from './LRUCache'
 import { RegexNode } from '../regex/ast'
 import { NFA, DFA } from '../automata/types'
+import type { MinimizationResult } from '../algorithms/minimize'
 import { parseKey, thompsonKey, subsetKey, minimizeKey } from './keys'
-
-// MinimizationResult type defined locally (minimize.ts may not exist)
-interface MinimizationResult {
-  dfa: DFA
-  stateMapping: Map<string, string>
-  mergedStates: Map<string, string[]>
-  description: string
-}
 
 // Cache version for invalidation on app updates.
 // Bumped to 1.1.0 when `+` between operands was corrected to parse as union:

@@ -19,13 +19,18 @@ import { assertWithinBounds } from './bounds'
 // not interchangeable: lambda is the concatenation identity, the empty language is
 // the concatenation annihilator and the union identity. Conflating them is the
 // classic source-of-wrong-language bug, so they stay distinct here.
+// The compound fields are readonly so the compiler enforces the immutability the
+// shallow store copy in eliminate() relies on: every transform returns a NEW node
+// (addLabel/simplify replace entries, never mutate in place), so sharing nodes by
+// reference across the caller's store and the snapshots is safe. An in-place edit
+// would now be a type error rather than a silent cross-store corruption.
 export type GnfaLabel =
   | { type: 'empty' } // lambda: the empty string
   | { type: 'emptyset' } // the empty language (no RegexNode equivalent)
-  | { type: 'symbol'; value: string }
-  | { type: 'concat'; left: GnfaLabel; right: GnfaLabel }
-  | { type: 'union'; left: GnfaLabel; right: GnfaLabel }
-  | { type: 'star'; child: GnfaLabel }
+  | { type: 'symbol'; readonly value: string }
+  | { type: 'concat'; readonly left: GnfaLabel; readonly right: GnfaLabel }
+  | { type: 'union'; readonly left: GnfaLabel; readonly right: GnfaLabel }
+  | { type: 'star'; readonly child: GnfaLabel }
 
 // Constructor helpers. They build raw nodes; simplify() applies the algebra.
 // GNFA elimination only ever produces union/concat/star over the atoms, so there
