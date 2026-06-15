@@ -5,6 +5,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
 import { WalkthroughProvider } from './components/walkthrough/WalkthroughProvider'
+// Fonts before ./index.css so the @font-face rules register before tokens apply.
+import '@fontsource-variable/space-grotesk'
+import '@fontsource-variable/hanken-grotesk'
+import '@fontsource-variable/jetbrains-mono'
 import './index.css'
 
 const App = lazy(() => import('./components/App'))
