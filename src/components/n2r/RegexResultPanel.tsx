@@ -57,8 +57,10 @@ export function RegexResultPanel({
           >
             {'∅'}
           </span>
-        ) : result.regex !== null ? (
-          // Non-empty language: render via formatRegex in the requested notation mode.
+        ) : showFinalResult && result.regex !== null ? (
+          // Final step: render the eliminated regex via formatRegex in the requested
+          // notation mode. result.regex is the completed START->ACCEPT label and is
+          // independent of currentStep, so it is only shown once elimination is done.
           <span
             className="font-mono text-lg text-text-hi break-all"
             data-testid="n2r-final-regex"
@@ -66,7 +68,9 @@ export function RegexResultPanel({
             {formatRegex(result.regex, mode)}
           </span>
         ) : (
-          // Intermediate step where the final regex is not yet resolved.
+          // Intermediate step: the final regex is not yet "reached", so show the
+          // in-progress placeholder rather than revealing the finished answer under
+          // a "Running" heading. The step note above explains each elimination.
           <span className="font-mono text-sm text-text-low italic">
             elimination in progress
           </span>

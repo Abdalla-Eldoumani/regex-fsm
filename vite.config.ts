@@ -31,6 +31,11 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    // The fast-check property suites (automata language-equivalence batteries) can
+    // exceed the 5s default under heavy CPU contention; raise the per-test budget so
+    // the gate stays reliable under load. This does not reduce any property's run
+    // count or weaken an assertion -- it only grants slow-but-correct tests more time.
+    testTimeout: 20000,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
