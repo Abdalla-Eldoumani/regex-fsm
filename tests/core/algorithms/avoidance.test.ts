@@ -303,7 +303,7 @@ describe('DFA structure validation', () => {
       transitionCount.set(transition.from, count + 1)
     }
 
-    for (const [stateId, count] of transitionCount) {
+    for (const count of transitionCount.values()) {
       expect(count).toBe(alphabet.size)
     }
   })
