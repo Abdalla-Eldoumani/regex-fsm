@@ -35,16 +35,17 @@ const Layout = memo(function Layout() {
               </h1>
             </div>
           </div>
-          <div className="hidden md:flex items-center gap-2 lg:gap-4">
+          {/* gap-1 at md keeps five links + controls in 768px; lg widens to gap-3 */}
+          <div className="hidden md:flex items-center gap-1 lg:gap-3">
              {/* tagline pill — decorative, only worth showing when there is room */}
              <span className="hidden lg:inline-flex text-sm font-medium text-text-mid bg-surface-raised px-3 py-1.5 rounded-full border border-border">
                Visualizing Regular Expressions
              </span>
-             {/* Editor nav link — min-h/min-w for 44px touch target */}
+             {/* Editor nav link — min-h/min-w for 44px touch target; px-1 at md, px-3 at lg */}
              <NavLink
                to="/editor"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
@@ -56,7 +57,7 @@ const Layout = memo(function Layout() {
              <NavLink
                to="/multi"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
@@ -68,7 +69,7 @@ const Layout = memo(function Layout() {
              <NavLink
                to="/n2r"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
@@ -80,7 +81,7 @@ const Layout = memo(function Layout() {
              <NavLink
                to="/closure"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
@@ -92,7 +93,7 @@ const Layout = memo(function Layout() {
              <NavLink
                to="/pumping"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
