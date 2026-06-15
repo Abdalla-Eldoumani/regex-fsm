@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { patternTemplates, getTemplateById, PatternTemplate, isComplexPattern } from '@/core/patterns/templates'
 import { DFA } from '@/core/automata/types'
+import { useNotation } from '@/notation/useNotation'
+import { parse } from '@/core/regex/parser'
+import { formatRegex } from '@/notation/format'
 
 interface PatternBuilderProps {
   onInsert: (regex: string) => void
@@ -12,6 +15,19 @@ export function PatternBuilder({ onInsert, onBuildDFA }: PatternBuilderProps) {
   const [parameters, setParameters] = useState<Record<string, string>>({})
   const [generatedRegex, setGeneratedRegex] = useState<string>('')
   const [isExpanded, setIsExpanded] = useState(false)
+
+  const { mode } = useNotation()
+
+  // Preview re-formats the generated regex through the AST so it flips with mode.
+  // Falls back to the raw string if parsing fails (e.g., template produces partial output).
+  let previewRegex = generatedRegex
+  if (generatedRegex) {
+    try {
+      previewRegex = formatRegex(parse(generatedRegex), mode)
+    } catch {
+      previewRegex = generatedRegex
+    }
+  }
 
   const selectedTemplate = selectedTemplateId ? getTemplateById(selectedTemplateId) : null
   const suggestsDFA = selectedTemplate?.suggestDFA ?? false
@@ -189,7 +205,7 @@ export function PatternBuilder({ onInsert, onBuildDFA }: PatternBuilderProps) {
                   Generated Regex
                 </div>
                 <div className="px-4 py-3 bg-surface-overlay rounded-lg border border-border font-mono text-lg text-text-hi break-all">
-                  {generatedRegex}
+                  {previewRegex}
                 </div>
               </div>
               <button

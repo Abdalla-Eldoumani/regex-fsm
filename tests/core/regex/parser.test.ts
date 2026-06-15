@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { parse } from '@/core/regex/parser'
+import { buildNFA } from '@/core/algorithms/thompson'
+import { nfaToDFA } from '@/core/algorithms/subset'
 import { RegexNode } from '@/core/regex/ast'
 
 describe('parser', () => {
@@ -86,6 +88,97 @@ describe('parser', () => {
         },
         right: { type: 'symbol', value: 'c' },
       })
+    })
+  })
+
+  describe('course union with +', () => {
+    // Course PDF Definition 3.9: union is written `+` between operands.
+    // A `+` with an operand after it is union; a `+` with nothing parseable
+    // after it is positive closure. These ASTs are derived by hand from the
+    // grammar (union loosest < concat < closure), not pasted from parser output.
+    it('parses a+b as union of a and b', () => {
+      const ast = parse('a+b')
+      expect(ast).toEqual({
+        type: 'union',
+        left: { type: 'symbol', value: 'a' },
+        right: { type: 'symbol', value: 'b' },
+      })
+    })
+
+    it('parses a + b (with spaces) as union of a and b', () => {
+      const ast = parse('a + b')
+      expect(ast).toEqual({
+        type: 'union',
+        left: { type: 'symbol', value: 'a' },
+        right: { type: 'symbol', value: 'b' },
+      })
+    })
+
+    it('parses (a+b) as union of a and b', () => {
+      const ast = parse('(a+b)')
+      expect(ast).toEqual({
+        type: 'union',
+        left: { type: 'symbol', value: 'a' },
+        right: { type: 'symbol', value: 'b' },
+      })
+    })
+
+    it('parses + and | as the identical union AST', () => {
+      expect(parse('a+b')).toEqual(parse('a|b'))
+    })
+
+    it('parses multiple +-unions left-associatively', () => {
+      const ast = parse('a+b+c')
+      expect(ast).toEqual({
+        type: 'union',
+        left: {
+          type: 'union',
+          left: { type: 'symbol', value: 'a' },
+          right: { type: 'symbol', value: 'b' },
+        },
+        right: { type: 'symbol', value: 'c' },
+      })
+    })
+
+    it('parses a*b+c?d|e with union loosest', () => {
+      // Hand derivation against the grammar:
+      //   top-level | splits into [a*b+c?d] and [e]
+      //   within a*b+c?d the + has operand c after it, so it is union:
+      //     a* b  +  c? d  =  union( concat(star a, b), concat(optional c, d) )
+      //   full = union( union(concat(star a, b), concat(optional c, d)), e )
+      const ast = parse('a*b+c?d|e')
+      expect(ast).toEqual({
+        type: 'union',
+        left: {
+          type: 'union',
+          left: {
+            type: 'concat',
+            left: { type: 'star', child: { type: 'symbol', value: 'a' } },
+            right: { type: 'symbol', value: 'b' },
+          },
+          right: {
+            type: 'concat',
+            left: { type: 'optional', child: { type: 'symbol', value: 'c' } },
+            right: { type: 'symbol', value: 'd' },
+          },
+        },
+        right: { type: 'symbol', value: 'e' },
+      })
+    })
+
+    it('builds the same NFA for (a+b)*abb and (a|b)*abb', () => {
+      // The course's canonical example. After the fix both spellings produce the
+      // identical union AST, so Thompson construction yields structurally identical
+      // NFAs (state ids are generated deterministically from the AST).
+      const plusNFA = buildNFA(parse('(a+b)*abb'))
+      const pipeNFA = buildNFA(parse('(a|b)*abb'))
+      expect(plusNFA).toEqual(pipeNFA)
+    })
+
+    it('builds the same DFA for (a+b)*abb and (a|b)*abb', () => {
+      const plusDFA = nfaToDFA(buildNFA(parse('(a+b)*abb')))
+      const pipeDFA = nfaToDFA(buildNFA(parse('(a|b)*abb')))
+      expect(plusDFA).toEqual(pipeDFA)
     })
   })
 
@@ -284,22 +377,35 @@ describe('parser', () => {
     })
 
     it('parses (a+b)*c', () => {
+      // Course reading: (a+b) is union, so this is concat(star(union(a,b)), c).
       const ast = parse('(a+b)*c')
-      expect(ast.type).toBe('concat')
-      const concat = ast as Extract<RegexNode, { type: 'concat' }>
-      expect(concat.left.type).toBe('star')
-      const star = concat.left as Extract<RegexNode, { type: 'star' }>
-      expect(star.child.type).toBe('concat')
-      const innerConcat = star.child as Extract<RegexNode, { type: 'concat' }>
-      expect(innerConcat.left.type).toBe('plus')
-      expect(innerConcat.right.type).toBe('symbol')
-      const plus = innerConcat.left as Extract<RegexNode, { type: 'plus' }>
-      expect(plus.child.type).toBe('symbol')
+      expect(ast).toEqual({
+        type: 'concat',
+        left: {
+          type: 'star',
+          child: {
+            type: 'union',
+            left: { type: 'symbol', value: 'a' },
+            right: { type: 'symbol', value: 'b' },
+          },
+        },
+        right: { type: 'symbol', value: 'c' },
+      })
     })
 
-    it('parses a*b+c?', () => {
+    it('parses a*b+c? with the + as union', () => {
+      // Course reading: the + has operand c after it, so it is union (loosest):
+      //   a* b  +  c?  =  union( concat(star a, b), optional c )
       const ast = parse('a*b+c?')
-      expect(ast.type).toBe('concat')
+      expect(ast).toEqual({
+        type: 'union',
+        left: {
+          type: 'concat',
+          left: { type: 'star', child: { type: 'symbol', value: 'a' } },
+          right: { type: 'symbol', value: 'b' },
+        },
+        right: { type: 'optional', child: { type: 'symbol', value: 'c' } },
+      })
     })
 
     it('parses nested groups (a(b|c)*d)', () => {
@@ -507,7 +613,9 @@ describe('parser', () => {
     })
 
     it('handles alternating operators', () => {
-      const ast = parse('a*b+c?')
+      // c+ is genuine positive closure here (nothing follows it), so the whole
+      // expression is a concatenation of quantified atoms.
+      const ast = parse('a*b?c+')
       expect(ast.type).toBe('concat')
     })
 

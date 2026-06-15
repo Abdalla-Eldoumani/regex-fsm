@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildNFA } from '@/core/algorithms/thompson'
 import { parse } from '@/core/regex/parser'
+import { simulateNFA } from '@/core/algorithms/simulate'
 
 describe('thompson construction', () => {
   describe('base cases', () => {
@@ -182,19 +183,37 @@ describe('thompson construction', () => {
       expect(nfa.acceptStates).toHaveLength(1)
     })
 
-    it('builds NFA for a*b+c?', () => {
+    // 03-01 parse fix: a*b+c? = union(concat(star a, b), optional c) because the
+    // + at b+c has operand c following (union), not closure on b. Thompson's union
+    // adds one fresh accept state for the whole expression, so acceptStates is 1.
+    // Language {a*b} ∪ {λ, c}: empty and c accept via the optional arm; a*b accepts
+    // via the left arm; a lone "a" or any a*b followed by c is in neither arm.
+    it('builds NFA for a*b+c? = union(a*b, c?): accepts empty, b, c, ab; rejects a, abc', () => {
       const ast = parse('a*b+c?')
       const nfa = buildNFA(ast)
 
       expect(nfa.alphabet).toEqual(new Set(['a', 'b', 'c']))
       expect(nfa.acceptStates).toHaveLength(1)
+
+      const accept = ['', 'b', 'c', 'ab', 'aab', 'aaab']
+      const reject = ['a', 'abc', 'aabbc', 'bc', 'aa']
+      accept.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(true))
+      reject.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(false))
     })
 
-    it('builds NFA for (a+b)*c', () => {
+    // 03-01 parse fix: with + as union, (a+b) = union(a,b), so (a+b)*c builds the
+    // SAME language as (a|b)*c = concat(star(union(a,b)), c): any string of a's and
+    // b's (including empty) followed by a single trailing c.
+    it('builds NFA for (a+b)*c = (a|b)*c: accepts c, ac, bac; rejects empty, ab', () => {
       const ast = parse('(a+b)*c')
       const nfa = buildNFA(ast)
 
       expect(nfa.alphabet).toEqual(new Set(['a', 'b', 'c']))
+
+      const accept = ['c', 'ac', 'bc', 'abc', 'bac', 'aaac', 'bbbc']
+      const reject = ['', 'ab', 'abcc', 'ca']
+      accept.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(true))
+      reject.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(false))
     })
 
     it('builds NFA for nested groups', () => {
@@ -304,12 +323,21 @@ describe('thompson construction', () => {
       expect(nfa.alphabet).toEqual(new Set(['a', 'b']))
     })
 
-    it('builds NFA for all operators', () => {
+    // 03-01 parse fix: union binds loosest, and the + at b+c is union too, so
+    // a*b+c?|d = union(union(a*b, c?), d) = {a*b} ∪ {λ, c} ∪ {d}. Thompson's
+    // outermost union still yields a single accept state. The empty string, c,
+    // and d each match one arm; a lone "a" matches none.
+    it('builds NFA for a*b+c?|d = union(a*b, c?, d): accepts empty, b, c, d; rejects a, abc', () => {
       const ast = parse('a*b+c?|d')
       const nfa = buildNFA(ast)
 
       expect(nfa.alphabet).toEqual(new Set(['a', 'b', 'c', 'd']))
       expect(nfa.acceptStates).toHaveLength(1)
+
+      const accept = ['', 'b', 'c', 'd', 'ab', 'aab']
+      const reject = ['a', 'abc', 'bc', 'aabbc', 'dd', 'bd']
+      accept.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(true))
+      reject.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(false))
     })
   })
 

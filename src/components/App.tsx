@@ -374,11 +374,14 @@ function App() {
           {!isDirectMethod && (simulationMode === 'nfa' || simulationMode === 'both') && (
             <article data-walkthrough="nfa-view" className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-border-strong group">
               <div className="p-5 border-b border-border bg-gradient-to-r from-brand-tint to-transparent flex justify-between items-center relative">
-                 <h3 className="font-display font-bold text-text-hi flex items-center gap-3 relative z-10">
-                   {/* Chrome dot — brand, not a state color */}
-                   <span className="w-3 h-3 rounded-full bg-brand shadow-sm"></span>
-                   <span className="text-lg">Nondeterministic Finite Automaton</span>
-                 </h3>
+                 <div className="relative z-10">
+                   <h3 className="font-display font-bold text-text-hi flex items-center gap-3">
+                     {/* Chrome dot — brand, not a state color */}
+                     <span className="w-3 h-3 rounded-full bg-brand shadow-sm"></span>
+                     <span className="text-lg">Nondeterministic Finite Automaton</span>
+                   </h3>
+                   <p className="text-xs font-mono text-text-low ml-6 mt-0.5">(Q, Σ, δ, q₀, A)</p>
+                 </div>
                  <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-brand-tint border border-border text-brand-hover font-bold shadow-inner relative z-10">NFA</span>
               </div>
               <div className="flex-1 relative bg-bg">
@@ -419,11 +422,14 @@ function App() {
           {(simulationMode === 'dfa' || simulationMode === 'both' || isDirectMethod) && (
             <article data-walkthrough="dfa-view" className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-border-strong group">
                <div className="p-5 border-b border-border bg-gradient-to-r from-brand-tint to-transparent flex justify-between items-center relative">
-                 <h3 className="font-display font-bold text-text-hi flex items-center gap-3 relative z-10">
-                    {/* Chrome dot — brand, not a state color */}
-                    <span className="w-3 h-3 rounded-full bg-brand shadow-sm"></span>
-                    <span className="text-lg">Deterministic Finite Automaton</span>
-                 </h3>
+                 <div className="relative z-10">
+                   <h3 className="font-display font-bold text-text-hi flex items-center gap-3">
+                      {/* Chrome dot — brand, not a state color */}
+                      <span className="w-3 h-3 rounded-full bg-brand shadow-sm"></span>
+                      <span className="text-lg">Deterministic Finite Automaton</span>
+                   </h3>
+                   <p className="text-xs font-mono text-text-low ml-6 mt-0.5">(Q, Σ, δ, q₀, A)</p>
+                 </div>
                  <div className="flex items-center gap-2 relative z-10">
                    {constructionInfo && (
                      <span className="text-[10px] font-medium text-text-low px-2 py-1 rounded-full bg-surface-raised border border-border">
