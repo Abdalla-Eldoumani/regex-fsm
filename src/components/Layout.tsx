@@ -76,6 +76,18 @@ const Layout = memo(function Layout() {
              >
                NFA&#x2192;Regex
              </NavLink>
+             {/* Closure constructions nav link */}
+             <NavLink
+               to="/closure"
+               className={({ isActive }) =>
+                 'min-h-[44px] min-w-[44px] flex items-center px-2 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 (isActive
+                   ? 'bg-brand-tint text-brand-hover border border-brand/30'
+                   : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
+               }
+             >
+               Closure
+             </NavLink>
              <NotationToggle />
              <WalkthroughToggle />
              <a
