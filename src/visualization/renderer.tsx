@@ -157,12 +157,17 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       // events from box-selection (matches the editable handler's WR-02 pattern).
       // Only bind here when NOT editable; the editable effect owns select/unselect
       // when editable is true to avoid a double-bind.
+      // cancelled guards the queued microtask: if the effect cleanup runs before
+      // the microtask fires (selection + automaton change in the same render batch),
+      // the stale callback no-ops rather than dispatching into a dead/replaced pane.
       let selectPending = false
+      let cancelled = false
       const readOnlySelectHandler = () => {
         if (selectPending) return
         selectPending = true
         Promise.resolve().then(() => {
           selectPending = false
+          if (cancelled) return
           const nodeIds = cy
             .nodes(':selected')
             .filter(n => n.id() !== '__start_marker__')
@@ -177,6 +182,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       }
 
       return () => {
+        cancelled = true
         cy.off('tap', 'node', nodeHandler)
         cy.off('tap', 'edge', edgeHandler)
         if (!editable) {
@@ -216,12 +222,16 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       // Cytoscape fires select/unselect once per element, so box-selecting n nodes
       // triggers n dispatches. A microtask (Promise.resolve) coalesces the burst
       // into one dispatch after the synchronous event loop drains (WR-02).
+      // editCancelled guards the queued microtask against effect cleanup running
+      // before the microtask fires (same race as the read-only path, WR-01).
       let selectPending = false
+      let editCancelled = false
       const selectHandler = () => {
         if (selectPending) return
         selectPending = true
         Promise.resolve().then(() => {
           selectPending = false
+          if (editCancelled) return
           const nodeIds = cy
             .nodes(':selected')
             .filter(n => n.id() !== '__start_marker__')
@@ -236,6 +246,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       cy.on('select unselect', selectHandler)
 
       return () => {
+        editCancelled = true
         cy.off('tap', bgTapHandler)
         cy.off('ehcomplete', completeHandler)
         cy.off('select unselect', selectHandler)
