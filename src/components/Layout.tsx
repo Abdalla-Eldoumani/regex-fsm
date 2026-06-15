@@ -1,5 +1,5 @@
 import { memo, useEffect } from 'react'
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { WalkthroughToggle } from './walkthrough/WalkthroughToggle'
 import { NotationProvider } from '@/notation/NotationContext'
 import { NotationToggle } from '@/notation/NotationToggle'
@@ -39,6 +39,18 @@ const Layout = memo(function Layout() {
              <span className="text-sm font-medium text-text-mid bg-surface-raised px-3 py-1.5 rounded-full border border-border">
                Visualizing Regular Expressions
              </span>
+             {/* Editor nav link — min-h/min-w for 44px touch target */}
+             <NavLink
+               to="/editor"
+               className={({ isActive }) =>
+                 'min-h-[44px] min-w-[44px] flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 (isActive
+                   ? 'bg-brand-tint text-brand-hover border border-brand/30'
+                   : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
+               }
+             >
+               Editor
+             </NavLink>
              <NotationToggle />
              <WalkthroughToggle />
              <a
