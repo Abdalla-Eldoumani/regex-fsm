@@ -15,6 +15,7 @@ const App = lazy(() => import('./components/App'))
 const NotFound = lazy(() => import('./components/NotFound'))
 const GithubRedirect = lazy(() => import('./components/GithubRedirect'))
 const EditorView = lazy(() => import('./components/editor/EditorView').then(m => ({ default: m.EditorView })))
+const MultiView = lazy(() => import('./components/multiview/MultiView'))
 
 function LoadingFallback() {
   return (
@@ -37,6 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route element={<Layout />}>
                 <Route path="/" element={<App />} />
                 <Route path="/editor" element={<EditorView />} />
+                <Route path="/multi" element={<MultiView />} />
                 <Route path="/github" element={<GithubRedirect />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
