@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { LRUCache } from '../src/core/cache/LRUCache'
 import { parseKey, thompsonKey, subsetKey, minimizeKey, layoutKey } from '../src/core/cache/keys'
 import { RegexNode } from '../src/core/regex/ast'
@@ -258,7 +258,7 @@ describe('cachedAlgorithms', () => {
   })
 
   it('should produce same results as original algorithms', async () => {
-    const { parse, buildNFA, nfaToDFA } = await import('../src/core/cachedAlgorithms')
+    const { parse, buildNFA } = await import('../src/core/cachedAlgorithms')
     const { parse: parseOriginal } = await import('../src/core/regex/parser')
     const { buildNFA: buildNFAOriginal } = await import('../src/core/algorithms/thompson')
 
