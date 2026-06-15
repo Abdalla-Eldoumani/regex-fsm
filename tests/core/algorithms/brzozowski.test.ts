@@ -5,6 +5,7 @@ import { simulateDFA } from '@/core/algorithms/simulate'
 import { buildNFA } from '@/core/algorithms/thompson'
 import { nfaToDFA } from '@/core/algorithms/subset'
 import { isDeterministic } from '@/core/automata/dfa'
+import { TooLargeError, BOUNDS } from '@/core/automata/types'
 
 describe('Brzozowski derivative DFA construction', () => {
   describe('basic patterns', () => {
@@ -200,6 +201,59 @@ describe('Brzozowski derivative DFA construction', () => {
           expect(brzAccepts).toBe(thompsonAccepts)
         }
       })
+    })
+  })
+
+  // SAFETY-01: the cap must fire on a known blow-up and stay dormant for small inputs.
+  // A long alternation of distinct symbols generates one derivative state per symbol
+  // combination, growing rapidly past 256. We use a 30-symbol alphabet with the
+  // regex (a0|a1|...|a29) so the Brzozowski construction explores many distinct
+  // derivative classes and reliably exceeds MAX_DFA_STATES = 256.
+  describe('SAFETY-01: TooLargeError on blow-up', () => {
+    it('throws TooLargeError with reason state-cap when DFA would exceed BOUNDS.MAX_DFA_STATES', () => {
+      // Build a regex that causes a state explosion: a long concatenation whose
+      // Brzozowski derivative DFA needs more than 256 states. Each unique prefix
+      // substring corresponds to a distinct derivative class. With a 30-symbol
+      // alphabet the concatenation a0a1a2...a29 needs 31 derivative states (one
+      // per prefix), but we want to exceed 256. We use the alternation of each
+      // pair of distinct 30 symbols: (a0|a1)(a2|a3)...(a28|a29) repeated 9 times
+      // gives 2^9 = 512 derivative states, safely above the cap.
+      const symbols: string[] = []
+      for (let i = 0; i < 30; i++) symbols.push(String.fromCharCode(97 + i))  // 'a'..'z' + 4 more
+      // Build: (a|b)(c|d)(e|f)...(x|y)(z|A) as a long concatenation
+      // We need >256 states. Use a concatenation of 9 two-symbol alternations on
+      // a 18-symbol alphabet. Each unprocessed suffix is a distinct derivative
+      // state, giving 2^9 = 512 derivative classes. We deliberately encode this
+      // in the 18-char alphabet a-r.
+      const pairs: string[] = []
+      for (let i = 0; i < 18; i += 2) {
+        pairs.push(`(${symbols[i]}|${symbols[i + 1]})`)
+      }
+      // Repeat the block enough times so state count exceeds 256
+      const blowupRegex = pairs.join('')  // 9 pairs -> 2^9 = 512 distinct suffixes
+      const alphabet = new Set(symbols.slice(0, 18))
+      const ast = parse(blowupRegex)
+
+      expect(() => brzozowskiDFA(ast, alphabet)).toThrow(TooLargeError)
+      expect(() => brzozowskiDFA(ast, alphabet)).toThrow(/too large/i)
+      try {
+        brzozowskiDFA(ast, alphabet)
+      } catch (err) {
+        expect(err).toBeInstanceOf(TooLargeError)
+        expect((err as TooLargeError).reason).toBe('state-cap')
+        expect((err as TooLargeError).limit).toBe(BOUNDS.MAX_DFA_STATES)
+      }
+    })
+
+    it('does NOT throw for small patterns that stay well under BOUNDS.MAX_DFA_STATES', () => {
+      const smallRegexes = ['a', 'ab', 'a|b', 'a*', '(a|b)*abb', 'a*b+c?']
+      const alphabet = new Set(['a', 'b', 'c'])
+      for (const regex of smallRegexes) {
+        const ast = parse(regex)
+        let result: ReturnType<typeof brzozowskiDFA> | undefined
+        expect(() => { result = brzozowskiDFA(ast, alphabet) }, `"${regex}" should not throw`).not.toThrow()
+        expect(result!.dfa.states.length).toBeLessThan(BOUNDS.MAX_DFA_STATES)
+      }
     })
   })
 })
