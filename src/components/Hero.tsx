@@ -162,8 +162,9 @@ export function Hero() {
               r={NODE_R}
               fill="var(--color-state-active)"
             />
-            {/* Mono state label, ink on the lit fill / high-emphasis at rest.
-                Sits above the overlay so it stays readable when the node is lit. */}
+            {/* Mono state label in two stacked layers so the contrast tracks the
+                fill (the styles.ts "--color-on-state ink on colored fills" rule).
+                Base layer: --color-text-hi for the resting neutral frames. */}
             <text
               x={n.cx}
               y={NODE_CY + 4}
@@ -172,6 +173,24 @@ export function Hero() {
               fontSize="14"
               fontWeight="500"
               fill="var(--color-text-hi)"
+            >
+              {n.label}
+            </text>
+            {/* Ink layer: --color-on-state, faded in on the same per-beat keyframe
+                as the amber overlay so the dark ink shows exactly when the fill is
+                lit (~8.4:1 vs the ~1.8:1 of off-white on amber). Held in the
+                reduced-motion still frame for the accept node via data-still. */}
+            <text
+              className="hero-node-label-ink"
+              data-beat={n.beat}
+              data-still={n.isAccept ? '' : undefined}
+              x={n.cx}
+              y={NODE_CY + 4}
+              textAnchor="middle"
+              fontFamily="var(--font-mono)"
+              fontSize="14"
+              fontWeight="500"
+              fill="var(--color-on-state)"
             >
               {n.label}
             </text>
