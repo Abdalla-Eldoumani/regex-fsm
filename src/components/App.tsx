@@ -7,6 +7,7 @@ import { StringInput } from './input/StringInput'
 import { PatternBuilder } from './input/PatternBuilder'
 import { AutomatonView } from './display/AutomatonView'
 import { SimulationPanel } from './simulation/SimulationPanel'
+import { Hero } from './Hero'
 
 type ConstructionMethod = 'thompson' | 'asu' | 'brzozowski'
 
@@ -173,16 +174,22 @@ function App() {
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 relative z-10">
 
-        <section data-walkthrough="input-section" className="bg-surface rounded-3xl shadow-hard border border-border hover:border-border-hover transition-all duration-300 p-8 md:p-10 animate-slide-up group">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+        {/* The live-automaton signature, decorative (aria-hidden inside Hero).
+            Shares the page gutter and the section rhythm of the views below. */}
+        <section className="pt-2 pb-4">
+          <Hero />
+        </section>
+
+        <section data-walkthrough="input-section" className="bg-surface rounded-3xl shadow-lg border border-border hover:border-border-strong transition-all duration-300 p-8 md:p-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative">
             <div className="lg:col-span-2 space-y-6">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-1.5 h-6 bg-gradient-to-b from-primary to-accent rounded-full"></div>
-                  <h2 className="text-xl font-display font-bold text-text-primary">Pattern</h2>
+                  {/* Decorative accent bar — brand chrome, not a state color */}
+                  <div className="w-1.5 h-6 bg-gradient-to-b from-brand to-brand-pressed rounded-full"></div>
+                  <h2 className="text-xl font-display font-bold text-text-hi">Pattern</h2>
                 </div>
-                <p className="text-sm text-text-secondary mb-5 ml-3.5">Enter a regular expression to generate the automata.</p>
+                <p className="text-sm text-text-mid mb-5 ml-3.5">Enter a regular expression to generate the automata.</p>
                 <div className="space-y-4">
                   <div data-walkthrough="pattern-builder">
                     <PatternBuilder onInsert={handlePatternInsert} />
@@ -196,35 +203,35 @@ function App() {
             <div className="space-y-6">
                <div data-walkthrough="test-string">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-1.5 h-6 bg-gradient-to-b from-secondary to-primary rounded-full"></div>
-                  <h2 className="text-xl font-display font-bold text-text-primary">Test String</h2>
+                  <div className="w-1.5 h-6 bg-gradient-to-b from-brand-hover to-brand rounded-full"></div>
+                  <h2 className="text-xl font-display font-bold text-text-hi">Test String</h2>
                 </div>
-                <p className="text-sm text-text-secondary mb-5 ml-3.5">Simulate how the machine processes input.</p>
+                <p className="text-sm text-text-mid mb-5 ml-3.5">Simulate how the machine processes input.</p>
                 <StringInput value={testString} onChange={setTestString} />
               </div>
               <div data-walkthrough="options-panel">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-1.5 h-6 bg-gradient-to-b from-accent to-success rounded-full"></div>
-                  <h2 className="text-xl font-display font-bold text-text-primary">Options</h2>
+                  <div className="w-1.5 h-6 bg-gradient-to-b from-brand-pressed to-brand rounded-full"></div>
+                  <h2 className="text-xl font-display font-bold text-text-hi">Options</h2>
                 </div>
-                <p className="text-sm text-text-secondary mb-5 ml-3.5">Configure automata generation.</p>
+                <p className="text-sm text-text-mid mb-5 ml-3.5">Configure automata generation.</p>
                 <div className="space-y-4">
                   <label className="flex items-center gap-3 cursor-pointer group">
                     <input
                       type="checkbox"
                       checked={autoBuild}
                       onChange={(e) => setAutoBuild(e.target.checked)}
-                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/50 cursor-pointer"
+                      className="w-4 h-4 rounded border-border text-brand focus:ring-brand-hover/50 cursor-pointer"
                     />
-                    <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                      Auto-build <span className="text-xs text-text-tertiary">(build on regex change)</span>
+                    <span className="text-sm text-text-mid group-hover:text-text-hi transition-colors">
+                      Auto-build <span className="text-xs text-text-low">(build on regex change)</span>
                     </span>
                   </label>
                   {!autoBuild && (
                     <button
                       onClick={buildAutomata}
                       disabled={!regex}
-                      className="px-4 py-2 bg-primary text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-hover transition-colors"
+                      className="min-h-[44px] px-4 py-2 bg-brand text-on-brand rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-hover transition-colors"
                     >
                       Build Automata
                     </button>
@@ -232,8 +239,8 @@ function App() {
                 </div>
 
                 {/* Construction Method Selector */}
-                <div data-walkthrough="construction-method" className="mt-4 p-4 bg-background/50 rounded-xl border border-border space-y-3">
-                  <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Construction Method</div>
+                <div data-walkthrough="construction-method" className="mt-4 p-4 bg-bg/50 rounded-xl border border-border space-y-3">
+                  <div className="text-xs font-semibold text-text-mid uppercase tracking-wider">Construction Method</div>
                   <div className="flex flex-col gap-2">
                     {([
                       { value: 'thompson' as const, label: "Thompson + Subset", desc: 'Regex → NFA → DFA' },
@@ -247,28 +254,28 @@ function App() {
                           value={value}
                           checked={constructionMethod === value}
                           onChange={() => setConstructionMethod(value)}
-                          className="w-4 h-4 border-border text-primary focus:ring-primary/50 cursor-pointer"
+                          className="w-4 h-4 border-border text-brand focus:ring-brand-hover/50 cursor-pointer"
                         />
-                        <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                          {label} <span className="text-xs text-text-tertiary">({desc})</span>
+                        <span className="text-sm text-text-mid group-hover:text-text-hi transition-colors">
+                          {label} <span className="text-xs text-text-low">({desc})</span>
                         </span>
                       </label>
                     ))}
                   </div>
                 </div>
 
-                <div className="mt-4 p-4 bg-background/50 rounded-xl border border-border space-y-3">
-                  <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">DFA Options</div>
+                <div className="mt-4 p-4 bg-bg/50 rounded-xl border border-border space-y-3">
+                  <div className="text-xs font-semibold text-text-mid uppercase tracking-wider">DFA Options</div>
                   {constructionMethod === 'thompson' && (
                     <label className="flex items-center gap-3 cursor-pointer group">
                       <input
                         type="checkbox"
                         checked={shouldMinimize}
                         onChange={(e) => setShouldMinimize(e.target.checked)}
-                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary/50 cursor-pointer"
+                        className="w-4 h-4 rounded border-border text-brand focus:ring-brand-hover/50 cursor-pointer"
                       />
-                      <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                        Minimize DFA <span className="text-xs text-text-tertiary">(optimal states)</span>
+                      <span className="text-sm text-text-mid group-hover:text-text-hi transition-colors">
+                        Minimize DFA <span className="text-xs text-text-low">(optimal states)</span>
                       </span>
                     </label>
                   )}
@@ -277,10 +284,10 @@ function App() {
                       type="checkbox"
                       checked={useLetterNames}
                       onChange={(e) => setUseLetterNames(e.target.checked)}
-                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/50 cursor-pointer"
+                      className="w-4 h-4 rounded border-border text-brand focus:ring-brand-hover/50 cursor-pointer"
                     />
-                    <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                      Use letter names <span className="text-xs text-text-tertiary">(A, B, C vs q0, q1, q2)</span>
+                    <span className="text-sm text-text-mid group-hover:text-text-hi transition-colors">
+                      Use letter names <span className="text-xs text-text-low">(A, B, C vs q0, q1, q2)</span>
                     </span>
                   </label>
                 </div>
@@ -289,34 +296,33 @@ function App() {
           </div>
         </section>
 
-        <section data-walkthrough="simulation-section" className="bg-surface rounded-3xl shadow-hard border border-border overflow-hidden animate-slide-up animate-delay-200 hover:border-border-hover transition-all duration-300">
-           <div className="border-b border-border p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 relative">
-             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-50"></div>
+        <section data-walkthrough="simulation-section" className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden hover:border-border-strong transition-all duration-300">
+           <div className="border-b border-border p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-brand-tint via-transparent to-brand-tint relative">
              <div className="relative">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1.5 h-6 bg-gradient-to-b from-accent to-accent-secondary rounded-full"></div>
-                  <h2 className="text-xl font-display font-bold text-text-primary">Simulation</h2>
+                  <div className="w-1.5 h-6 bg-gradient-to-b from-brand to-brand-pressed rounded-full"></div>
+                  <h2 className="text-xl font-display font-bold text-text-hi">Simulation</h2>
                 </div>
-                <p className="text-sm text-text-secondary ml-3.5">Step through the state transitions.</p>
+                <p className="text-sm text-text-mid ml-3.5">Step through the state transitions.</p>
              </div>
-             <div data-walkthrough="simulation-mode" className="flex p-1.5 bg-background/60 rounded-xl border border-border shadow-inner relative">
+             <div data-walkthrough="simulation-mode" className="flex p-1.5 bg-bg/60 rounded-xl border border-border shadow-inner relative">
                 <button
                   onClick={() => setSimulationMode('nfa')}
                   disabled={isDirectMethod}
-                  className={`cursor-pointer px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  className={`cursor-pointer min-h-[44px] px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
                     simulationMode === 'nfa' && !isDirectMethod
-                      ? 'bg-gradient-to-br from-primary to-primary-hover shadow-lg text-background ring-2 ring-primary/50 scale-105'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+                      ? 'bg-brand text-on-brand shadow-lg ring-2 ring-brand-hover/50 scale-105'
+                      : 'text-text-mid hover:text-text-hi hover:bg-surface-raised'
                   } ${isDirectMethod ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   NFA
                 </button>
                 <button
                   onClick={() => setSimulationMode('dfa')}
-                  className={`cursor-pointer px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  className={`cursor-pointer min-h-[44px] px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
                     simulationMode === 'dfa' || (isDirectMethod && simulationMode !== 'both')
-                      ? 'bg-gradient-to-br from-secondary to-secondary-hover shadow-lg text-background ring-2 ring-secondary/50 scale-105'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+                      ? 'bg-brand text-on-brand shadow-lg ring-2 ring-brand-hover/50 scale-105'
+                      : 'text-text-mid hover:text-text-hi hover:bg-surface-raised'
                   }`}
                 >
                   DFA
@@ -324,10 +330,10 @@ function App() {
                 <button
                   onClick={() => setSimulationMode('both')}
                   disabled={isDirectMethod}
-                  className={`cursor-pointer px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  className={`cursor-pointer min-h-[44px] px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
                     simulationMode === 'both' && !isDirectMethod
-                      ? 'bg-gradient-to-br from-accent to-success shadow-lg text-background ring-2 ring-accent/50 scale-105'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+                      ? 'bg-brand text-on-brand shadow-lg ring-2 ring-brand-hover/50 scale-105'
+                      : 'text-text-mid hover:text-text-hi hover:bg-surface-raised'
                   } ${isDirectMethod ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   Both
@@ -335,7 +341,7 @@ function App() {
              </div>
            </div>
 
-           <div className="p-6 md:p-8 bg-gradient-to-b from-transparent to-background/30">
+           <div className="p-6 md:p-8">
               {!isDirectMethod && simulationMode === 'nfa' && (
                 <SimulationPanel
                   automaton={nfa}
@@ -355,27 +361,27 @@ function App() {
               )}
 
               {!isDirectMethod && simulationMode === 'both' && (
-                <div className="text-center py-8 text-text-secondary">
+                <div className="text-center py-8 text-text-mid">
                   <p className="text-lg">Both automatons are displayed below. Use the simulation controls on each to step through independently.</p>
                 </div>
               )}
            </div>
         </section>
 
-        <section className={`grid gap-8 animate-slide-up animate-delay-300 ${
+        <section className={`grid gap-8 ${
           !isDirectMethod && simulationMode === 'both' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'
         }`}>
           {!isDirectMethod && (simulationMode === 'nfa' || simulationMode === 'both') && (
-            <article data-walkthrough="nfa-view" className="bg-surface rounded-3xl shadow-hard border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-primary/50 hover:shadow-glow-primary group">
-              <div className="p-5 border-b border-border bg-gradient-to-r from-primary/20 via-primary/10 to-transparent flex justify-between items-center relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                 <h3 className="font-display font-bold text-text-primary flex items-center gap-3 relative z-10">
-                   <span className="w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/50"></span>
+            <article data-walkthrough="nfa-view" className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-border-strong group">
+              <div className="p-5 border-b border-border bg-gradient-to-r from-brand-tint to-transparent flex justify-between items-center relative">
+                 <h3 className="font-display font-bold text-text-hi flex items-center gap-3 relative z-10">
+                   {/* Chrome dot — brand, not a state color */}
+                   <span className="w-3 h-3 rounded-full bg-brand shadow-sm"></span>
                    <span className="text-lg">Nondeterministic Finite Automaton</span>
                  </h3>
-                 <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-primary/20 border border-primary/40 text-primary font-bold shadow-inner relative z-10">NFA</span>
+                 <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-brand-tint border border-border text-brand-hover font-bold shadow-inner relative z-10">NFA</span>
               </div>
-              <div className="flex-1 relative bg-gradient-to-br from-background to-background-secondary">
+              <div className="flex-1 relative bg-bg">
                 <AutomatonView
                   automaton={nfa}
                   title=""
@@ -391,17 +397,17 @@ function App() {
 
           {/* Show NFA "not applicable" message for direct methods when user was on NFA/Both mode */}
           {isDirectMethod && nfa === null && dfa && (simulationMode === 'nfa' || simulationMode === 'both') && (
-            <article className="bg-surface rounded-3xl shadow-hard border border-border overflow-hidden flex flex-col h-[200px] transition-all duration-300">
-              <div className="p-5 border-b border-border bg-gradient-to-r from-primary/20 via-primary/10 to-transparent flex justify-between items-center">
-                <h3 className="font-display font-bold text-text-primary flex items-center gap-3">
-                  <span className="w-3 h-3 rounded-full bg-primary/50"></span>
+            <article className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col h-[200px] transition-all duration-300">
+              <div className="p-5 border-b border-border bg-gradient-to-r from-brand-tint to-transparent flex justify-between items-center">
+                <h3 className="font-display font-bold text-text-hi flex items-center gap-3">
+                  <span className="w-3 h-3 rounded-full bg-brand/50"></span>
                   <span className="text-lg">NFA</span>
                 </h3>
               </div>
-              <div className="flex-1 flex items-center justify-center text-text-secondary p-8 text-center">
+              <div className="flex-1 flex items-center justify-center text-text-mid p-8 text-center">
                 <div>
                   <p className="text-lg font-semibold mb-2">No NFA Generated</p>
-                  <p className="text-sm text-text-tertiary">
+                  <p className="text-sm text-text-low">
                     Direct regex-to-DFA construction was used ({constructionMethod === 'asu' ? 'ASU syntax tree method' : "Brzozowski's derivatives"}).
                     No intermediate NFA is produced.
                   </p>
@@ -411,23 +417,23 @@ function App() {
           )}
 
           {(simulationMode === 'dfa' || simulationMode === 'both' || isDirectMethod) && (
-            <article data-walkthrough="dfa-view" className="bg-surface rounded-3xl shadow-hard border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-secondary/50 hover:shadow-glow-secondary group">
-               <div className="p-5 border-b border-border bg-gradient-to-r from-secondary/20 via-secondary/10 to-transparent flex justify-between items-center relative">
-                 <div className="absolute inset-0 bg-gradient-to-r from-secondary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                 <h3 className="font-display font-bold text-text-primary flex items-center gap-3 relative z-10">
-                    <span className="w-3 h-3 rounded-full bg-secondary shadow-lg shadow-secondary/50"></span>
+            <article data-walkthrough="dfa-view" className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-border-strong group">
+               <div className="p-5 border-b border-border bg-gradient-to-r from-brand-tint to-transparent flex justify-between items-center relative">
+                 <h3 className="font-display font-bold text-text-hi flex items-center gap-3 relative z-10">
+                    {/* Chrome dot — brand, not a state color */}
+                    <span className="w-3 h-3 rounded-full bg-brand shadow-sm"></span>
                     <span className="text-lg">Deterministic Finite Automaton</span>
                  </h3>
                  <div className="flex items-center gap-2 relative z-10">
                    {constructionInfo && (
-                     <span className="text-[10px] font-medium text-text-tertiary px-2 py-1 rounded-full bg-surface-hover border border-border">
+                     <span className="text-[10px] font-medium text-text-low px-2 py-1 rounded-full bg-surface-raised border border-border">
                        {constructionMethod === 'thompson' ? 'Thompson+Subset' : constructionMethod === 'asu' ? 'ASU Direct' : 'Brzozowski'}
                      </span>
                    )}
-                   <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-secondary/20 border border-secondary/40 text-secondary font-bold shadow-inner">DFA</span>
+                   <span className="text-xs font-mono px-3 py-1.5 rounded-full bg-brand-tint border border-border text-brand-hover font-bold shadow-inner">DFA</span>
                  </div>
               </div>
-              <div className="flex-1 relative bg-gradient-to-br from-background to-background-secondary">
+              <div className="flex-1 relative bg-bg">
                 <AutomatonView
                   automaton={dfa}
                   title=""
@@ -443,21 +449,21 @@ function App() {
         </section>
 
         {dfa && (
-          <section data-walkthrough="statistics" className="animate-slide-up animate-delay-400">
-             <div className="bg-surface rounded-3xl shadow-hard border border-border p-8 md:p-10 hover:border-border-hover transition-all duration-300">
+          <section data-walkthrough="statistics">
+             <div className="bg-surface rounded-3xl shadow-lg border border-border p-8 md:p-10 hover:border-border-strong transition-all duration-300">
                <div className="flex items-center gap-2 mb-8">
-                 <div className="w-1.5 h-6 bg-gradient-to-b from-success to-accent rounded-full"></div>
-                 <h3 className="text-xl font-display font-bold text-text-primary">Automaton Statistics</h3>
+                 <div className="w-1.5 h-6 bg-gradient-to-b from-brand to-brand-pressed rounded-full"></div>
+                 <h3 className="text-xl font-display font-bold text-text-hi">Automaton Statistics</h3>
                </div>
                <div className={`grid gap-6 ${nfa ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'}`}>
                   {nfa && (
                     <>
-                      <StatCard label="NFA States" value={nfa.states.length} color="text-primary" gradient="from-primary/20 to-primary/5" />
-                      <StatCard label="NFA Transitions" value={nfa.transitions.length} color="text-primary" gradient="from-primary/20 to-primary/5" />
+                      <StatCard label="NFA States" value={nfa.states.length} color="text-brand-hover" gradient="from-brand-tint to-transparent" />
+                      <StatCard label="NFA Transitions" value={nfa.transitions.length} color="text-brand-hover" gradient="from-brand-tint to-transparent" />
                     </>
                   )}
-                  <StatCard label="DFA States" value={dfa.states.length} color="text-secondary" gradient="from-secondary/20 to-secondary/5" />
-                  <StatCard label="DFA Transitions" value={dfa.transitions.length} color="text-secondary" gradient="from-secondary/20 to-secondary/5" />
+                  <StatCard label="DFA States" value={dfa.states.length} color="text-brand-hover" gradient="from-brand-tint to-transparent" />
+                  <StatCard label="DFA Transitions" value={dfa.transitions.length} color="text-brand-hover" gradient="from-brand-tint to-transparent" />
                </div>
              </div>
           </section>
@@ -466,13 +472,14 @@ function App() {
 
       <footer className="mt-16 py-10 border-t border-border bg-surface relative z-10">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-sm text-text-tertiary">
+          <p className="text-sm text-text-low">
             Designed for educational purposes. Visualizing Formal Language Theory.
           </p>
+          {/* Three chrome dots — brand ramp, not state colors */}
           <div className="mt-4 flex justify-center items-center gap-2">
-            <div className="w-1 h-1 rounded-full bg-primary"></div>
-            <div className="w-1 h-1 rounded-full bg-secondary"></div>
-            <div className="w-1 h-1 rounded-full bg-accent"></div>
+            <div className="w-1 h-1 rounded-full bg-brand"></div>
+            <div className="w-1 h-1 rounded-full bg-brand-hover"></div>
+            <div className="w-1 h-1 rounded-full bg-brand-pressed"></div>
           </div>
         </div>
       </footer>
@@ -482,8 +489,8 @@ function App() {
 
 function StatCard({ label, value, color, gradient }: { label: string, value: number, color: string, gradient: string }) {
   return (
-    <div className={`p-6 rounded-2xl bg-gradient-to-br ${gradient} border border-border hover:border-border-bright transition-all group hover:shadow-lg hover:scale-105 duration-300`}>
-      <div className="text-xs font-bold text-text-tertiary uppercase tracking-widest mb-3">{label}</div>
+    <div className={`p-6 rounded-2xl bg-gradient-to-br ${gradient} border border-border hover:border-border-strong transition-all group hover:shadow-md hover:scale-105 duration-300`}>
+      <div className="text-xs font-bold text-text-low uppercase tracking-widest mb-3">{label}</div>
       <div className={`text-4xl font-mono font-black ${color} group-hover:scale-110 transition-transform origin-left`}>
         {value}
       </div>

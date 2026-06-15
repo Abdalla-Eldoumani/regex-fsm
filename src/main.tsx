@@ -5,6 +5,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
 import { WalkthroughProvider } from './components/walkthrough/WalkthroughProvider'
+// Fonts before ./index.css so the @font-face rules register before tokens apply.
+import '@fontsource-variable/space-grotesk'
+import '@fontsource-variable/hanken-grotesk'
+import '@fontsource-variable/jetbrains-mono'
 import './index.css'
 
 const App = lazy(() => import('./components/App'))
@@ -15,8 +19,8 @@ function LoadingFallback() {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p className="text-text-secondary">Loading...</p>
+        <div className="w-16 h-16 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="text-text-mid">Loading...</p>
       </div>
     </div>
   )

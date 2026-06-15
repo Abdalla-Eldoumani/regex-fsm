@@ -20,33 +20,33 @@ export const RegexInput = memo(function RegexInput({ value, onChange, alphabet, 
   return (
     <div className="flex flex-col gap-3">
       <div className="relative">
-        <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+        <label className="block text-xs font-semibold text-text-mid uppercase tracking-label mb-2">
           Alphabet (optional)
         </label>
         <input
           type="text"
           value={alphabet}
           onChange={handleAlphabetChange}
-          className="w-full px-5 py-3 bg-background/80 backdrop-blur-sm border-2 rounded-xl font-mono text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-4 transition-all shadow-inner border-border hover:border-border-hover focus:ring-secondary/20 focus:border-secondary shadow-secondary/5"
+          className="w-full px-5 min-h-[44px] bg-surface border border-border rounded-lg font-mono text-sm text-text-hi placeholder:text-text-low focus:outline-none transition-all"
           placeholder="abc (leave empty for auto-detection)"
         />
-        <p className="text-xs text-text-tertiary mt-1.5 ml-1">
+        <p className="text-xs text-text-low mt-1.5 ml-1">
           Enter symbols without separators (e.g., "abc" or "01"). Leave empty to auto-detect from regex.
         </p>
       </div>
 
       <div className="relative">
-        <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+        <label className="block text-xs font-semibold text-text-mid uppercase tracking-label mb-2">
           Regular Expression
         </label>
         <input
           type="text"
           value={value}
           onChange={handleChange}
-          className={`w-full px-5 py-4 bg-background/80 backdrop-blur-sm border-2 rounded-xl font-mono text-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-4 transition-all shadow-inner ${
+          className={`w-full px-5 min-h-[44px] py-3 bg-surface border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus:outline-none transition-all ${
             error
-              ? 'border-error focus:ring-error/20 focus:border-error shadow-error/10'
-              : 'border-border hover:border-border-hover focus:ring-primary/20 focus:border-primary shadow-primary/5'
+              ? 'border-error'
+              : 'border-border'
           }`}
           placeholder="(a|b)*abb"
         />
@@ -60,26 +60,29 @@ export const RegexInput = memo(function RegexInput({ value, onChange, alphabet, 
       </div>
 
       {error && (
-        <div className="text-sm text-error font-semibold bg-error-light px-3 py-2 rounded-lg border border-error/30 animate-slide-up">
+        <div className="text-sm text-error font-semibold bg-error/10 px-3 py-2 rounded-lg border border-error/30 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+          </svg>
           {error}
         </div>
       )}
 
       <div className="flex flex-wrap gap-2">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-text-secondary text-xs font-medium">
-          <span className="font-mono text-primary font-bold">|</span> union
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-tint border border-border text-text-mid text-xs font-medium">
+          <span className="font-mono text-brand-hover font-bold">|</span> union
         </span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/10 border border-secondary/20 text-text-secondary text-xs font-medium">
-          <span className="font-mono text-secondary font-bold">*</span> star
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-tint border border-border text-text-mid text-xs font-medium">
+          <span className="font-mono text-brand-hover font-bold">*</span> star
         </span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20 text-text-secondary text-xs font-medium">
-          <span className="font-mono text-accent font-bold">+</span> plus
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-tint border border-border text-text-mid text-xs font-medium">
+          <span className="font-mono text-brand-hover font-bold">+</span> plus
         </span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success/10 border border-success/20 text-text-secondary text-xs font-medium">
-          <span className="font-mono text-success font-bold">?</span> optional
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-tint border border-border text-text-mid text-xs font-medium">
+          <span className="font-mono text-brand-hover font-bold">?</span> optional
         </span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-secondary/10 border border-accent-secondary/20 text-text-secondary text-xs font-medium">
-          <span className="font-mono text-accent-secondary font-bold">()</span> grouping
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-tint border border-border text-text-mid text-xs font-medium">
+          <span className="font-mono text-brand-hover font-bold">()</span> grouping
         </span>
       </div>
     </div>

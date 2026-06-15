@@ -123,34 +123,35 @@ export function WalkthroughTooltip() {
   const isLast = state.stepIndex === totalSteps - 1
 
   return (
+    /* Tooltip card uses surface-overlay (the overlay surface tier) */
     <div
       ref={tooltipRef}
-      className="fixed z-[9999] w-[380px] max-w-[calc(100vw-32px)] bg-surface border border-border rounded-2xl shadow-2xl pointer-events-auto animate-fade-in"
+      className="fixed z-[9999] w-[380px] max-w-[calc(100vw-32px)] bg-surface-overlay border border-border rounded-lg shadow-lg pointer-events-auto"
       style={{ top: pos.top, left: pos.left }}
     >
       {/* Header */}
-      <div className="px-5 py-4 border-b border-border bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 rounded-t-2xl">
+      <div className="px-5 py-4 border-b border-border bg-surface-raised rounded-t-lg">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary"></div>
-            <span className="text-xs font-bold text-text-tertiary uppercase tracking-wider">
+            <div className="w-2 h-2 rounded-full bg-brand"></div>
+            <span className="text-xs font-bold text-text-low uppercase tracking-label">
               {currentWalkthrough.name}
             </span>
           </div>
-          <span className="text-xs font-mono text-text-tertiary">
+          <span className="text-xs font-mono text-text-low">
             {state.stepIndex + 1} / {totalSteps}
           </span>
         </div>
-        <h3 className="text-lg font-display font-bold text-text-primary">{currentStep.title}</h3>
+        <h3 className="text-lg font-display font-bold text-text-hi">{currentStep.title}</h3>
       </div>
 
       {/* Content */}
       <div className="px-5 py-4 max-h-[40vh] overflow-y-auto">
-        <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
+        <p className="text-sm text-text-mid leading-relaxed whitespace-pre-line">
           {currentStep.description}
         </p>
         {currentStep.lectureRef && (
-          <p className="mt-3 text-xs text-primary font-medium">
+          <p className="mt-3 text-xs text-brand-hover font-medium">
             Lecture reference: {currentStep.lectureRef}
           </p>
         )}
@@ -159,7 +160,7 @@ export function WalkthroughTooltip() {
       {/* Progress bar */}
       <div className="mx-5 h-1 bg-border rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-300"
+          className="h-full bg-brand rounded-full transition-all duration-300"
           style={{ width: `${((state.stepIndex + 1) / totalSteps) * 100}%` }}
         />
       </div>
@@ -168,7 +169,7 @@ export function WalkthroughTooltip() {
       <div className="px-5 py-4 flex items-center justify-between">
         <button
           onClick={skip}
-          className="cursor-pointer text-xs text-text-tertiary hover:text-text-primary transition-colors"
+          className="cursor-pointer min-h-[44px] px-2 text-xs text-text-low hover:text-text-hi transition-colors"
         >
           Skip Tour
         </button>
@@ -176,14 +177,14 @@ export function WalkthroughTooltip() {
           {!isFirst && (
             <button
               onClick={prev}
-              className="cursor-pointer px-4 py-2 text-xs font-semibold text-text-secondary border border-border rounded-lg hover:border-primary/50 hover:text-primary transition-all"
+              className="cursor-pointer px-4 min-h-[44px] text-xs font-semibold text-text-mid border border-border rounded-lg hover:border-border-strong hover:text-text-hi transition-all"
             >
               Back
             </button>
           )}
           <button
             onClick={next}
-            className="cursor-pointer px-4 py-2 text-xs font-semibold text-white bg-gradient-to-br from-primary to-primary-hover rounded-lg shadow-sm hover:shadow-md transition-all"
+            className="cursor-pointer px-4 min-h-[44px] text-xs font-semibold text-on-brand bg-brand hover:bg-brand-hover rounded-lg shadow-sm transition-all"
           >
             {isLast ? 'Finish' : 'Next'}
           </button>

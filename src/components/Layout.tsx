@@ -10,7 +10,7 @@ const Layout = memo(function Layout() {
   }, [location.pathname])
 
   return (
-    <div className="min-h-screen bg-background text-text-primary">
+    <div className="min-h-screen bg-bg text-text">
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute inset-0" style={{
           backgroundImage: 'radial-gradient(circle at center, var(--color-border) 1px, transparent 1px)',
@@ -19,25 +19,28 @@ const Layout = memo(function Layout() {
         }}></div>
       </div>
 
-      <header className="sticky top-0 z-50 bg-surface/95 backdrop-blur-sm border-b border-border shadow-medium relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 pointer-events-none"></div>
+      <header className="sticky top-0 z-50 bg-surface/95 backdrop-blur-sm border-b border-border shadow-md relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-brand/10 via-transparent to-brand-pressed/10 pointer-events-none"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
           <div className="flex items-center gap-3">
-            <Link to="/" className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-accent to-secondary flex items-center justify-center shadow-lg ring-2 ring-primary/30 transition-all hover:ring-primary/60 hover:scale-105 cursor-pointer">
-              <span className="text-background font-mono font-bold text-xl drop-shadow-md">R</span>
+            <Link to="/" className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-xl bg-gradient-to-br from-brand to-brand-pressed flex items-center justify-center shadow-lg ring-2 ring-brand/30 transition-all hover:ring-brand/60 hover:scale-105 cursor-pointer">
+              <span className="text-on-brand font-mono font-bold text-xl drop-shadow-md">R</span>
             </Link>
             <div>
-              <h1 className="text-xl font-display font-bold text-text-primary tracking-tight">
+              <h1 className="text-xl font-display font-bold text-text-hi tracking-tight">
                 RegexFSM
               </h1>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-4">
-             <span className="text-sm font-medium text-text-secondary bg-surface-hover px-3 py-1.5 rounded-full border border-border">
+             <span className="text-sm font-medium text-text-mid bg-surface-raised px-3 py-1.5 rounded-full border border-border">
                Visualizing Regular Expressions
              </span>
              <WalkthroughToggle />
-             <a href="/github" className="text-text-tertiary hover:text-primary transition-all hover:scale-110 active:scale-95">
+             <a
+               href="/github"
+               className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-low hover:text-brand-hover transition-all hover:scale-110 active:scale-95"
+             >
                <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
                  <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
                </svg>

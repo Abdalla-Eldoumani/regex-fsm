@@ -95,10 +95,10 @@ export function WalkthroughOverlay({ targetSelector }: WalkthroughOverlayProps) 
           mask="url(#walkthrough-mask)"
         />
       </svg>
-      {/* Spotlight border ring */}
+      {/* Spotlight border ring uses brand-hover to match the focus ring color */}
       {rect && (
         <div
-          className="absolute border-2 border-primary rounded-xl shadow-[0_0_0_4px_rgba(99,102,241,0.2)] transition-all duration-300"
+          className="absolute border-2 border-brand-hover rounded-xl transition-all duration-300"
           style={{
             top: rect.top - pad,
             left: rect.left - pad,
