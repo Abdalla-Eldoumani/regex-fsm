@@ -101,9 +101,23 @@ export interface ComplementResult {
 // input would silently drop the off-edge strings. The flip is computed from the
 // COMPLETED machine, never from the input.
 //
+// `overAlphabet` is the Σ the complement is taken against. Complement is defined as
+// Σ* \ L, so Σ is a property of the language, NOT of whichever symbols this machine
+// happens to use. A DFA built from a symbol-free or symbol-light regex (e.g. λ, λ?,
+// a* over Σ = {a, b}) carries a strict subset of Σ as its own alphabet; completing
+// over that subset leaves it trivially complete and the complement wrongly drops
+// every string built from the missing symbols. So callers that know Σ (the closure
+// view, the property suite) pass it here. When omitted, Σ defaults to the input's
+// own alphabet, which is correct for a DFA already total over Σ (the subset.ts case).
+//
 // Pure: never mutates `input`.
-export function complementDFA(input: DFA): ComplementResult {
-  const { dfa: completed, trapAdded, addedEdges } = completeDFA(input)
+export function complementDFA(input: DFA, overAlphabet?: Set<string>): ComplementResult {
+  // Complete over Σ ∪ (the input's own alphabet) so completion never narrows the
+  // alphabet below what the input already uses, and widens it to Σ when given.
+  const sigma = overAlphabet
+    ? new Set<string>([...overAlphabet, ...input.alphabet])
+    : input.alphabet
+  const { dfa: completed, trapAdded, addedEdges } = completeDFA(input, sigma)
 
   const wasAccept = new Set(completed.acceptStates)
   const flippedAccept = completed.states
