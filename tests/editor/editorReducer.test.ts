@@ -175,6 +175,29 @@ describe('toggleAccept', () => {
     ])
     expect(s.acceptStates.sort()).toEqual(['s0', 's1'])
   })
+
+  it('is a no-op when the state id does not exist', () => {
+    // Guard: toggling accept on a nonexistent id must leave acceptStates unchanged
+    // so phantom ids never accumulate (WR-03 — mirrors setStart existence check).
+    const base = run([
+      { type: 'addState', x: 0, y: 0 },
+      { type: 'toggleAccept', id: 's0' },
+    ])
+    expect(base.acceptStates).toEqual(['s0'])
+    const after = editorReducer(base, { type: 'toggleAccept', id: 'ghost' })
+    expect(after.acceptStates).toEqual(['s0'])
+    expect(after).toBe(base) // exact reference equality: no new object created
+  })
+
+  it('still toggles an existing state when guard passes', () => {
+    const s = run([
+      { type: 'addState', x: 0, y: 0 },
+      { type: 'toggleAccept', id: 's0' },
+    ])
+    expect(s.acceptStates).toEqual(['s0'])
+    const toggled = editorReducer(s, { type: 'toggleAccept', id: 's0' })
+    expect(toggled.acceptStates).toEqual([])
+  })
 })
 
 describe('addTransition', () => {
