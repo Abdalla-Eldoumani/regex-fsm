@@ -175,19 +175,25 @@ describe('regex to NFA integration', () => {
       expect(simulateNFA(nfa, 'b').accepted).toBe(false)
     })
 
-    it('converts plus with concatenation', () => {
+    // 03-01 parse fix: in a+b+ the first + has operand b following, so it is
+    // union; only the trailing + is closure. a+b+ = union(a, plus(b)) =
+    // {a} ∪ {one-or-more b}. The genuine positive-closure-with-concatenation
+    // guard is the grouped form (ab)+ below, which keeps + postfix.
+    it('a+b+ is union(a, one-or-more b): accepts a, b, bb; rejects ab', () => {
       const regex = 'a+b+'
       const ast = parse(regex)
       const nfa = buildNFA(ast)
 
       assertNFAValid(nfa)
 
-      expect(simulateNFA(nfa, 'ab').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'aab').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'abb').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'aaabbb').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'a').accepted).toBe(false)
-      expect(simulateNFA(nfa, 'b').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'a').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'b').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'bb').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'bbb').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'ab').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'aab').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'abb').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'aaabbb').accepted).toBe(false)
       expect(simulateNFA(nfa, '').accepted).toBe(false)
     })
 
@@ -264,7 +270,12 @@ describe('regex to NFA integration', () => {
       expect(simulateNFA(nfa, '').accepted).toBe(false)
     })
 
-    it('converts pattern with multiple operators', () => {
+    // 03-01 parse fix: the + in a+b*c? has operand b (then *) following, so it
+    // is union: a+b*c? = union(a, concat(star b, optional c)) = {a} ∪ L(b*c?).
+    // L(b*c?) includes the empty string (zero b, zero c), so "" now accepts and
+    // "a" accepts via the left arm; but "ab"/"ac"/"abc" (an a followed by more)
+    // are in neither arm and now reject, unlike the old concat misparse.
+    it('a+b*c? is union(a, b*c?): accepts a, empty, b, c, bc; rejects ab, abc', () => {
       const regex = 'a+b*c?'
       const ast = parse(regex)
       const nfa = buildNFA(ast)
@@ -272,13 +283,18 @@ describe('regex to NFA integration', () => {
       assertNFAValid(nfa)
 
       expect(simulateNFA(nfa, 'a').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'ab').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'ac').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'abc').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'aabb').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'aabbc').accepted).toBe(true)
-      expect(simulateNFA(nfa, '').accepted).toBe(false)
-      expect(simulateNFA(nfa, 'b').accepted).toBe(false)
+      expect(simulateNFA(nfa, '').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'b').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'bb').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'c').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'bc').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'bbc').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'ab').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'ac').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'abc').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'aabb').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'aabbc').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'aa').accepted).toBe(false)
     })
 
     it('converts nested groups', () => {
@@ -299,19 +315,31 @@ describe('regex to NFA integration', () => {
       expect(simulateNFA(nfa, 'ab').accepted).toBe(false)
     })
 
-    it('converts pattern with all operators', () => {
+    // 03-01 parse fix: the + at c+d is union (operand d? follows), so
+    // (a|b)*c+d?e = union((a|b)*c, d?e). Left arm: a/b string ending in one c;
+    // right arm: {e, de}. ce/cde/ace/bcde/aabccde belong to NEITHER arm and now
+    // reject; e is now accepted (it is exactly the d?e arm with zero d).
+    it('(a|b)*c+d?e is union((a|b)*c, d?e): accepts c, ac, e, de; rejects ce, cde', () => {
       const regex = '(a|b)*c+d?e'
       const ast = parse(regex)
       const nfa = buildNFA(ast)
 
       assertNFAValid(nfa)
 
-      expect(simulateNFA(nfa, 'ce').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'cde').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'ace').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'bcde').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'aabccde').accepted).toBe(true)
-      expect(simulateNFA(nfa, 'e').accepted).toBe(false)
+      // left arm: (a|b)* then a final c
+      expect(simulateNFA(nfa, 'c').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'ac').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'bc').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'aabc').accepted).toBe(true)
+      // right arm: d?e
+      expect(simulateNFA(nfa, 'e').accepted).toBe(true)
+      expect(simulateNFA(nfa, 'de').accepted).toBe(true)
+      // in neither arm (old misparse accepted these)
+      expect(simulateNFA(nfa, 'ce').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'cde').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'ace').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'bcde').accepted).toBe(false)
+      expect(simulateNFA(nfa, 'aabccde').accepted).toBe(false)
       expect(simulateNFA(nfa, 'cd').accepted).toBe(false)
     })
   })
