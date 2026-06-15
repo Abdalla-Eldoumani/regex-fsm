@@ -255,15 +255,25 @@ describe('NFA to DFA integration', () => {
   })
 
   describe('complex patterns', () => {
-    it('converts pattern with all operators', () => {
+    // 03-01 parse fix: the + at c+d is union (operand d? follows), so
+    // (a|b)*c+d? = union((a|b)*c, optional d) = L((a|b)*c) ∪ {λ, d}.
+    // Left arm: a/b string ending in a single c (c, abc accept). Right arm: {"", "d"}.
+    // cd and abcccd are in NEITHER arm and now reject (the old closure misparse accepted them).
+    it('(a|b)*c+d? is union((a|b)*c, optional d): accepts c, abc, d, empty; rejects cd, abcccd', () => {
       const nfa = buildNFA(parse('(a|b)*c+d?'))
       const dfa = nfaToDFA(nfa)
 
       expect(isDeterministic(dfa)).toBe(true)
+      // left arm: (a|b)* then a final c
       expect(simulateDFA(dfa, 'c').accepted).toBe(true)
-      expect(simulateDFA(dfa, 'cd').accepted).toBe(true)
       expect(simulateDFA(dfa, 'abc').accepted).toBe(true)
-      expect(simulateDFA(dfa, 'abcccd').accepted).toBe(true)
+      // right arm: optional d
+      expect(simulateDFA(dfa, '').accepted).toBe(true)
+      expect(simulateDFA(dfa, 'd').accepted).toBe(true)
+      // in neither arm (old misparse accepts)
+      expect(simulateDFA(dfa, 'cd').accepted).toBe(false)
+      expect(simulateDFA(dfa, 'abcccd').accepted).toBe(false)
+      expect(simulateDFA(dfa, 'cccd').accepted).toBe(false)
     })
 
     it('converts deeply nested pattern', () => {
@@ -276,14 +286,21 @@ describe('NFA to DFA integration', () => {
       expect(simulateDFA(dfa, 'bdac').accepted).toBe(true)
     })
 
-    it('converts pattern with repeated subpatterns', () => {
+    // 03-01 parse fix: the + in (ab)+cd sits between ) and c, and an operand (c)
+    // follows it, so it is union, not closure on (ab). (ab)+cd = union((ab), (cd))
+    // = the two-word language {ab, cd}. The old "(ab) one-or-more then cd" reading
+    // (accepting abcd, ababcd, rejecting cd) is gone: now cd accepts and abcd rejects.
+    it('(ab)+cd is union(ab, cd): accepts ab, cd; rejects abcd, ababcd', () => {
       const nfa = buildNFA(parse('(ab)+cd'))
       const dfa = nfaToDFA(nfa)
 
       expect(isDeterministic(dfa)).toBe(true)
-      expect(simulateDFA(dfa, 'abcd').accepted).toBe(true)
-      expect(simulateDFA(dfa, 'ababcd').accepted).toBe(true)
-      expect(simulateDFA(dfa, 'cd').accepted).toBe(false)
+      expect(simulateDFA(dfa, 'ab').accepted).toBe(true)
+      expect(simulateDFA(dfa, 'cd').accepted).toBe(true)
+      expect(simulateDFA(dfa, 'abcd').accepted).toBe(false)
+      expect(simulateDFA(dfa, 'ababcd').accepted).toBe(false)
+      expect(simulateDFA(dfa, 'abab').accepted).toBe(false)
+      expect(simulateDFA(dfa, '').accepted).toBe(false)
     })
   })
 
