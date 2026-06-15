@@ -176,13 +176,22 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
 
       // Selection change: collect selected node and edge ids, excluding the
       // internal __start_marker__ node so it is never surfaced as a user state.
+      // Cytoscape fires select/unselect once per element, so box-selecting n nodes
+      // triggers n dispatches. A microtask (Promise.resolve) coalesces the burst
+      // into one dispatch after the synchronous event loop drains (WR-02).
+      let selectPending = false
       const selectHandler = () => {
-        const nodeIds = cy
-          .nodes(':selected')
-          .filter(n => n.id() !== '__start_marker__')
-          .map(n => n.id())
-        const edgeIds = cy.edges(':selected').map(e => e.id())
-        onSelect?.(nodeIds, edgeIds)
+        if (selectPending) return
+        selectPending = true
+        Promise.resolve().then(() => {
+          selectPending = false
+          const nodeIds = cy
+            .nodes(':selected')
+            .filter(n => n.id() !== '__start_marker__')
+            .map(n => n.id())
+          const edgeIds = cy.edges(':selected').map(e => e.id())
+          onSelect?.(nodeIds, edgeIds)
+        })
       }
 
       cy.on('tap', bgTapHandler)
