@@ -1,6 +1,36 @@
 import { describe, it, expect } from 'vitest'
 import { TooLargeError, BOUNDS } from '@/core/automata/types'
+import type { NFA } from '@/core/automata/types'
 import { assertWithinBounds } from '@/core/algorithms/bounds'
+import { nfaToDFA } from '@/core/algorithms/subset'
+import { buildNFA } from '@/core/algorithms/thompson'
+import { parse } from '@/core/regex/parser'
+import { simulateDFA } from '@/core/algorithms/simulate'
+
+// A literal NFA whose determinization is exactly 2^n states: q0 self-loops on
+// a and b, then a chain q0 -a-> q1 -(a|b)-> q2 ... -> qn accepts the strings
+// whose nth-from-last symbol is 'a'. Built directly (not via regex) so the test
+// is a pure subset-construction blow-up. n=9 gives 512 DFA states, past the 256
+// cap. The subset construction must throw before finishing, never hang.
+function nthFromEndIsA(n: number): NFA {
+  const states = Array.from({ length: n + 1 }, (_, i) => ({ id: `q${i}` }))
+  const transitions = [
+    { from: 'q0', to: 'q0', symbol: 'a' },
+    { from: 'q0', to: 'q0', symbol: 'b' },
+    { from: 'q0', to: 'q1', symbol: 'a' },
+  ]
+  for (let i = 1; i < n; i++) {
+    transitions.push({ from: `q${i}`, to: `q${i + 1}`, symbol: 'a' })
+    transitions.push({ from: `q${i}`, to: `q${i + 1}`, symbol: 'b' })
+  }
+  return {
+    states,
+    transitions,
+    startState: 'q0',
+    acceptStates: [`q${n}`],
+    alphabet: new Set(['a', 'b']),
+  }
+}
 
 // SAFETY-01. These tests pin the shared DoS bound. A small automaton must never
 // trip the cap (the existing exact-acceptance suite is the regression net); a
@@ -95,5 +125,82 @@ describe('assertWithinBounds', () => {
       expect((err as TooLargeError).limit).toBe(BOUNDS.TIME_BUDGET_MS)
       expect((err as TooLargeError).partial).toEqual({ states: 10 })
     }
+  })
+})
+
+describe('nfaToDFA bound (the additive cap)', () => {
+  it('throws TooLargeError on a 2^n blow-up instead of hanging', () => {
+    const blowUp = nthFromEndIsA(9) // 512 DFA states uncapped
+
+    expect(() => nfaToDFA(blowUp)).toThrow(TooLargeError)
+
+    try {
+      nfaToDFA(blowUp)
+    } catch (err) {
+      expect(err).toBeInstanceOf(TooLargeError)
+      expect((err as TooLargeError).reason).toBe('state-cap')
+      expect((err as TooLargeError).limit).toBe(BOUNDS.MAX_DFA_STATES)
+    }
+  })
+
+  it('throws fast, not after grinding through every state', () => {
+    const blowUp = nthFromEndIsA(9)
+    const start = performance.now()
+
+    expect(() => nfaToDFA(blowUp)).toThrow(TooLargeError)
+
+    // The cap stops construction just past 256 states; this is far below the
+    // 2000ms time budget. A generous ceiling proves "no hang" without being
+    // flaky on a slow CI box.
+    expect(performance.now() - start).toBeLessThan(1000)
+  })
+
+  it('never fires below the cap: (a|b)*abb keeps its exact 5-state DFA', () => {
+    // 5 is the measured state count before this change. The cap is additive:
+    // it must not alter this value. If this number ever changes, the cap is
+    // not additive and subset.ts is wrong (do not edit this expectation).
+    const dfa = nfaToDFA(buildNFA(parse('(a|b)*abb')))
+
+    expect(dfa.states.length).toBe(5)
+    expect(dfa.states.length).toBeLessThan(BOUNDS.MAX_DFA_STATES)
+  })
+
+  it('never fires below the cap: (a|b)*abb acceptance is unchanged', () => {
+    const dfa = nfaToDFA(buildNFA(parse('(a|b)*abb')))
+
+    for (const s of ['abb', 'aabb', 'babb']) {
+      expect(simulateDFA(dfa, s).accepted).toBe(true)
+    }
+    for (const s of ['ab', 'aab', 'aba']) {
+      expect(simulateDFA(dfa, s).accepted).toBe(false)
+    }
+  })
+})
+
+describe('the cap is dormant for normal inputs (additive proof)', () => {
+  // A representative spread of small regexes. None determinizes near 256
+  // states, so none may throw and each DFA stays well under the cap. This is
+  // the explicit additive-property check that backs the full-suite regression
+  // net: it proves the guard does nothing on the inputs students actually use.
+  const regexes = [
+    'a',
+    'ab',
+    'a|b',
+    'a*',
+    'a+',
+    'a?',
+    '(a|b)*',
+    '(a|b)*abb',
+    'a*b+c?',
+    'ab|cd',
+    'a(b|c)*d',
+  ]
+
+  it.each(regexes)('builds %s without tripping the cap', (regex) => {
+    let dfa
+    expect(() => {
+      dfa = nfaToDFA(buildNFA(parse(regex)))
+    }).not.toThrow()
+    expect(dfa!.states.length).toBeLessThan(BOUNDS.MAX_DFA_STATES)
   })
 })
