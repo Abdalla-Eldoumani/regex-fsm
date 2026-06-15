@@ -62,7 +62,7 @@ export const SimulationControls = memo(function SimulationControls({
       <button
         onClick={isRunning ? onPause : onPlay}
         disabled={!canStep && !isRunning}
-        className={`cursor-pointer px-6 min-h-[44px] rounded-lg text-sm font-semibold text-on-brand shadow-sm transition-all flex items-center gap-2 min-w-[110px] justify-center active:scale-95 bg-brand hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none`}
+        className={`cursor-pointer px-6 min-h-[44px] rounded-lg text-sm font-semibold text-on-brand shadow-sm transition-all flex items-center gap-2 min-w-[110px] justify-center bg-brand hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none`}
         title={isRunning ? 'Pause' : 'Play'}
       >
         {isRunning ? (
