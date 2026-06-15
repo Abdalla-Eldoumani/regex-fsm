@@ -14,7 +14,9 @@ async function gotoLoadedHome(page: import('@playwright/test').Page) {
 
 test('app boots and the home route renders', async ({ page }) => {
   await gotoLoadedHome(page)
-  await expect(page.locator('#root')).toBeVisible()
+  // The <h1> inside Layout only exists after React has mounted; #root is static
+  // HTML and would pass even if React failed to render.
+  await expect(page.locator('h1', { hasText: 'RegexFSM' })).toBeVisible()
 })
 
 test('home route has no serious or critical a11y violations', async ({ page }) => {
