@@ -32,7 +32,8 @@ const DEFAULT_PRESET_A = GNFA_PRESETS[0].id  // a*
 const DEFAULT_PRESET_B = GNFA_PRESETS[4].id  // contains a
 
 // Derive a DFA from a preset id or a typed regex string. Returns the DFA or
-// null if there is a parse error. Records the error for display.
+// null if there is a parse error. Re-throws TooLargeError so the caller can
+// show TooLargeNotice (SAFETY-01). Only ordinary parse errors are swallowed.
 function deriveSourceDfa(
   spec: { kind: 'preset'; id: string } | { kind: 'regex'; src: string }
 ): { dfa: DFA | null; parseError: string | null } {
@@ -46,8 +47,11 @@ function deriveSourceDfa(
   if (!src) return { dfa: null, parseError: null }
   try {
     const nfa = regexToSourceNfa(src)
+    // nfaToDFA can throw TooLargeError for large inputs. Re-throw so the
+    // closureResult useMemo catches it and returns { kind: 'too-large' }.
     return { dfa: nfaToDFA(nfa), parseError: null }
   } catch (e) {
+    if (e instanceof TooLargeError) throw e
     return {
       dfa: null,
       parseError: e instanceof Error ? e.message : 'Parse error',
@@ -126,17 +130,41 @@ export default function ClosureView(): JSX.Element {
   }, [regexB])
 
   // Derive the source DFAs from the current specs.
-  const { dfa: dfaA, parseError: parseErrorA } = useMemo(
+  // TooLargeError from nfaToDFA is stored as a special marker so closureResult
+  // can surface it as the 'too-large' kind without crashing the render (SAFETY-01).
+  const {
+    dfa: dfaA,
+    parseError: parseErrorA,
+    tooLargeA,
+  } = useMemo(
     () => {
       const s = specA.kind === 'regex' ? { kind: 'regex' as const, src: debouncedA } : specA
-      return deriveSourceDfa(s)
+      try {
+        return { ...deriveSourceDfa(s), tooLargeA: null as TooLargeError | null }
+      } catch (e) {
+        if (e instanceof TooLargeError) {
+          return { dfa: null, parseError: null, tooLargeA: e }
+        }
+        throw e
+      }
     },
     [specA, debouncedA]
   )
-  const { dfa: dfaB, parseError: parseErrorB } = useMemo(
+  const {
+    dfa: dfaB,
+    parseError: parseErrorB,
+    tooLargeB,
+  } = useMemo(
     () => {
       const s = specB.kind === 'regex' ? { kind: 'regex' as const, src: debouncedB } : specB
-      return deriveSourceDfa(s)
+      try {
+        return { ...deriveSourceDfa(s), tooLargeB: null as TooLargeError | null }
+      } catch (e) {
+        if (e instanceof TooLargeError) {
+          return { dfa: null, parseError: null, tooLargeB: e }
+        }
+        throw e
+      }
     },
     [specB, debouncedB]
   )
@@ -147,6 +175,10 @@ export default function ClosureView(): JSX.Element {
   // Compute the closure result: productDFA or complementDFA depending on mode.
   // Catches TooLargeError (SAFETY-01 / T-07-DOS).
   const closureResult = useMemo<ClosureResult>(() => {
+    // Surface TooLargeError from source determinization before computing the product.
+    if (tooLargeA) return { kind: 'too-large', message: tooLargeA.message, partial: tooLargeA.partial }
+    if (tooLargeB) return { kind: 'too-large', message: tooLargeB.message, partial: tooLargeB.partial }
+
     if (closureMode === 'complement') {
       if (!dfaA) return { kind: 'none' }
       try {
@@ -172,7 +204,7 @@ export default function ClosureView(): JSX.Element {
       }
       throw e
     }
-  }, [dfaA, dfaB, closureMode])
+  }, [dfaA, dfaB, closureMode, tooLargeA, tooLargeB])
 
   // Total step count and clamped step (NfaToRegexView pattern).
   const totalSteps = useMemo(() => {
