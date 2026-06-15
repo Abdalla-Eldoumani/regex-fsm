@@ -14,17 +14,21 @@ interface EditorPanelProps {
 
 // A single panel button styled with state-semantic or brand tokens as
 // appropriate. 44px minimum touch target enforced via min-h / min-w.
+// type defaults to "button" so instances inside <form> elements do not
+// accidentally submit on click (WR-01).
 function PanelButton({
   onClick,
   disabled,
   children,
   variant = 'secondary',
+  type = 'button',
   'data-testid': testId,
 }: {
   onClick: () => void
   disabled?: boolean
   children: React.ReactNode
   variant?: 'primary' | 'secondary' | 'danger'
+  type?: 'button' | 'submit'
   'data-testid'?: string
 }) {
   const base =
@@ -37,6 +41,7 @@ function PanelButton({
   }
   return (
     <button
+      type={type}
       onClick={onClick}
       disabled={disabled}
       data-testid={testId}
@@ -65,10 +70,11 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
   // Rename state: local controlled input; dispatched on submit.
   const [renameValue, setRenameValue] = useState('')
 
-  // Transition symbol input: accepts any printable character including λ.
-  // Symbol is plain text passed to dispatch — never used to construct RegExp or
-  // evaluated as code (threat T-04-12).
-  const [symbolValue, setSymbolValue] = useState('')
+  // Separate symbol inputs for the two forms that can be visible simultaneously
+  // (edge selected and 2+ states exist). A single shared value caused the relabel
+  // and add-transition forms to contaminate each other (CR-01).
+  const [relabelSymbol, setRelabelSymbol] = useState('')
+  const [addSymbol, setAddSymbol] = useState('')
 
   // Add transition inputs: source and target state ids typed by the user.
   const [transFromId, setTransFromId] = useState('')
@@ -78,9 +84,14 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
   // keep a single state instance shared by both desktop and mobile renders.
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  // Insert λ into the symbol input.
-  function insertLambda() {
-    setSymbolValue(prev => prev + LAMBDA)
+  // Insert λ into the relabel form's symbol input.
+  function insertRelabelLambda() {
+    setRelabelSymbol(prev => prev + LAMBDA)
+  }
+
+  // Insert λ into the add-transition form's symbol input.
+  function insertAddLambda() {
+    setAddSymbol(prev => prev + LAMBDA)
   }
 
   // Resolve the canonical symbol: '' or 'λ' both mean a λ-move (null).
@@ -105,15 +116,15 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
     if (!from || !to) return
     const ids = new Set(working.states.map(s => s.id))
     if (!ids.has(from) || !ids.has(to)) return
-    dispatchers.addTransition(from, to, resolveSymbol(symbolValue))
-    setSymbolValue('')
+    dispatchers.addTransition(from, to, resolveSymbol(addSymbol))
+    setAddSymbol('')
   }
 
   function handleRelabelTransition(e: React.FormEvent) {
     e.preventDefault()
     if (!selectedEdgeId) return
-    dispatchers.relabelTransition(selectedEdgeId, resolveSymbol(symbolValue))
-    setSymbolValue('')
+    dispatchers.relabelTransition(selectedEdgeId, resolveSymbol(relabelSymbol))
+    setRelabelSymbol('')
   }
 
   const selectedState = working.states.find(s => s.id === selectedNodeId) ?? null
@@ -201,7 +212,7 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
                 aria-label="New state label"
                 data-testid="rename-input"
               />
-              <PanelButton onClick={() => undefined} disabled={!renameValue.trim()} variant="primary">
+              <PanelButton onClick={() => undefined} disabled={!renameValue.trim()} variant="primary" type="submit">
                 <span aria-hidden="true">&#10003;</span>
                 <span className="sr-only">Rename</span>
               </PanelButton>
@@ -230,20 +241,20 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
               <div className="flex gap-2">
                 <input
                   type="text"
-                  value={symbolValue}
-                  onChange={e => setSymbolValue(e.target.value)}
+                  value={relabelSymbol}
+                  onChange={e => setRelabelSymbol(e.target.value)}
                   placeholder={'a, b, or ' + LAMBDA}
                   className={inputBase + ' flex-1'}
                   aria-label="Transition symbol"
                   data-testid="symbol-input"
                   maxLength={64}
                 />
-                <PanelButton onClick={insertLambda} data-testid="lambda-btn">
+                <PanelButton onClick={insertRelabelLambda} data-testid="lambda-btn">
                   <span aria-hidden="true">{LAMBDA}</span>
                   <span className="sr-only">Insert lambda</span>
                 </PanelButton>
               </div>
-              <PanelButton onClick={() => undefined} variant="primary">
+              <PanelButton onClick={() => undefined} variant="primary" type="submit">
                 Apply Label
               </PanelButton>
             </form>
@@ -281,15 +292,15 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
               <div className="flex gap-2">
                 <input
                   type="text"
-                  value={symbolValue}
-                  onChange={e => setSymbolValue(e.target.value)}
+                  value={addSymbol}
+                  onChange={e => setAddSymbol(e.target.value)}
                   placeholder={'Symbol or ' + LAMBDA}
                   className={inputBase + ' flex-1'}
                   aria-label="Transition symbol for new edge"
                   data-testid="add-symbol-input"
                   maxLength={64}
                 />
-                <PanelButton onClick={insertLambda}>
+                <PanelButton onClick={insertAddLambda}>
                   <span aria-hidden="true">{LAMBDA}</span>
                   <span className="sr-only">Insert lambda</span>
                 </PanelButton>
@@ -297,6 +308,7 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
               <PanelButton
                 onClick={() => undefined}
                 variant="primary"
+                type="submit"
                 disabled={!transFromId.trim() || !transToId.trim()}
                 data-testid="add-transition-btn"
               >
