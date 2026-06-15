@@ -3,6 +3,7 @@ import { parse } from '@/core/regex/parser'
 import { buildNFA } from '@/core/algorithms/thompson'
 import { nfaToDFA } from '@/core/algorithms/subset'
 import { RegexNode } from '@/core/regex/ast'
+import { TooLargeError, BOUNDS } from '@/core/automata/types'
 
 describe('parser', () => {
   describe('single symbols', () => {
@@ -684,6 +685,46 @@ describe('parser', () => {
     it('parses complex language pattern', () => {
       const ast = parse('(a|b)*abb')
       expect(ast.type).toBe('concat')
+    })
+  })
+
+  // SAFETY-01: parser recursion depth bound.
+  // Deeply nested input must throw TooLargeError('parser-depth', ...) instead
+  // of a RangeError / stack overflow. The bound (BOUNDS.MAX_PARSE_DEPTH = 300)
+  // is generous: all existing tests use shallow nesting (deepest is ((((a))))
+  // which is 4 levels) so they are unaffected. 100 nested parens (well under
+  // the bound) must still parse successfully.
+  describe('SAFETY-01: recursion depth bound', () => {
+    it('throws TooLargeError with reason parser-depth on pathologically nested input', () => {
+      // 500 open parens + 'a' + 500 close parens: nesting depth = 500.
+      // This exceeds BOUNDS.MAX_PARSE_DEPTH = 300, so it must throw cleanly.
+      const pathological = '('.repeat(500) + 'a' + ')'.repeat(500)
+
+      expect(() => parse(pathological)).toThrow(TooLargeError)
+      expect(() => parse(pathological)).toThrow(/too large/i)
+      try {
+        parse(pathological)
+      } catch (err) {
+        expect(err).toBeInstanceOf(TooLargeError)
+        expect((err as TooLargeError).reason).toBe('parser-depth')
+        expect((err as TooLargeError).limit).toBe(BOUNDS.MAX_PARSE_DEPTH)
+        // Must NOT be a RangeError / stack overflow
+        expect(err).not.toBeInstanceOf(RangeError)
+      }
+    })
+
+    it('does NOT throw for moderately nested input well below the bound', () => {
+      // 100 nested parens: depth = 100, well under BOUNDS.MAX_PARSE_DEPTH = 300.
+      const moderatelyNested = '('.repeat(100) + 'a' + ')'.repeat(100)
+      expect(() => parse(moderatelyNested)).not.toThrow()
+      const result = parse(moderatelyNested)
+      expect(result).toEqual({ type: 'symbol', value: 'a' })
+    })
+
+    it('consecutive-quantifier errors keep their original message (not a depth error)', () => {
+      // The depth guard must not shadow existing validation errors.
+      expect(() => parse('a**')).toThrow(/quantifier cannot follow quantifier/i)
+      expect(() => parse('a*+')).toThrow(/quantifier cannot follow quantifier/i)
     })
   })
 })

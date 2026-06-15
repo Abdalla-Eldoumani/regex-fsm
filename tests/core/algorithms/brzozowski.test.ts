@@ -5,6 +5,7 @@ import { simulateDFA } from '@/core/algorithms/simulate'
 import { buildNFA } from '@/core/algorithms/thompson'
 import { nfaToDFA } from '@/core/algorithms/subset'
 import { isDeterministic } from '@/core/automata/dfa'
+import { TooLargeError, BOUNDS } from '@/core/automata/types'
 
 describe('Brzozowski derivative DFA construction', () => {
   describe('basic patterns', () => {
@@ -200,6 +201,45 @@ describe('Brzozowski derivative DFA construction', () => {
           expect(brzAccepts).toBe(thompsonAccepts)
         }
       })
+    })
+  })
+
+  // SAFETY-01: the cap must fire on a known blow-up and stay dormant for small inputs.
+  //
+  // The L_9 language over {0,1}: strings where the 9th-from-last character is '1'.
+  // Its minimal DFA has exactly 2^9 = 512 states (the Myhill-Nerode classes are
+  // the 512 possible values of the last 9 characters seen so far). Brzozowski
+  // constructs the minimal DFA, so it reaches exactly 512 derivative classes,
+  // well above BOUNDS.MAX_DFA_STATES = 256. This is the canonical blow-up proof.
+  // Regex: (0|1)* 1 (0|1)(0|1)(0|1)(0|1)(0|1)(0|1)(0|1)(0|1)
+  describe('SAFETY-01: TooLargeError on blow-up', () => {
+    it('throws TooLargeError with reason state-cap when DFA would exceed BOUNDS.MAX_DFA_STATES', () => {
+      // L_9 over {0,1}: the 9th-from-last symbol is 1. Minimal DFA = 512 states.
+      const repeatSuffix = '(0|1)'.repeat(8)
+      const blowupRegex = `(0|1)*1${repeatSuffix}`
+      const alphabet = new Set(['0', '1'])
+      const ast = parse(blowupRegex)
+
+      expect(() => brzozowskiDFA(ast, alphabet)).toThrow(TooLargeError)
+      expect(() => brzozowskiDFA(ast, alphabet)).toThrow(/too large/i)
+      try {
+        brzozowskiDFA(ast, alphabet)
+      } catch (err) {
+        expect(err).toBeInstanceOf(TooLargeError)
+        expect((err as TooLargeError).reason).toBe('state-cap')
+        expect((err as TooLargeError).limit).toBe(BOUNDS.MAX_DFA_STATES)
+      }
+    })
+
+    it('does NOT throw for small patterns that stay well under BOUNDS.MAX_DFA_STATES', () => {
+      const smallRegexes = ['a', 'ab', 'a|b', 'a*', '(a|b)*abb', 'a*b+c?']
+      const alphabet = new Set(['a', 'b', 'c'])
+      for (const regex of smallRegexes) {
+        const ast = parse(regex)
+        let result: ReturnType<typeof brzozowskiDFA> | undefined
+        expect(() => { result = brzozowskiDFA(ast, alphabet) }, `"${regex}" should not throw`).not.toThrow()
+        expect(result!.dfa.states.length).toBeLessThan(BOUNDS.MAX_DFA_STATES)
+      }
     })
   })
 })
