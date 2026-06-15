@@ -298,9 +298,12 @@ export default function PumpingView(): JSX.Element {
   }, [clampedStep, currentKey])
 
   const handlePlay = useCallback(() => {
-    if (reducedMotion || clampedStep >= totalSteps - 1) return
+    if (reducedMotion) return
     if (clampedStep >= totalSteps - 1) {
+      // Restart from the first stage rather than silently doing nothing.
       setStageState({ key: currentKey, step: 0 })
+      setIsPlaying(true)
+      return
     }
     setIsPlaying(true)
   }, [reducedMotion, clampedStep, totalSteps, currentKey])
@@ -480,6 +483,14 @@ export default function PumpingView(): JSX.Element {
                 |xy| = {effectiveSplit.x.length + effectiveSplit.y.length} ≤ p = {p} &nbsp;|&nbsp;
                 |y| = {effectiveSplit.y.length} ≥ 1
               </p>
+              {witnessError && clampedStep === 2 && (
+                // Split-validation rejection (|xy|>p or |y|<1). Shared witnessError
+                // state, but rendered here instead of the witness card because the
+                // error can only be set at this stage in tryAdvance.
+                <p className="text-sm text-error" data-testid="pumping-split-error">
+                  {witnessError}
+                </p>
+              )}
             </div>
           ) : (
             <p className="font-sans text-sm text-text-mid">
@@ -504,7 +515,10 @@ export default function PumpingView(): JSX.Element {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setIInput(prev => Math.max(0, prev === 1 ? 0 : prev - 1))}
+                  onClick={() => setIInput(prev => {
+                    const next = prev - 1 === 1 ? 0 : prev - 1
+                    return Math.max(0, next)
+                  })}
                   className="w-10 min-h-[44px] bg-surface-raised border border-border rounded-lg text-text-hi font-mono hover:border-border-strong transition-colors"
                   aria-label="Decrease i"
                 >
