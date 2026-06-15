@@ -70,6 +70,11 @@ export function editorReducer(state: WorkingAutomaton, action: EditorAction): Wo
     }
 
     case 'toggleAccept': {
+      // Guard against phantom ids: mirror setStart's existence check so toggling
+      // accept on a deleted or nonexistent state id is a no-op (WR-03). Without
+      // this, a phantom id can accumulate in acceptStates and produce an invalid
+      // automaton (acceptStates is required to be a subset of state ids).
+      if (!state.states.some(s => s.id === action.id)) return state
       const has = state.acceptStates.includes(action.id)
       return {
         ...state,
