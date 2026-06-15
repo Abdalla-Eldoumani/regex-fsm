@@ -21,14 +21,11 @@ test('app boots and the home route renders', async ({ page }) => {
 
 test('home route has no serious or critical a11y violations', async ({ page }) => {
   await gotoLoadedHome(page)
-  // color-contrast is disabled because the dark theme's `text-text-tertiary` tokens
-  // fall below WCAG AA contrast on the home route (4 nodes). That is a deferred theme
-  // a11y gap, not a harness defect: token reconciliation is Phase 2 and the full a11y
-  // audit is Phase 13. See .agent/TECH_DEBT.md. Every other serious/critical rule is
-  // still asserted, so this proves the Playwright + axe harness runs green for real.
+  // The Reasoning Instrument tokens were tuned in Phase 2 to meet WCAG AA ratios:
+  // text-text-low (#828BA0) on bg-bg (#0E1117) >= 4.5:1; all other ramp entries are
+  // higher. color-contrast is therefore enforced here; the Phase 1 deferral is removed.
   const results = await new AxeBuilder({ page })
     .withTags('wcag2aa')
-    .disableRules(['color-contrast'])
     .analyze()
   const seriousOrCritical = results.violations.filter(
     (v) => v.impact === 'serious' || v.impact === 'critical',
