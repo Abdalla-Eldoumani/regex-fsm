@@ -393,9 +393,19 @@ describe('parser', () => {
       })
     })
 
-    it('parses a*b+c?', () => {
+    it('parses a*b+c? with the + as union', () => {
+      // Course reading: the + has operand c after it, so it is union (loosest):
+      //   a* b  +  c?  =  union( concat(star a, b), optional c )
       const ast = parse('a*b+c?')
-      expect(ast.type).toBe('concat')
+      expect(ast).toEqual({
+        type: 'union',
+        left: {
+          type: 'concat',
+          left: { type: 'star', child: { type: 'symbol', value: 'a' } },
+          right: { type: 'symbol', value: 'b' },
+        },
+        right: { type: 'optional', child: { type: 'symbol', value: 'c' } },
+      })
     })
 
     it('parses nested groups (a(b|c)*d)', () => {
@@ -603,7 +613,9 @@ describe('parser', () => {
     })
 
     it('handles alternating operators', () => {
-      const ast = parse('a*b+c?')
+      // c+ is genuine positive closure here (nothing follows it), so the whole
+      // expression is a concatenation of quantified atoms.
+      const ast = parse('a*b?c+')
       expect(ast.type).toBe('concat')
     })
 
