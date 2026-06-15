@@ -11,8 +11,11 @@ interface MinimizationResult {
   description: string
 }
 
-// Cache version for invalidation on app updates
-const CACHE_VERSION = '1.0.0'
+// Cache version for invalidation on app updates.
+// Bumped to 1.1.0 when `+` between operands was corrected to parse as union:
+// the same regex string now builds a different (correct) automaton, so automata
+// cached under the old misparse must be discarded by the version mismatch.
+const CACHE_VERSION = '1.1.0'
 const STORAGE_KEY = 'regexfsm_cache'
 
 interface CacheState {
