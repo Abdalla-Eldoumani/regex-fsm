@@ -51,6 +51,18 @@ const Layout = memo(function Layout() {
              >
                Editor
              </NavLink>
+             {/* Multi-View nav link */}
+             <NavLink
+               to="/multi"
+               className={({ isActive }) =>
+                 'min-h-[44px] min-w-[44px] flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 (isActive
+                   ? 'bg-brand-tint text-brand-hover border border-brand/30'
+                   : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
+               }
+             >
+               Multi-View
+             </NavLink>
              <NotationToggle />
              <WalkthroughToggle />
              <a
