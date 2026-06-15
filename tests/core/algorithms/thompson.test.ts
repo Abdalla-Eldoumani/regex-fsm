@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildNFA } from '@/core/algorithms/thompson'
+import { buildNFA, buildNFAWithCorrespondence } from '@/core/algorithms/thompson'
 import { parse } from '@/core/regex/parser'
 import { simulateNFA } from '@/core/algorithms/simulate'
 
@@ -338,6 +338,75 @@ describe('thompson construction', () => {
       const reject = ['a', 'abc', 'bc', 'aabbc', 'dd', 'bd']
       accept.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(true))
       reject.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(false))
+    })
+  })
+
+  describe('thompson correspondence', () => {
+    it('single symbol: nfa deep-equals buildNFA result', () => {
+      const ast = parse('a')
+      const { nfa } = buildNFAWithCorrespondence(ast)
+      const bare = buildNFA(ast)
+
+      expect(nfa.states.map(s => s.id).sort()).toEqual(bare.states.map(s => s.id).sort())
+      expect(nfa.startState).toBe(bare.startState)
+      expect(nfa.acceptStates).toEqual(bare.acceptStates)
+      expect(nfa.alphabet).toEqual(bare.alphabet)
+    })
+
+    it('single symbol: fragments has one entry with correct states', () => {
+      const ast = parse('a')
+      const { nfa, fragments } = buildNFAWithCorrespondence(ast)
+
+      expect(fragments.size).toBe(1)
+      const [entry] = fragments.values()
+      const fstateIds = new Set(entry.stateIds)
+      const nfaIds = new Set(nfa.states.map(s => s.id))
+      expect(fstateIds).toEqual(nfaIds)
+      expect(nfa.states.map(s => s.id)).toContain(entry.start)
+      expect(nfa.acceptStates).toContain(entry.accept)
+    })
+
+    it('union a|b: root fragment stateIds is superset of both children', () => {
+      const ast = parse('a|b')
+      const { fragments } = buildNFAWithCorrespondence(ast)
+
+      // 3 nodes: n0=union root, n1=symbol a, n2=symbol b (pre-order)
+      const rootEntry = fragments.get('n0')!
+      const leftEntry = fragments.get('n1')!
+      const rightEntry = fragments.get('n2')!
+
+      expect(rootEntry).toBeDefined()
+      expect(leftEntry).toBeDefined()
+      expect(rightEntry).toBeDefined()
+
+      const rootSet = new Set(rootEntry.stateIds)
+      for (const id of leftEntry.stateIds) expect(rootSet.has(id)).toBe(true)
+      for (const id of rightEntry.stateIds) expect(rootSet.has(id)).toBe(true)
+      // children are strict subsets
+      expect(rootEntry.stateIds.length).toBeGreaterThan(leftEntry.stateIds.length)
+      expect(rootEntry.stateIds.length).toBeGreaterThan(rightEntry.stateIds.length)
+    })
+
+    it('concat ab: nfa deep-equals buildNFA result', () => {
+      const ast = parse('ab')
+      const { nfa } = buildNFAWithCorrespondence(ast)
+      const bare = buildNFA(ast)
+
+      expect(nfa.states.map(s => s.id).sort()).toEqual(bare.states.map(s => s.id).sort())
+      expect(nfa.startState).toBe(bare.startState)
+      expect(nfa.acceptStates).toEqual(bare.acceptStates)
+    })
+
+    it('buildNFA is still byte-identical: same states and transitions as wrapper nfa', () => {
+      for (const regex of ['a*', '(a|b)*', '(a|b)*abb']) {
+        const ast = parse(regex)
+        const { nfa } = buildNFAWithCorrespondence(ast)
+        const bare = buildNFA(ast)
+
+        expect(nfa.states.map(s => s.id).sort()).toEqual(bare.states.map(s => s.id).sort())
+        expect(nfa.alphabet).toEqual(bare.alphabet)
+        expect(nfa.acceptStates).toEqual(bare.acceptStates)
+      }
     })
   })
 
