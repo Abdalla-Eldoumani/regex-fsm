@@ -180,6 +180,103 @@ body {
   animation: breathe var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
+/* The live-automaton hero. A 3-state DFA consumes "aab" on a loop: the active
+   marking walks q0 -> q1 -> q1 -> q2 in four beats while the head advances along
+   the mono tape in lockstep. Everything is token-driven and scoped under
+   .hero-automaton so the reduced-motion override below stills it to one frame.
+   The loop is a multiple of --dur-pulse so it reads as calm breathing, not a
+   ticker; the head step uses --ease-out-expo to match the graph's edge traversal. */
+
+/* Four-beat cycle for the active overlay on each node. Each node is "on" for one
+   quarter of the loop; the breathe glow (defined above) plays only while on. The
+   thicker active stroke is part of the same on-state so the hero reuses the exact
+   simulation-active language (state-active color + pulse + thicker stroke). */
+@keyframes hero-node-beat-0 {
+  0%, 22%   { opacity: 1; }
+  25%, 100% { opacity: 0; }
+}
+@keyframes hero-node-beat-1 {
+  0%, 22%   { opacity: 0; }
+  25%, 72%  { opacity: 1; }
+  75%, 100% { opacity: 0; }
+}
+@keyframes hero-node-beat-2 {
+  0%, 72%   { opacity: 0; }
+  75%, 100% { opacity: 1; }
+}
+
+/* The head marker steps across the three tape cells, parking on the last cell
+   for the final beat, then snaps back to the first cell as the loop repeats. The
+   cell pitch is a CSS variable so the component owns the geometry. */
+@keyframes hero-head-advance {
+  0%, 22%   { transform: translateX(0); }
+  25%, 47%  { transform: translateX(var(--hero-cell-pitch)); }
+  50%, 72%  { transform: translateX(calc(var(--hero-cell-pitch) * 2)); }
+  75%, 100% { transform: translateX(calc(var(--hero-cell-pitch) * 2)); }
+}
+
+/* Highlight the tape cell under the head in step with the active node, reusing
+   the state-active soft tint so the tape and the graph speak one "now" language. */
+@keyframes hero-cell-beat-0 {
+  0%, 22%   { opacity: 1; }
+  25%, 100% { opacity: 0; }
+}
+@keyframes hero-cell-beat-1 {
+  0%, 22%   { opacity: 0; }
+  25%, 47%  { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes hero-cell-beat-2 {
+  0%, 47%   { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}
+
+.hero-automaton {
+  /* One source for the loop length and the head pitch so the keyframes above and
+     the SVG geometry below stay in lockstep. Loop = 5x the pulse for a calm read. */
+  --hero-loop: calc(var(--dur-pulse) * 5);
+}
+
+/* The active overlay layered over each node circle: state-active fill, thicker
+   stroke, and the shared breathe glow. Each node's overlay runs its own beat
+   keyframe (set on the element) so only the current node is lit. */
+.hero-automaton .hero-node-active {
+  fill: var(--color-state-active);
+  stroke: var(--color-state-active);
+  stroke-width: 3;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hero-node-beat-0 var(--hero-loop) var(--ease-in-out) infinite,
+             breathe var(--dur-pulse) var(--ease-in-out) infinite;
+}
+.hero-automaton .hero-node-active[data-beat='1'] {
+  animation: hero-node-beat-1 var(--hero-loop) var(--ease-in-out) infinite,
+             breathe var(--dur-pulse) var(--ease-in-out) infinite;
+}
+.hero-automaton .hero-node-active[data-beat='2'] {
+  animation: hero-node-beat-2 var(--hero-loop) var(--ease-in-out) infinite,
+             breathe var(--dur-pulse) var(--ease-in-out) infinite;
+}
+
+/* The tape head marker advancing across the cells, eased like edge traversal. */
+.hero-automaton .hero-head {
+  animation: hero-head-advance var(--hero-loop) var(--ease-out-expo) infinite;
+}
+
+/* The state-active wash on the tape cell under the head. */
+.hero-automaton .hero-cell-active {
+  fill: var(--color-state-active-soft);
+  opacity: 0;
+  animation: hero-cell-beat-0 var(--hero-loop) var(--ease-in-out) infinite;
+}
+.hero-automaton .hero-cell-active[data-beat='1'] {
+  animation: hero-cell-beat-1 var(--hero-loop) var(--ease-in-out) infinite;
+}
+.hero-automaton .hero-cell-active[data-beat='2'] {
+  animation: hero-cell-beat-2 var(--hero-loop) var(--ease-in-out) infinite;
+}
+
 /* Reduced motion is mandatory. Collapse to near-zero rather than blanket none
    so a transitionend still fires for any JS awaiting it, and stop looped
    pulses. The hero holds a still frame via the explicit override below. */
@@ -193,5 +290,19 @@ body {
 
   .hero-automaton * {
     animation: none !important;
+  }
+
+  /* The hero must hold a *composed* still frame, not a blank one. The line above
+     freezes every overlay at its opacity:0 default, so without this the still
+     frame would show no active state and no head. Reveal exactly the final-frame
+     elements (the accept state lit, its tape cell washed) and park the head at
+     the last cell, so reduced-motion users still read "the automaton accepted".
+     This sets static presentation, not animation, so it does not compete with the
+     override above. */
+  .hero-automaton [data-still] {
+    opacity: 1 !important;
+  }
+  .hero-automaton .hero-head {
+    transform: translateX(calc(var(--hero-cell-pitch) * 2)) !important;
   }
 }
