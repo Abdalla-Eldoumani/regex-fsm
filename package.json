@@ -28,6 +28,7 @@
     "@types/cytoscape": "3.31.0",
     "clsx": "2.1.1",
     "cytoscape": "3.34.0",
+    "cytoscape-edgehandles": "4.0.1",
     "lz-string": "1.5.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
