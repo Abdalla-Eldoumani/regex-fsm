@@ -7,6 +7,7 @@ import { StringInput } from './input/StringInput'
 import { PatternBuilder } from './input/PatternBuilder'
 import { AutomatonView } from './display/AutomatonView'
 import { SimulationPanel } from './simulation/SimulationPanel'
+import { Hero } from './Hero'
 
 type ConstructionMethod = 'thompson' | 'asu' | 'brzozowski'
 
@@ -172,6 +173,12 @@ function App() {
   return (
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 relative z-10">
+
+        {/* The live-automaton signature, decorative (aria-hidden inside Hero).
+            Shares the page gutter and the section rhythm of the views below. */}
+        <section className="pt-2 pb-4">
+          <Hero />
+        </section>
 
         <section data-walkthrough="input-section" className="bg-surface rounded-3xl shadow-lg border border-border hover:border-border-strong transition-all duration-300 p-8 md:p-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative">
