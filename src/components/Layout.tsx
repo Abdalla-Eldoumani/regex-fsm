@@ -1,6 +1,8 @@
 import { memo, useEffect } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { WalkthroughToggle } from './walkthrough/WalkthroughToggle'
+import { NotationProvider } from '@/notation/NotationContext'
+import { NotationToggle } from '@/notation/NotationToggle'
 
 const Layout = memo(function Layout() {
   const location = useLocation()
@@ -10,6 +12,7 @@ const Layout = memo(function Layout() {
   }, [location.pathname])
 
   return (
+    <NotationProvider>
     <div className="min-h-screen bg-bg text-text">
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute inset-0" style={{
@@ -36,6 +39,7 @@ const Layout = memo(function Layout() {
              <span className="text-sm font-medium text-text-mid bg-surface-raised px-3 py-1.5 rounded-full border border-border">
                Visualizing Regular Expressions
              </span>
+             <NotationToggle />
              <WalkthroughToggle />
              <a
                href="/github"
@@ -51,6 +55,7 @@ const Layout = memo(function Layout() {
 
       <Outlet />
     </div>
+    </NotationProvider>
   )
 })
 
