@@ -293,7 +293,7 @@ export default function ClosureView(): JSX.Element {
   }, [sourceKey, totalSteps])
 
   const handlePlay = useCallback(() => {
-    if (reducedMotion) return
+    if (reducedMotion || totalSteps === 0) return
     if (clampedStep >= totalSteps - 1) {
       setStepState({ key: sourceKey, step: 0 })
     }
@@ -472,7 +472,7 @@ export default function ClosureView(): JSX.Element {
                 onChange={e => handleRegexA(e.target.value)}
                 placeholder="e.g. (a+b)*abb"
                 spellCheck={false}
-                className="flex-1 min-w-0 bg-transparent font-mono text-text-hi text-sm focus:outline-none placeholder:text-text-low"
+                className="flex-1 min-w-0 bg-transparent font-mono text-text-hi text-sm focus-visible:outline-none placeholder:text-text-low"
               />
               {parseErrorA && (
                 <span className="text-xs text-error shrink-0">{parseErrorA}</span>
@@ -517,7 +517,7 @@ export default function ClosureView(): JSX.Element {
                   onChange={e => handleRegexB(e.target.value)}
                   placeholder="e.g. a*b"
                   spellCheck={false}
-                  className="flex-1 min-w-0 bg-transparent font-mono text-text-hi text-sm focus:outline-none placeholder:text-text-low"
+                  className="flex-1 min-w-0 bg-transparent font-mono text-text-hi text-sm focus-visible:outline-none placeholder:text-text-low"
                 />
                 {parseErrorB && (
                   <span className="text-xs text-error shrink-0">{parseErrorB}</span>
