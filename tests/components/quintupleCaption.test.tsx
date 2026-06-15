@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 
 // The quintuple caption is rendered inside App.tsx as a static <p> element
 // alongside the NFA and DFA section headers. This test verifies the text
