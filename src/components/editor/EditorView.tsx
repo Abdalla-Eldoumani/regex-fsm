@@ -76,6 +76,13 @@ export function EditorView(): JSX.Element {
     [automaton]
   )
 
+  // Positional editor edge ids fed to the renderer so canvas selection round-trips
+  // through the editor id, not the array index (BL-01). Order matches
+  // automaton.transitions because toAutomaton is a 1:1 positional map. Memoised on
+  // working.transitions (a stable reference unless transitions change) so it does
+  // not add Cytoscape re-creations beyond the structural edits that already force one.
+  const edgeIds = useMemo(() => working.transitions.map(t => t.id), [working.transitions])
+
   const isEmpty = working.states.length === 0
 
   return (
@@ -126,6 +133,7 @@ export function EditorView(): JSX.Element {
           )}
           <AutomatonGraph
             automaton={automaton}
+            edgeIds={edgeIds}
             editable
             onAddStateAt={dispatchers.addStateAt}
             onDrawEdge={dispatchers.drawEdge}
