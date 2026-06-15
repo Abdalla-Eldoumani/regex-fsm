@@ -178,7 +178,12 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
             .nodes(':selected')
             .filter(n => n.id() !== '__start_marker__')
             .map(n => n.id())
-          const edgeIds = cy.edges(':selected').map(e => e.id())
+          // Mirror the node guard for edges: the injected __start_arrow__ has no
+          // editor counterpart, so never surface it as a selectable edge id (IN-01).
+          const edgeIds = cy
+            .edges(':selected')
+            .filter(e => e.id() !== '__start_arrow__')
+            .map(e => e.id())
           onSelect?.(nodeIds, edgeIds)
         })
       }
@@ -242,7 +247,12 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
             .nodes(':selected')
             .filter(n => n.id() !== '__start_marker__')
             .map(n => n.id())
-          const edgeIds = cy.edges(':selected').map(e => e.id())
+          // Mirror the node guard for edges: the injected __start_arrow__ has no
+          // editor counterpart, so never surface it as a selectable edge id (IN-01).
+          const edgeIds = cy
+            .edges(':selected')
+            .filter(e => e.id() !== '__start_arrow__')
+            .map(e => e.id())
           onSelect?.(nodeIds, edgeIds)
         })
       }
