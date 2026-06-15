@@ -175,9 +175,11 @@ export function AutomatonView({
                 <div className="w-5 h-5 rounded-full border-[2px] border-dashed border-state-trap bg-state-trap-soft opacity-80"></div>
                 <span className="text-text-mid">Trap State</span>
               </div>
-              {/* Active (simulation) — amber; non-color cue: thicker ring (ring-2) */}
+              {/* Active (simulation) — amber; non-color cue: thicker stroke
+                  (border-[3px], matching the graph's border-width: 3 active node).
+                  The ring halo stays for visual punch but the thicker border is the cue. */}
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full border-[2px] border-state-active bg-state-active-soft ring-2 ring-state-active/40"></div>
+                <div className="w-5 h-5 rounded-full border-[3px] border-state-active bg-state-active-soft ring-2 ring-state-active/40"></div>
                 <span className="text-text-mid">Active (Simulation)</span>
               </div>
             </div>
