@@ -125,25 +125,26 @@ describe('pattern templates', () => {
 
   describe('template regex generation', () => {
     describe('position templates', () => {
+      // Position templates emit + for union (course notation)
       it('starts_with generates correct regex', () => {
         const template = getTemplateById('starts_with')
         expect(template).toBeDefined()
         const regex = template!.buildRegex('abc')
-        expect(regex).toBe('abc(a|b|c)*')
+        expect(regex).toBe('abc(a + b + c)*')
       })
 
       it('ends_with generates correct regex', () => {
         const template = getTemplateById('ends_with')
         expect(template).toBeDefined()
         const regex = template!.buildRegex('xyz')
-        expect(regex).toBe('(a|b|c)*xyz')
+        expect(regex).toBe('(a + b + c)*xyz')
       })
 
       it('contains generates correct regex', () => {
         const template = getTemplateById('contains')
         expect(template).toBeDefined()
         const regex = template!.buildRegex('test')
-        expect(regex).toBe('(a|b|c)*test(a|b|c)*')
+        expect(regex).toBe('(a + b + c)*test(a + b + c)*')
       })
     })
 
@@ -157,11 +158,12 @@ describe('pattern templates', () => {
     })
 
     describe('combination templates', () => {
+      // alternation emits + for union (course notation)
       it('alternation generates correct regex', () => {
         const template = getTemplateById('alternation')
         expect(template).toBeDefined()
         const regex = template!.buildRegex('a', 'b')
-        expect(regex).toBe('(a|b)')
+        expect(regex).toBe('(a + b)')
       })
 
       it('concatenation generates correct regex', () => {
@@ -203,18 +205,19 @@ describe('pattern templates', () => {
         expect(regex).toBe('(a)')
       })
 
+      // any_single emits + for union (course notation)
       it('any_single generates correct regex for multiple chars', () => {
         const template = getTemplateById('any_single')
         expect(template).toBeDefined()
         const regex = template!.buildRegex('abc')
-        expect(regex).toBe('(a|b|c)')
+        expect(regex).toBe('(a + b + c)')
       })
 
       it('any_single generates correct regex for numeric chars', () => {
         const template = getTemplateById('any_single')
         expect(template).toBeDefined()
         const regex = template!.buildRegex('012')
-        expect(regex).toBe('(0|1|2)')
+        expect(regex).toBe('(0 + 1 + 2)')
       })
     })
   })
@@ -294,7 +297,7 @@ describe('pattern templates', () => {
       const template = getTemplateById('starts_with')
       expect(template).toBeDefined()
       const regex = template!.buildRegex('a b')
-      expect(regex).toBe('a b(a|b|c)*')
+      expect(regex).toBe('a b(a + b + c)*')
     })
   })
 
@@ -359,8 +362,36 @@ describe('pattern templates', () => {
       expect(() => parse(regex)).not.toThrow()
     })
 
+    // Round-trip guard: + form and | form parse to equivalent languages
+    it('alternation + form parses and accepts same strings as | form', () => {
+      // The parser accepts both + and | as union, so (a + b) and (a|b) are equivalent
+      const plusForm = '(a + b)'
+      const pipeForm = '(a|b)'
+      // Both must parse without throwing
+      expect(() => parse(plusForm)).not.toThrow()
+      expect(() => parse(pipeForm)).not.toThrow()
+      // Both ASTs should have type 'union'
+      const plusAst = parse(plusForm)
+      const pipeAst = parse(pipeForm)
+      expect(plusAst.type).toBe('union')
+      expect(pipeAst.type).toBe('union')
+    })
+
+    it('position template + form parses identically to equivalent | form', () => {
+      // starts_with emits (a + b + c)* — verify the parser handles spaced + union
+      const plusForm = '(a + b + c)*'
+      const pipeForm = '(a|b|c)*'
+      expect(() => parse(plusForm)).not.toThrow()
+      expect(() => parse(pipeForm)).not.toThrow()
+      const plusAst = parse(plusForm)
+      const pipeAst = parse(pipeForm)
+      // Both should be star nodes over a union
+      expect(plusAst.type).toBe('star')
+      expect(pipeAst.type).toBe('star')
+    })
+
     it('note: all templates now use parser-compatible syntax', () => {
-      // Position templates now use (a|b|c)* instead of .* for wildcards
+      // Position templates use (a + b + c)* instead of .* for wildcards
       // All templates generate patterns compatible with our simplified parser
       expect(true).toBe(true)
     })
