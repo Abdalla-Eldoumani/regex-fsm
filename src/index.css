@@ -161,9 +161,37 @@ body {
   color: var(--color-brand-hover);
 }
 
-/* Focus styles */
+/* Focus styles. The 2px offset gap guarantees separation from the element so
+   the ring never relies on color contrast against the element alone. */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-brand-hover);
   outline-offset: 2px;
-  border-radius: 4px;
+}
+
+/* The single "this is happening now" treatment, reused for every active step
+   (simulation state now; later elimination/round/construction node). */
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-state-active-soft); }
+  50%      { box-shadow: 0 0 0 6px var(--color-state-active-soft); }
+}
+
+.is-active {
+  outline: 2px solid var(--color-state-active);
+  animation: breathe var(--dur-pulse) var(--ease-in-out) infinite;
+}
+
+/* Reduced motion is mandatory. Collapse to near-zero rather than blanket none
+   so a transitionend still fires for any JS awaiting it, and stop looped
+   pulses. The hero holds a still frame via the explicit override below. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .hero-automaton * {
+    animation: none !important;
+  }
 }
