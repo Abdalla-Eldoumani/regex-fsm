@@ -5,6 +5,7 @@ import { nfaToDFA } from '@/core/algorithms/subset'
 import { simulateDFA } from '@/core/algorithms/simulate'
 import { completeDFA, complementDFA } from '@/core/algorithms/complement'
 import { DFA } from '@/core/automata/types'
+import { RegexNode } from '@/core/regex/ast'
 
 // Unit suite for completeDFA and complementDFA (automata-correctness invariants 1
 // and 7, Theorem 4.23).
@@ -197,6 +198,50 @@ describe('complementDFA', () => {
       expect(simulateDFA(complement, s).accepted).toBe(
         !simulateDFA(source, s).accepted
       )
+    }
+  })
+
+  // Regression: the property suite (07-02) found this counterexample. The regex λ?
+  // (optional of empty) is the language {λ}; its subset-built DFA has an EMPTY own
+  // alphabet because no symbol appears. Complementing over that empty alphabet left
+  // the machine trivially "complete" and produced the empty language, so the
+  // complement wrongly rejected every string including "a" and "b". The fix takes the
+  // complement over the working Σ = {a, b} passed by the caller: complementDFA(A, Σ).
+  // Then L(complement) = Σ* \ {λ} = every non-empty string. Decided by simulate.
+  it('complement of a symbol-light language is taken over the given Sigma (lambda? regression)', () => {
+    // The exact counterexample AST fast-check shrank to: λ? = {λ}.
+    const lambdaOptional: RegexNode = { type: 'optional', child: { type: 'empty' } }
+    const A = nfaToDFA(buildNFA(lambdaOptional))
+
+    // L(A) = {λ}: A accepts the empty string and nothing else. Its own alphabet is
+    // empty (no symbol occurs in the regex), which is the trigger for the bug.
+    expect(simulateDFA(A, '').accepted).toBe(true)
+    expect(A.alphabet.size).toBe(0)
+
+    const sigma = new Set(['a', 'b'])
+    const complement = complementDFA(A, sigma).dfa
+
+    // Σ* \ {λ} over {a, b}: reject λ, accept every non-empty string in the battery.
+    const battery = allStringsUpTo(6)
+    for (const s of battery) {
+      expect(simulateDFA(complement, s).accepted).toBe(s.length > 0)
+    }
+  })
+
+  // Companion to the regression above: a single-symbol regex over Σ = {a, b}. "a"
+  // has alphabet {a}; without the Σ override the complement would never reject any
+  // 'b'-containing string. Complementing over Σ = {a, b} gives Σ* \ {a}.
+  it('complement of a single-symbol language is taken over the given Sigma', () => {
+    const justA = dfaFromRegex('a') // L = {a}, own alphabet {a}
+    expect(justA.alphabet.has('b')).toBe(false)
+
+    const sigma = new Set(['a', 'b'])
+    const complement = complementDFA(justA, sigma).dfa
+
+    const battery = allStringsUpTo(6)
+    for (const s of battery) {
+      // Σ* \ {a}: accept everything except exactly "a".
+      expect(simulateDFA(complement, s).accepted).toBe(s !== 'a')
     }
   })
 
