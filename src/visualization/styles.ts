@@ -161,9 +161,11 @@ export function getStylesheet(): StyleRule[] {
         'arrow-scale': 1.3,
       },
     },
-    // Lambda transition: dashed, token-colored.
+    // Lambda/epsilon transition: dashed, token-colored.
+    // Keyed off isEmpty data attribute instead of label text so the dashed
+    // style survives textbook mode where the label renders as ε, not λ.
     {
-      selector: 'edge[label = "λ"]',
+      selector: 'edge[?isEmpty]',
       style: {
         'line-style': 'dashed',
         'line-dash-pattern': [6, 4],

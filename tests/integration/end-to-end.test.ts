@@ -56,7 +56,14 @@ describe('end-to-end integration', () => {
       })
     })
 
-    it('handles all regex operators in single pattern', () => {
+    // Regression for the 03-01 parse fix: + between operands is union (course
+    // PDF Def 3.9), so the + at c+d binds as union, not closure on c.
+    // (a|b)*c+d?e = union((a|b)*c, d?e). Hand-derived language:
+    //   left  arm L((a|b)*c) = any string of a's and b's ending in a single c
+    //   right arm L(d?e)     = {e, de}
+    // The old expectations assumed c+ was positive closure followed by d?e and
+    // are now WRONG: ce/cde/cccde/ace/bcde/aabccde are in NEITHER arm, so they reject.
+    it('handles all regex operators in single pattern: union((a|b)*c, d?e)', () => {
       const regex = '(a|b)*c+d?e'
 
       const ast = parse(regex)
@@ -64,15 +71,23 @@ describe('end-to-end integration', () => {
       const dfa = nfaToDFA(nfa)
 
       const testCases = [
-        { input: 'ce', expected: true },
-        { input: 'cde', expected: true },
-        { input: 'cccde', expected: true },
-        { input: 'ace', expected: true },
-        { input: 'bcde', expected: true },
-        { input: 'aabccde', expected: true },
-        { input: 'e', expected: false },
-        { input: 'cd', expected: false },
-        { input: 'de', expected: false },
+        // left arm: (a|b)* then a final c
+        { input: 'c', expected: true },
+        { input: 'ac', expected: true },
+        { input: 'bc', expected: true },
+        { input: 'aabc', expected: true },
+        { input: 'abababc', expected: true },
+        // right arm: d?e
+        { input: 'e', expected: true },
+        { input: 'de', expected: true },
+        // in neither arm (these were the old misparse's accepts)
+        { input: 'ce', expected: false },
+        { input: 'cde', expected: false },
+        { input: 'cccde', expected: false },
+        { input: 'ace', expected: false },
+        { input: 'bcde', expected: false },
+        { input: 'aabccde', expected: false },
+        { input: '', expected: false },
       ]
 
       testCases.forEach(({ input, expected }) => {
@@ -148,19 +163,28 @@ describe('end-to-end integration', () => {
   })
 
   describe('real-world patterns', () => {
-    it('validates username pattern', () => {
+    // Regression for the 03-01 parse fix: a+b+c+ is parsed with each interior +
+    // (a+b, b+c) as union and only the trailing c+ as positive closure, giving
+    // union(union(a, b), plus(c)) = {a} ∪ {b} ∪ {one-or-more c}. The old name
+    // "username pattern" assumed concat(plus a, plus b, plus c); that reading is
+    // gone, so abc and aaabbbccc now reject.
+    it('a+b+c+ is union(a, b, one-or-more c): accepts a, b, c, ccc; rejects abc', () => {
       const regex = 'a+b+c+'
       const nfa = buildNFA(parse(regex))
       const dfa = nfaToDFA(nfa)
 
-      expect(simulateNFA(nfa, 'abc').accepted).toBe(true)
-      expect(simulateDFA(dfa, 'abc').accepted).toBe(true)
+      const accept = ['a', 'b', 'c', 'cc', 'ccc']
+      const reject = ['', 'ab', 'abc', 'aaabbbccc', 'bc']
 
-      expect(simulateNFA(nfa, 'aaabbbccc').accepted).toBe(true)
-      expect(simulateDFA(dfa, 'aaabbbccc').accepted).toBe(true)
+      accept.forEach(str => {
+        expect(simulateNFA(nfa, str).accepted).toBe(true)
+        expect(simulateDFA(dfa, str).accepted).toBe(true)
+      })
 
-      expect(simulateNFA(nfa, 'bc').accepted).toBe(false)
-      expect(simulateDFA(dfa, 'bc').accepted).toBe(false)
+      reject.forEach(str => {
+        expect(simulateNFA(nfa, str).accepted).toBe(false)
+        expect(simulateDFA(dfa, str).accepted).toBe(false)
+      })
     })
 
     it('validates identifier pattern', () => {
@@ -403,7 +427,10 @@ describe('end-to-end integration', () => {
       { pattern: 'a?', accept: ['', 'a'], reject: ['aa', 'b'] },
       { pattern: '(ab)*', accept: ['', 'ab', 'abab'], reject: ['a', 'aba'] },
       { pattern: '(a|b)*', accept: ['', 'a', 'b', 'ab', 'ba'], reject: ['c'] },
-      { pattern: 'a+b+', accept: ['ab', 'aab', 'abb', 'aaabbb'], reject: ['', 'a', 'b'] },
+      // 03-01 parse fix: a+b+ = union(a, plus(b)) = {a} ∪ {one-or-more b}.
+      // a alone matches the left arm; b, bb, bbb match the right. The old
+      // concat(plus a, plus b) accepts ['ab','aab','abb','aaabbb'] which is now WRONG.
+      { pattern: 'a+b+', accept: ['a', 'b', 'bb', 'bbb'], reject: ['', 'ab', 'aab', 'abb', 'aaabbb'] },
       { pattern: '(a|b)*abb', accept: ['abb', 'aabb', 'babb'], reject: ['ab', 'aba'] },
     ]
 

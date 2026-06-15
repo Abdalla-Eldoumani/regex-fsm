@@ -14,6 +14,10 @@ class Parser {
     return this.tokens[this.pos]
   }
 
+  private peek(): Token {
+    return this.tokens[Math.min(this.pos + 1, this.tokens.length - 1)]
+  }
+
   private advance(): void {
     if (this.current().type !== 'EOF') {
       this.pos++
@@ -22,6 +26,22 @@ class Parser {
 
   private match(...types: Token['type'][]): boolean {
     return types.includes(this.current().type)
+  }
+
+  // A token that can begin an atom (and therefore a new operand at union level).
+  private startsAtom(type: Token['type']): boolean {
+    return type === 'SYMBOL' || type === 'EPSILON' || type === 'LPAREN'
+  }
+
+  // `+` is overloaded: it is union when a new operand follows it, and positive
+  // closure when nothing parseable as an operand follows. `|` is always union.
+  // The current PLUS acts as union iff the next token can begin an atom.
+  private plusIsUnion(): boolean {
+    return this.match('PLUS') && this.startsAtom(this.peek().type)
+  }
+
+  private unionHere(): boolean {
+    return this.match('UNION') || this.plusIsUnion()
   }
 
   private expect(type: Token['type']): void {
@@ -45,7 +65,7 @@ class Parser {
   private parseUnion(): RegexNode {
     let left = this.parseConcat()
 
-    while (this.match('UNION')) {
+    while (this.unionHere()) {
       this.advance()
       const right = this.parseConcat()
       left = { type: 'union', left, right }
@@ -57,7 +77,10 @@ class Parser {
   private parseConcat(): RegexNode {
     const nodes: RegexNode[] = []
 
-    while (!this.match('EOF', 'UNION', 'RPAREN')) {
+    // Stop at the boundaries of a concatenation: end, an explicit `|`, a closing
+    // paren, or a `+` that is acting as union (so parseUnion picks it up instead
+    // of parseRepeat swallowing it as closure on the left operand).
+    while (!this.match('EOF', 'UNION', 'RPAREN') && !this.plusIsUnion()) {
       nodes.push(this.parseRepeat())
     }
 
@@ -75,7 +98,10 @@ class Parser {
   private parseRepeat(): RegexNode {
     let node = this.parseAtom()
 
-    while (this.match('STAR', 'PLUS', 'OPTIONAL')) {
+    // A `+` here is postfix positive closure only when it is NOT acting as union
+    // (i.e. nothing parseable as an operand follows it). `*` and `?` are always
+    // postfix. A union-acting `+` is left for parseUnion.
+    while (this.match('STAR', 'OPTIONAL') || (this.match('PLUS') && !this.plusIsUnion())) {
       // Check if the node is already a quantifier
       if (node.type === 'star' || node.type === 'plus' || node.type === 'optional') {
         throw new Error(

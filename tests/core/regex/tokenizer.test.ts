@@ -72,10 +72,14 @@ describe('tokenizer', () => {
     })
   })
 
-  describe('plus operator context', () => {
-    it('tokenizes plus as union at start', () => {
+  describe('plus is a neutral token in every position', () => {
+    // The course overloads `+` as both infix union and postfix positive closure.
+    // The lexer does NOT disambiguate; it emits PLUS for every `+` character and
+    // the parser decides meaning by grammar position. So `+` is PLUS at the start,
+    // after `(`, between symbols, and after an operand alike.
+    it('tokenizes a lone + as PLUS', () => {
       const tokens = tokenize('+')
-      expect(tokens[0]).toEqual({ type: 'UNION', pos: 0 })
+      expect(tokens[0]).toEqual({ type: 'PLUS', pos: 0 })
     })
 
     it('tokenizes plus as positive closure after symbol', () => {
@@ -110,12 +114,15 @@ describe('tokenizer', () => {
       expect(tokens[1]).toEqual({ type: 'PLUS', pos: 1 })
     })
 
-    it('tokenizes plus as union after lparen', () => {
+    it('tokenizes plus after lparen as PLUS', () => {
       const tokens = tokenize('(+')
-      expect(tokens[1]).toEqual({ type: 'UNION', pos: 1 })
+      expect(tokens[1]).toEqual({ type: 'PLUS', pos: 1 })
     })
 
-    it('tokenizes plus as union in middle context', () => {
+    it('tokenizes + between symbols as a neutral PLUS token', () => {
+      // The lexer no longer guesses union vs closure. The + character always
+      // emits PLUS; the parser decides meaning by grammar position. Here a+b is
+      // union at parse time, but the token stream is the neutral PLUS.
       const tokens = tokenize('a+b')
       expect(tokens[0]).toEqual({ type: 'SYMBOL', value: 'a', pos: 0 })
       expect(tokens[1]).toEqual({ type: 'PLUS', pos: 1 })
@@ -254,6 +261,8 @@ describe('tokenizer', () => {
     })
 
     it('tokenizes complex nested expression', () => {
+      // The `+` inside (a+b) is union at parse time, but at the lexer level it is
+      // the neutral PLUS token; `|` is the only character that lexes to UNION.
       const tokens = tokenize('(a+b)*abb')
       expect(tokens[0]).toEqual({ type: 'LPAREN', pos: 0 })
       expect(tokens[1]).toEqual({ type: 'SYMBOL', value: 'a', pos: 1 })
@@ -264,6 +273,8 @@ describe('tokenizer', () => {
     })
 
     it('tokenizes all operators together', () => {
+      // Every `+` lexes to the neutral PLUS (here the `+` in b+c is union at parse
+      // time because c follows); only `|` lexes to UNION.
       const tokens = tokenize('a*b+c?d|e')
       expect(tokens[0]).toEqual({ type: 'SYMBOL', value: 'a', pos: 0 })
       expect(tokens[1]).toEqual({ type: 'STAR', pos: 1 })

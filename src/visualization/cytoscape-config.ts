@@ -46,6 +46,9 @@ export function automatonToCytoscape(automaton: Automaton): CytoscapeElements {
         source: t.from,
         target: t.to,
         label: t.symbol ?? 'λ',
+        // isEmpty drives the dashed-stroke selector so the style survives mode
+        // switching (in textbook mode the label becomes ε, not λ).
+        isEmpty: t.symbol === null,
       },
       classes: isLoop ? 'loop' : '',
     }
