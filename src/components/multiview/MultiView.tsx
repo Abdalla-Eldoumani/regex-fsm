@@ -296,6 +296,7 @@ export default function MultiView(): JSX.Element {
           {MOBILE_TABS.map(({ key, label }) => (
             <button
               key={key}
+              id={`tab-${key}`}
               role="tab"
               aria-selected={activeTab === key}
               aria-controls={`panel-${key}`}
