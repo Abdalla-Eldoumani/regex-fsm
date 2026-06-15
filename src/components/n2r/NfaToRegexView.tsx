@@ -151,7 +151,10 @@ export default function NfaToRegexView(): JSX.Element {
   }, [])
 
   // Regex input handler: switches to the regex source path.
+  // Stop any running timer before the source changes so the interval cannot
+  // advance stepState against the old source during the 300ms debounce window.
   const handleRegexInput = useCallback((value: string) => {
+    setIsPlaying(false)
     setRegexInput(value)
     if (value.trim()) {
       setSourceSpec({ kind: 'regex', src: value })
@@ -219,6 +222,9 @@ export default function NfaToRegexView(): JSX.Element {
   }, [sourceKey])
 
   const handleNext = useCallback(() => {
+    // Guard: totalSteps === 0 means no derivation result yet; do nothing so
+    // stepState never receives -1 from Math.min(totalSteps - 1, ...).
+    if (totalSteps <= 0) return
     setIsPlaying(false)
     setStepState(prev => ({
       key: sourceKey,
