@@ -30,13 +30,13 @@ const Layout = memo(function Layout() {
               <span className="text-on-brand font-mono font-bold text-xl drop-shadow-md">R</span>
             </Link>
             <div>
-              <h1 className="text-xl font-display font-bold text-text-hi tracking-tight">
+              <h1 className="text-lg lg:text-xl font-display font-bold text-text-hi tracking-tight">
                 RegexFSM
               </h1>
             </div>
           </div>
-          {/* gap-1 at md keeps five links + controls in 768px; lg widens to gap-3 */}
-          <div className="hidden md:flex items-center gap-1 lg:gap-3">
+          {/* tablet (md) compresses to text-xs + gap-0.5 to fit six links + controls in 768px; lg restores text-sm + gap-3 */}
+          <div className="hidden md:flex items-center gap-0.5 lg:gap-3">
              {/* tagline pill — decorative, only worth showing when there is room */}
              <span className="hidden lg:inline-flex text-sm font-medium text-text-mid bg-surface-raised px-3 py-1.5 rounded-full border border-border">
                Visualizing Regular Expressions
@@ -45,7 +45,7 @@ const Layout = memo(function Layout() {
              <NavLink
                to="/editor"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
@@ -57,7 +57,7 @@ const Layout = memo(function Layout() {
              <NavLink
                to="/multi"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
@@ -69,7 +69,7 @@ const Layout = memo(function Layout() {
              <NavLink
                to="/n2r"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
@@ -81,7 +81,7 @@ const Layout = memo(function Layout() {
              <NavLink
                to="/closure"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
@@ -93,7 +93,7 @@ const Layout = memo(function Layout() {
              <NavLink
                to="/pumping"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
@@ -105,7 +105,7 @@ const Layout = memo(function Layout() {
              <NavLink
                to="/challenges"
                className={({ isActive }) =>
-                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors ' +
                  (isActive
                    ? 'bg-brand-tint text-brand-hover border border-brand/30'
                    : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
