@@ -99,7 +99,7 @@ export const patternTemplates: PatternTemplate[] = [
     name: 'Starts with',
     description: 'Matches strings that begin with a specific pattern',
     category: 'position',
-    buildRegex: (pattern: string) => `${pattern}(a|b|c)*`,
+    buildRegex: (pattern: string) => `${pattern}(a + b + c)*`,
     parserCompatible: true,
     parameters: [
       {
@@ -114,7 +114,7 @@ export const patternTemplates: PatternTemplate[] = [
     name: 'Ends with',
     description: 'Matches strings that end with a specific pattern',
     category: 'position',
-    buildRegex: (pattern: string) => `(a|b|c)*${pattern}`,
+    buildRegex: (pattern: string) => `(a + b + c)*${pattern}`,
     parserCompatible: true,
     parameters: [
       {
@@ -129,7 +129,7 @@ export const patternTemplates: PatternTemplate[] = [
     name: 'Starts with X and ends with Y',
     description: 'Matches strings that begin with one pattern and end with another',
     category: 'position',
-    buildRegex: (start: string, end: string) => `${start}(a|b|c)*${end}`,
+    buildRegex: (start: string, end: string) => `${start}(a + b + c)*${end}`,
     parserCompatible: true,
     parameters: [
       {
@@ -149,7 +149,7 @@ export const patternTemplates: PatternTemplate[] = [
     name: 'Contains substring',
     description: 'Matches strings that contain a specific substring anywhere',
     category: 'position',
-    buildRegex: (pattern: string) => `(a|b|c)*${pattern}(a|b|c)*`,
+    buildRegex: (pattern: string) => `(a + b + c)*${pattern}(a + b + c)*`,
     parserCompatible: true,
     parameters: [
       {
@@ -165,7 +165,7 @@ export const patternTemplates: PatternTemplate[] = [
     name: 'Either/Or (union)',
     description: 'Matches strings containing either pattern A or pattern B',
     category: 'combination',
-    buildRegex: (patternA: string, patternB: string) => `(${patternA}|${patternB})`,
+    buildRegex: (patternA: string, patternB: string) => `(${patternA} + ${patternB})`,
     parserCompatible: true,
     parameters: [
       {
@@ -250,7 +250,7 @@ export const patternTemplates: PatternTemplate[] = [
     name: 'Any single character',
     description: 'Matches any single character from the alphabet',
     category: 'character',
-    buildRegex: (chars: string) => `(${chars.split('').join('|')})`,
+    buildRegex: (chars: string) => `(${chars.split('').join(' + ')})`,
     parserCompatible: true,
     parameters: [
       {
@@ -268,7 +268,7 @@ export const patternTemplates: PatternTemplate[] = [
     description: 'Matches all strings of even length (including empty string)',
     category: 'length',
     buildRegex: (alphabet: string) => {
-      const chars = alphabet.split('').join('|')
+      const chars = alphabet.split('').join(' + ')
       return `((${chars})(${chars}))*`
     },
     parserCompatible: true,
@@ -286,7 +286,7 @@ export const patternTemplates: PatternTemplate[] = [
     description: 'Matches all strings of odd length',
     category: 'length',
     buildRegex: (alphabet: string) => {
-      const chars = alphabet.split('').join('|')
+      const chars = alphabet.split('').join(' + ')
       return `(${chars})((${chars})(${chars}))*`
     },
     parserCompatible: true,
@@ -304,7 +304,7 @@ export const patternTemplates: PatternTemplate[] = [
     description: 'Matches all strings of exactly N characters',
     category: 'length',
     buildRegex: (alphabet: string, length: string) => {
-      const chars = alphabet.split('').join('|')
+      const chars = alphabet.split('').join(' + ')
       const n = parseInt(length)
       if (n === 0) return 'λ'
       return `(${chars})`.repeat(n)
@@ -331,31 +331,31 @@ export const patternTemplates: PatternTemplate[] = [
     description: 'Matches strings that do not begin with a specific pattern',
     category: 'negation',
     buildRegex: (pattern: string, alphabet: string) => {
-      const all = alphabet.split('').join('|')
+      const all = alphabet.split('').join(' + ')
       if (!all) return 'λ'
 
       if (pattern.length === 1) {
         // Single char: strings starting with other chars, or empty
-        const others = alphabet.split('').filter(c => c !== pattern).join('|')
+        const others = alphabet.split('').filter(c => c !== pattern).join(' + ')
         if (!others) return 'λ' // Only char in alphabet is the one to avoid
-        return `((${others})(${all})*|λ)`
+        return `((${others})(${all})* + λ)`
       }
 
       // Multi-char: build regex that accepts strings not starting with pattern
       // Strategy: empty string, OR first char differs, OR first char matches but diverges later
       const firstChar = pattern[0]
-      const others = alphabet.split('').filter(c => c !== firstChar).join('|')
+      const others = alphabet.split('').filter(c => c !== firstChar).join(' + ')
 
       if (pattern.length === 2) {
         const secondChar = pattern[1]
-        const notSecond = alphabet.split('').filter(c => c !== secondChar).join('|')
+        const notSecond = alphabet.split('').filter(c => c !== secondChar).join(' + ')
         // Either starts with different char, or starts with first but not followed by second, or empty/single
         if (others && notSecond) {
-          return `((${others})(${all})*|${firstChar}(${notSecond})(${all})*|${firstChar}|λ)`
+          return `((${others})(${all})* + ${firstChar}(${notSecond})(${all})* + ${firstChar} + λ)`
         } else if (others) {
-          return `((${others})(${all})*|${firstChar}|λ)`
+          return `((${others})(${all})* + ${firstChar} + λ)`
         } else if (notSecond) {
-          return `(${firstChar}(${notSecond})(${all})*|${firstChar}|λ)`
+          return `(${firstChar}(${notSecond})(${all})* + ${firstChar} + λ)`
         }
         return 'λ'
       }
@@ -364,18 +364,18 @@ export const patternTemplates: PatternTemplate[] = [
       // Simplified approach: diverge at any position
       let result = 'λ' // Empty string always accepted
       if (others) {
-        result = `(${others})(${all})*|λ` // Start with different char
+        result = `(${others})(${all})* + λ` // Start with different char
       }
       // Add case for matching prefix but diverging
       for (let i = 1; i < pattern.length; i++) {
         const prefix = pattern.substring(0, i)
         const charAtI = pattern[i]
-        const notCharAtI = alphabet.split('').filter(c => c !== charAtI).join('|')
+        const notCharAtI = alphabet.split('').filter(c => c !== charAtI).join(' + ')
         if (notCharAtI) {
-          result += `|${prefix}(${notCharAtI})(${all})*`
+          result += ` + ${prefix}(${notCharAtI})(${all})*`
         }
         // Also accept exact prefix (shorter than full pattern)
-        result += `|${prefix}`
+        result += ` + ${prefix}`
       }
       return `(${result})`
     },
@@ -403,20 +403,20 @@ export const patternTemplates: PatternTemplate[] = [
     description: 'Matches strings that do not end with a specific pattern',
     category: 'negation',
     buildRegex: (pattern: string, alphabet: string) => {
-      const all = alphabet.split('').join('|')
+      const all = alphabet.split('').join(' + ')
       if (!all) return 'λ'
 
       if (pattern.length === 1) {
         // Single char: strings ending with other chars, or empty
-        const others = alphabet.split('').filter(c => c !== pattern).join('|')
+        const others = alphabet.split('').filter(c => c !== pattern).join(' + ')
         if (!others) return 'λ'
-        return `((${all})*(${others})|λ)`
+        return `((${all})*(${others}) + λ)`
       }
 
       // Multi-char: strings that don't end with the pattern
       // Strategy: end with something other than the last char, OR end with last char but not preceded correctly
       const lastChar = pattern[pattern.length - 1]
-      const others = alphabet.split('').filter(c => c !== lastChar).join('|')
+      const others = alphabet.split('').filter(c => c !== lastChar).join(' + ')
 
       if (pattern.length === 2) {
         // Ends with: something other than the pattern, OR single char, OR empty
@@ -429,17 +429,17 @@ export const patternTemplates: PatternTemplate[] = [
             }
           }
         }
-        const endingPattern = validEndings.map(e => e).join('|')
+        const endingPattern = validEndings.map(e => e).join(' + ')
         // Single chars (all valid since pattern is 2 chars)
-        return `((${all})*(${endingPattern})|${all}|λ)`
+        return `((${all})*(${endingPattern}) + ${all} + λ)`
       }
 
       // For longer patterns, simplified approach
       if (others) {
         // End with char other than last char of pattern
-        return `((${all})*(${others})|λ|${all})`
+        return `((${all})*(${others}) + λ + ${all})`
       }
-      return `(${all}|λ)`
+      return `(${all} + λ)`
     },
     suggestDFA: true,
     buildDFA: (pattern: string, alphabet: Set<string>) => {
@@ -465,12 +465,12 @@ export const patternTemplates: PatternTemplate[] = [
     description: 'Matches strings that do not contain a specific substring. For complex patterns, building a DFA directly is required.',
     category: 'negation',
     buildRegex: (pattern: string, alphabet: string) => {
-      const all = alphabet.split('').join('|')
+      const all = alphabet.split('').join(' + ')
       if (!all || !pattern) return `(${all})*`
 
       // Single char: just exclude that character
       if (pattern.length === 1) {
-        const others = alphabet.split('').filter(c => c !== pattern).join('|')
+        const others = alphabet.split('').filter(c => c !== pattern).join(' + ')
         if (!others) return 'λ' // Only char in alphabet is the one to avoid
         return `(${others})*`
       }
@@ -480,21 +480,21 @@ export const patternTemplates: PatternTemplate[] = [
       if (pattern.length === 2 && pattern[0] !== pattern[1]) {
         const first = pattern[0]
         const second = pattern[1]
-        const others = alphabet.split('').filter(c => c !== first && c !== second).join('|')
+        const others = alphabet.split('').filter(c => c !== first && c !== second).join(' + ')
         // Pattern: all (others + second) come before all (others + first)
         // i.e., once we see 'first', we can only see 'first' or others, not 'second'
-        const beforeFirst = others ? `(${others}|${second})*` : `${second}*`
-        const afterFirst = others ? `(${others}|${first})*` : `${first}*`
+        const beforeFirst = others ? `(${others} + ${second})*` : `${second}*`
+        const afterFirst = others ? `(${others} + ${first})*` : `${first}*`
         return `${beforeFirst}${afterFirst}`
       }
 
       // Two same chars "aa": no consecutive occurrences
       if (pattern.length === 2 && pattern[0] === pattern[1]) {
         const char = pattern[0]
-        const others = alphabet.split('').filter(c => c !== char).join('|')
-        if (!others) return `(${char}|λ)` // Only one char in alphabet, can have at most one
+        const others = alphabet.split('').filter(c => c !== char).join(' + ')
+        if (!others) return `(${char} + λ)` // Only one char in alphabet, can have at most one
         // Pattern: (others | char+others)* char?
-        return `(${others}|${char}(${others}))*${char}?`
+        return `(${others} + ${char}(${others}))*${char}?`
       }
 
       // For longer/complex patterns (3+ chars), regex generation is extremely complex
@@ -527,10 +527,10 @@ export const patternTemplates: PatternTemplate[] = [
     description: 'Matches strings where a character never appears twice in a row',
     category: 'negation',
     buildRegex: (char: string, alphabet: string) => {
-      const others = alphabet.split('').filter(c => c !== char).join('|')
-      if (!others) return `(${char}|λ)` // Only one char, can have at most one
+      const others = alphabet.split('').filter(c => c !== char).join(' + ')
+      if (!others) return `(${char} + λ)` // Only one char, can have at most one
       // Pattern: (others | char+others)* char?
-      return `(${others}|${char}(${others}))*${char}?`
+      return `(${others} + ${char}(${others}))*${char}?`
     },
     parserCompatible: true,
     parameters: [
@@ -553,13 +553,13 @@ export const patternTemplates: PatternTemplate[] = [
     description: 'Matches strings where every occurrence of X is immediately followed by Y',
     category: 'ordering',
     buildRegex: (charX: string, charY: string, alphabet: string) => {
-      const others = alphabet.split('').filter(c => c !== charX).join('|')
+      const others = alphabet.split('').filter(c => c !== charX).join(' + ')
       if (!others) {
         // Only charX in alphabet - must always be followed by charY
         return `(${charX}${charY})*`
       }
       // Pattern: (others | X+Y)*
-      return `(${others}|${charX}${charY})*`
+      return `(${others} + ${charX}${charY})*`
     },
     parserCompatible: true,
     parameters: [
@@ -588,7 +588,7 @@ export const patternTemplates: PatternTemplate[] = [
     category: 'ordering',
     buildRegex: (charA: string, charB: string) => {
       // Can start with either, must alternate
-      return `((${charA}${charB})*(${charA})?|(${charB}${charA})*(${charB})?|λ)`
+      return `((${charA}${charB})*(${charA})? + (${charB}${charA})*(${charB})? + λ)`
     },
     parserCompatible: true,
     parameters: [
@@ -612,7 +612,7 @@ export const patternTemplates: PatternTemplate[] = [
     category: 'counting',
     buildRegex: (char: string, count: string, alphabet: string) => {
       const n = parseInt(count)
-      const other = alphabet.split('').filter(c => c !== char).join('|')
+      const other = alphabet.split('').filter(c => c !== char).join(' + ')
 
       if (n === 0) {
         return other ? `(${other})*` : 'λ'
@@ -654,7 +654,7 @@ export const patternTemplates: PatternTemplate[] = [
     category: 'counting',
     buildRegex: (char: string, count: string, alphabet: string) => {
       const n = parseInt(count)
-      const other = alphabet.split('').filter(c => c !== char).join('|')
+      const other = alphabet.split('').filter(c => c !== char).join(' + ')
       if (n === 0) {
         return other ? `(${other})*` : 'λ'
       }
@@ -691,8 +691,8 @@ export const patternTemplates: PatternTemplate[] = [
     category: 'counting',
     buildRegex: (char: string, count: string, alphabet: string) => {
       const n = parseInt(count)
-      const chars = alphabet.split('').join('|')
-      const other = alphabet.split('').filter(c => c !== char).join('|')
+      const chars = alphabet.split('').join(' + ')
+      const other = alphabet.split('').filter(c => c !== char).join(' + ')
 
       if (n === 0) {
         return `(${chars})*`
@@ -731,11 +731,11 @@ export const patternTemplates: PatternTemplate[] = [
     description: 'Matches strings where character X never precedes character Y',
     category: 'ordering',
     buildRegex: (charX: string, charY: string, alphabet: string) => {
-      const other = alphabet.split('').filter(c => c !== charX && c !== charY).join('|')
+      const other = alphabet.split('').filter(c => c !== charX && c !== charY).join(' + ')
       // Pattern: either no Y appears, or all X's appear after all Y's
       // Strategy: (other|Y)* (other|X)*
-      const beforeY = other ? `(${other}|${charY})*` : `${charY}*`
-      const afterY = other ? `(${other}|${charX})*` : `${charX}*`
+      const beforeY = other ? `(${other} + ${charY})*` : `${charY}*`
+      const afterY = other ? `(${other} + ${charX})*` : `${charX}*`
       return `${beforeY}${afterY}`
     },
     parserCompatible: true,
@@ -763,10 +763,10 @@ export const patternTemplates: PatternTemplate[] = [
     description: 'Matches strings where all X\'s appear before any Y',
     category: 'ordering',
     buildRegex: (charX: string, charY: string, alphabet: string) => {
-      const other = alphabet.split('').filter(c => c !== charX && c !== charY).join('|')
+      const other = alphabet.split('').filter(c => c !== charX && c !== charY).join(' + ')
       // Pattern: (other|X)* (other|Y)*
-      const withX = other ? `(${other}|${charX})*` : `${charX}*`
-      const withY = other ? `(${other}|${charY})*` : `${charY}*`
+      const withX = other ? `(${other} + ${charX})*` : `${charX}*`
+      const withY = other ? `(${other} + ${charY})*` : `${charY}*`
       return `${withX}${withY}`
     },
     parserCompatible: true,
