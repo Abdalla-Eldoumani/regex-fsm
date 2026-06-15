@@ -1,112 +1,100 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #11111b;
-  --color-background-secondary: #181825;
-  --color-surface: #1e1e2e;
-  --color-surface-hover: #313244;
-  --color-surface-elevated: #45475a;
+  /* Clear the dead Catppuccin palette so no starter color token survives. */
+  --color-*: initial;
 
-  --color-primary: #cba6f7;
-  --color-primary-hover: #b4befe;
-  --color-primary-light: rgba(203, 166, 247, 0.15);
-  --color-primary-dark: #9580d4;
-  --color-primary-glow: rgba(203, 166, 247, 0.4);
+  /* Backgrounds (cool indigo-slate ink) */
+  --color-canvas:          #0A0C12;
+  --color-bg:              #0E1117;
+  --color-surface:         #171B24;
+  --color-surface-raised:  #1D222D;
+  --color-surface-overlay: #222837;
 
-  --color-secondary: #89b4fa;
-  --color-secondary-hover: #74c7ec;
-  --color-secondary-light: rgba(137, 180, 250, 0.15);
-  --color-secondary-glow: rgba(137, 180, 250, 0.3);
+  /* Borders and lines */
+  --color-border-subtle:   #252B38;
+  --color-border:          #323A4A;
+  --color-border-strong:   #626D86;
 
-  --color-accent: #f5c2e7;
-  --color-accent-secondary: #fab387;
+  /* Text ramp (cool off-white; never pure white) */
+  --color-text-hi:   #E8EBF2;
+  --color-text:      #C7CDDA;
+  --color-text-mid:  #9AA3B5;
+  --color-text-low:  #828BA0;
 
-  --color-success: #a6e3a1;
-  --color-success-light: rgba(166, 227, 161, 0.15);
-  --color-success-glow: rgba(166, 227, 161, 0.3);
+  /* Brand iris-indigo (UI chrome only, never a state color) */
+  --color-brand:         #7A6FF0;
+  --color-brand-hover:   #948BF7;
+  --color-brand-pressed: #5F54D9;
+  --color-brand-tint:    rgba(122, 111, 240, 0.12);
+  --color-on-brand:      #0E1117;
 
-  --color-error: #f38ba8;
-  --color-error-light: rgba(243, 139, 168, 0.15);
-  --color-error-glow: rgba(243, 139, 168, 0.3);
+  /* State-semantic (colorblind-safe; reserved for automaton meaning) */
+  --color-state-start:   #56B4E9;
+  --color-state-accept:  #2BB17A;
+  --color-state-active:  #E8A33D;
+  --color-state-trap:    #CB7BB0;
+  --color-on-state:      #0E1117;
+  --color-state-start-soft:  rgba(86, 180, 233, 0.16);
+  --color-state-accept-soft: rgba(43, 177, 122, 0.16);
+  --color-state-active-soft: rgba(232, 163, 61, 0.18);
+  --color-state-trap-soft:   rgba(203, 123, 176, 0.16);
 
-  --color-text-primary: #cdd6f4;
-  --color-text-secondary: #bac2de;
-  --color-text-tertiary: #7f849c;
-  --color-text-muted: #6c7086;
+  /* Feedback (icon + text, never color alone) */
+  --color-success: #2BB17A;
+  --color-error:   #F0726B;
+  --color-warning: #E8A33D;
 
-  --color-border: #313244;
-  --color-border-hover: #45475a;
-  --color-border-bright: #585b70;
+  /* Fonts (exact Fontsource variable family names) */
+  --font-display: "Space Grotesk Variable", system-ui, sans-serif;
+  --font-sans:    "Hanken Grotesk Variable", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono Variable", ui-monospace, monospace;
 
-  /* Fonts */
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-display: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  /* Type scale with paired line-height / letter-spacing */
+  --text-xs:   0.75rem;   --text-xs--line-height: 1.5;
+  --text-sm:   0.875rem;  --text-sm--line-height: 1.55;
+  --text-base: 1rem;      --text-base--line-height: 1.6;
+  --text-lg:   1.125rem;  --text-lg--line-height: 1.55;
+  --text-xl:   1.375rem;  --text-xl--line-height: 1.4;   --text-xl--letter-spacing: -0.01em;
+  --text-2xl:  1.75rem;   --text-2xl--line-height: 1.3;  --text-2xl--letter-spacing: -0.01em;
+  --text-3xl:  2.5rem;    --text-3xl--line-height: 1.2;  --text-3xl--letter-spacing: -0.02em;
 
-  /* Shadows */
-  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.3);
-  --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.5);
-  --shadow-hard: 0 8px 32px rgba(0, 0, 0, 0.6);
-  --shadow-glow-primary: 0 0 20px var(--color-primary-glow);
-  --shadow-glow-secondary: 0 0 20px var(--color-secondary-glow);
-  --shadow-glow-success: 0 0 20px var(--color-success-glow);
-  --shadow-glow-error: 0 0 20px var(--color-error-glow);
+  /* Uppercase micro-label tracking */
+  --tracking-label: 0.04em;
 
-  /* Animations */
-  --animate-fade-in: fadeIn 0.5s ease-out forwards;
-  --animate-slide-up: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  --animate-slide-down: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  --animate-scale-in: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  --animate-glow-pulse: glowPulse 3s ease-in-out infinite;
+  /* Spacing base (4px): p-1 = 4px, p-2 = 8px, ... */
+  --spacing: 4px;
 
-  @keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-  }
+  /* Radii */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-full: 9999px;
 
-  @keyframes slideUp {
-    0% {
-      transform: translateY(30px);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
+  /* Elevation (cool-tinted, restrained) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55);
 
-  @keyframes slideDown {
-    0% {
-      transform: translateY(-30px);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
+  /* Easing */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
 
-  @keyframes scaleIn {
-    0% {
-      transform: scale(0.9);
-      opacity: 0;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
+  /* Breakpoints (floor is 360px with no scroll; sm/md/lg/xl per spec) */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
 
-  @keyframes glowPulse {
-    0%, 100% {
-      filter: brightness(1);
-      box-shadow: 0 0 20px var(--color-primary-glow);
-    }
-    50% {
-      filter: brightness(1.2);
-      box-shadow: 0 0 30px var(--color-primary-glow);
-    }
-  }
+/* Durations are not a Tailwind namespace, so they live as plain custom
+   properties and are read as var(--dur-*) in keyframes and transitions. */
+:root {
+  --dur-fast:  120ms;
+  --dur-base:  220ms;
+  --dur-slow:  420ms;
+  --dur-pulse: 1600ms;
 }
 
 /* Global Styles */
@@ -128,8 +116,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--color-background) 0%, var(--color-background-secondary) 100%);
-  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   overflow-x: hidden;
 }
 
@@ -148,29 +136,29 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background-color: var(--color-background);
+  background-color: var(--color-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--color-surface-hover) 0%, var(--color-surface-elevated) 100%);
+  background-color: var(--color-surface-raised);
   border-radius: 9999px;
-  border: 2px solid var(--color-background);
+  border: 2px solid var(--color-bg);
   transition: background-color 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--color-surface-elevated) 0%, var(--color-border-bright) 100%);
+  background-color: var(--color-border-strong);
 }
 
 /* Selection */
 ::selection {
-  background-color: var(--color-primary-light);
-  color: var(--color-primary);
+  background-color: var(--color-brand-tint);
+  color: var(--color-brand-hover);
 }
 
 ::-moz-selection {
-  background-color: var(--color-primary-light);
-  color: var(--color-primary);
+  background-color: var(--color-brand-tint);
+  color: var(--color-brand-hover);
 }
 
 /* Focus styles */
