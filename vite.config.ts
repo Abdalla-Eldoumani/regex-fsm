@@ -17,8 +17,11 @@ export default defineConfig({
         // form preserves the same two-vendor split. minify is dropped to use the
         // Oxc default (esbuild minify is deprecated in Vite 8).
         manualChunks(id) {
-          if (id.includes('node_modules/react')) return 'react-vendor'
-          if (id.includes('node_modules/cytoscape')) return 'cytoscape-vendor'
+          // Rolldown on Windows passes native backslash paths; normalize so the
+          // forward-slash substring tests work on all platforms.
+          const p = id.replace(/\\/g, '/')
+          if (p.includes('node_modules/react')) return 'react-vendor'
+          if (p.includes('node_modules/cytoscape')) return 'cytoscape-vendor'
         },
       },
     },
