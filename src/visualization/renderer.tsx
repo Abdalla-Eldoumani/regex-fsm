@@ -19,6 +19,10 @@ export interface AutomatonGraphProps {
   automaton: Automaton
   highlightStates?: string[]
   highlightEdges?: string[]
+  // Cross-pane linked highlight (brand-hover halo via node.linked / edge.linked).
+  // Separate from highlightStates/.active (amber simulation role). Fed by the
+  // pure correspondence resolver in multiview/correspondence.ts.
+  highlightLinked?: string[]
   onNodeClick?: (nodeId: string) => void
   onEdgeClick?: (edgeId: string) => void
   // Additive edit props — all optional so existing call sites are unchanged.
@@ -29,6 +33,8 @@ export interface AutomatonGraphProps {
   // from authoritative reducer state (Pitfall 3).
   onDrawEdge?: (fromId: string, toId: string) => void
   // Called when the Cytoscape selection changes. Provides node and edge ids.
+  // Fires for BOTH editable and non-editable panes (editable owns the edit
+  // gestures; read-only panes still emit selection for cross-pane highlighting).
   onSelect?: (nodeIds: string[], edgeIds: string[]) => void
 }
 
@@ -42,6 +48,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       automaton,
       highlightStates = [],
       highlightEdges = [],
+      highlightLinked = [],
       onNodeClick,
       onEdgeClick,
       editable = false,
@@ -127,7 +134,11 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
     }, [automaton, savePositions, editable])
 
     // Read-only event listener effect — separate so callback changes don't recreate
-    // the Cytoscape instance.
+    // the Cytoscape instance. Also wires the select/unselect -> onSelect handler
+    // for NON-editable panes, so MultiView read-only panes emit selection for
+    // cross-pane highlighting. The editable path has its own handler below that
+    // additionally handles bgTap and ehcomplete. Guard: only bind once — if
+    // editable is true the editable effect owns select/unselect.
     useEffect(() => {
       const cy = cyRef.current
       if (!cy) return
@@ -142,11 +153,43 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       cy.on('tap', 'node', nodeHandler)
       cy.on('tap', 'edge', edgeHandler)
 
+      // onSelect for non-editable panes: microtask-coalesced to handle burst
+      // events from box-selection (matches the editable handler's WR-02 pattern).
+      // Only bind here when NOT editable; the editable effect owns select/unselect
+      // when editable is true to avoid a double-bind.
+      // cancelled guards the queued microtask: if the effect cleanup runs before
+      // the microtask fires (selection + automaton change in the same render batch),
+      // the stale callback no-ops rather than dispatching into a dead/replaced pane.
+      let selectPending = false
+      let cancelled = false
+      const readOnlySelectHandler = () => {
+        if (selectPending) return
+        selectPending = true
+        Promise.resolve().then(() => {
+          selectPending = false
+          if (cancelled) return
+          const nodeIds = cy
+            .nodes(':selected')
+            .filter(n => n.id() !== '__start_marker__')
+            .map(n => n.id())
+          const edgeIds = cy.edges(':selected').map(e => e.id())
+          onSelect?.(nodeIds, edgeIds)
+        })
+      }
+
+      if (!editable) {
+        cy.on('select unselect', readOnlySelectHandler)
+      }
+
       return () => {
+        cancelled = true
         cy.off('tap', 'node', nodeHandler)
         cy.off('tap', 'edge', edgeHandler)
+        if (!editable) {
+          cy.off('select unselect', readOnlySelectHandler)
+        }
       }
-    }, [automaton, onNodeClick, onEdgeClick])
+    }, [automaton, onNodeClick, onEdgeClick, onSelect, editable])
 
     // Edit-mode event listener effect — only active when editable. Kept separate
     // from the read-only effect so the non-editable render path is untouched.
@@ -179,12 +222,16 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       // Cytoscape fires select/unselect once per element, so box-selecting n nodes
       // triggers n dispatches. A microtask (Promise.resolve) coalesces the burst
       // into one dispatch after the synchronous event loop drains (WR-02).
+      // editCancelled guards the queued microtask against effect cleanup running
+      // before the microtask fires (same race as the read-only path, WR-01).
       let selectPending = false
+      let editCancelled = false
       const selectHandler = () => {
         if (selectPending) return
         selectPending = true
         Promise.resolve().then(() => {
           selectPending = false
+          if (editCancelled) return
           const nodeIds = cy
             .nodes(':selected')
             .filter(n => n.id() !== '__start_marker__')
@@ -199,17 +246,19 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       cy.on('select unselect', selectHandler)
 
       return () => {
+        editCancelled = true
         cy.off('tap', bgTapHandler)
         cy.off('ehcomplete', completeHandler)
         cy.off('select unselect', selectHandler)
       }
     }, [automaton, editable, onAddStateAt, onDrawEdge, onSelect])
 
-    // Apply the current highlight set. The class swap is a static path
-    // highlight with no JS-driven Cytoscape tween, so it is correct under
-    // prefers-reduced-motion by construction (DESIGN-04: edge traversal becomes
-    // a static highlight, the active pulse stops). Kept as a stable callback so
-    // the matchMedia change listener below can re-run it.
+    // Apply the current highlight sets. All class swaps are static (no JS-driven
+    // Cytoscape tween) so this is correct under prefers-reduced-motion by
+    // construction (DESIGN-04). Two separate concerns batched together:
+    //   .active  — amber simulation role (highlightStates / highlightEdges)
+    //   .linked  — brand-hover cross-pane halo (highlightLinked)
+    // Kept as a stable callback so the matchMedia change listener can re-run it.
     const applyHighlights = useCallback(() => {
       const cy = cyRef.current
       if (!cy) return
@@ -217,6 +266,8 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       cy.startBatch()
       cy.nodes().removeClass('active')
       cy.edges().removeClass('active')
+      cy.nodes().removeClass('linked')
+      cy.edges().removeClass('linked')
 
       highlightStates.forEach(stateId => {
         cy.$id(stateId).addClass('active')
@@ -225,8 +276,12 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       highlightEdges.forEach(edgeId => {
         cy.$id(edgeId).addClass('active')
       })
+
+      highlightLinked.forEach(stateId => {
+        cy.$id(stateId).addClass('linked')
+      })
       cy.endBatch()
-    }, [highlightStates, highlightEdges])
+    }, [highlightStates, highlightEdges, highlightLinked])
 
     // Highlight effect — use batch mode for performance.
     useEffect(() => {
