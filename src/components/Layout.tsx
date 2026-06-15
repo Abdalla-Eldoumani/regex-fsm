@@ -101,6 +101,18 @@ const Layout = memo(function Layout() {
              >
                Pumping
              </NavLink>
+             {/* Construction challenges nav link */}
+             <NavLink
+               to="/challenges"
+               className={({ isActive }) =>
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                 (isActive
+                   ? 'bg-brand-tint text-brand-hover border border-brand/30'
+                   : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
+               }
+             >
+               Challenges
+             </NavLink>
              <NotationToggle />
              <WalkthroughToggle />
              <a
