@@ -18,6 +18,7 @@ const EditorView = lazy(() => import('./components/editor/EditorView').then(m =>
 const MultiView = lazy(() => import('./components/multiview/MultiView'))
 const NfaToRegexView = lazy(() => import('./components/n2r/NfaToRegexView'))
 const ClosureView = lazy(() => import('./components/closure/ClosureView'))
+const PumpingView = lazy(() => import('./components/pumping/PumpingView'))
 
 function LoadingFallback() {
   return (
@@ -43,6 +44,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <Route path="/multi" element={<MultiView />} />
                 <Route path="/n2r" element={<NfaToRegexView />} />
                 <Route path="/closure" element={<ClosureView />} />
+                <Route path="/pumping" element={<PumpingView />} />
                 <Route path="/github" element={<GithubRedirect />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
