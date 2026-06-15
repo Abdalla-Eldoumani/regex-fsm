@@ -37,11 +37,11 @@ const Layout = memo(function Layout() {
           </div>
           {/* tablet (md) compresses to text-xs + gap-0.5 to fit six links + controls in 768px; lg restores text-sm + gap-3 */}
           <div className="hidden md:flex items-center gap-0.5 lg:gap-3">
-             {/* tagline pill — decorative, only worth showing when there is room */}
+             {/* tagline pill -- decorative, only worth showing when there is room */}
              <span className="hidden lg:inline-flex text-sm font-medium text-text-mid bg-surface-raised px-3 py-1.5 rounded-full border border-border">
                Visualizing Regular Expressions
              </span>
-             {/* Editor nav link — min-h/min-w for 44px touch target; px-1 at md, px-3 at lg */}
+             {/* Editor nav link -- min-h/min-w for 44px touch target; px-1 at md, px-3 at lg */}
              <NavLink
                to="/editor"
                className={({ isActive }) =>
