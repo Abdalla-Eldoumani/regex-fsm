@@ -24,6 +24,7 @@ export function SimulationModal({
 
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing setState-in-effect; refactor under test in its owning phase (see .agent/TECH_DEBT.md)
       setInput('')
       onHighlightChange([], [])
       setHighlightStates([])
