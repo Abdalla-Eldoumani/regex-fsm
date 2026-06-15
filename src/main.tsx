@@ -14,6 +14,7 @@ import './index.css'
 const App = lazy(() => import('./components/App'))
 const NotFound = lazy(() => import('./components/NotFound'))
 const GithubRedirect = lazy(() => import('./components/GithubRedirect'))
+const EditorView = lazy(() => import('./components/editor/EditorView').then(m => ({ default: m.EditorView })))
 
 function LoadingFallback() {
   return (
@@ -35,6 +36,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Routes>
               <Route element={<Layout />}>
                 <Route path="/" element={<App />} />
+                <Route path="/editor" element={<EditorView />} />
                 <Route path="/github" element={<GithubRedirect />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
