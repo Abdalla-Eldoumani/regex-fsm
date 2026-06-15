@@ -1,4 +1,6 @@
 import { RegexNode } from '../regex/ast'
+import { NFA, BOUNDS } from '../automata/types'
+import { assertWithinBounds } from './bounds'
 
 // GNFA state elimination (NFA -> regex), Theorem 4.18 in the course notes.
 //
@@ -170,5 +172,244 @@ export function toRegexNode(l: GnfaLabel): RegexNode {
         'toRegexNode: the empty language has no RegexNode equivalent. Guard the ' +
           'whole-language-is-empty case with NfaToRegexResult.isEmptyLanguage before calling.'
       )
+  }
+}
+
+// The new single START and ACCEPT ids the GNFA construction introduces. They use
+// a sentinel shape no editor id or qN id can collide with (Pitfall 2): the editor
+// emits qN / user labels, Thompson emits qN; neither produces a __gnfa_*__ id.
+// They are excluded from elimination and are the only two states left at the end.
+export const GNFA_START = '__gnfa_start__'
+export const GNFA_ACCEPT = '__gnfa_accept__'
+
+// A serializable record of the GNFA after one elimination step, for the animated
+// view to replay (Pattern 4). step 0 is the initial GNFA (eliminated === null);
+// step k>=1 is the GNFA AFTER removing `eliminated`. edges carry GnfaLabels (the
+// view formats them with toRegexNode + formatRegex). states and edges are sorted
+// deterministically so identical inputs yield identical snapshots (Pitfall 4).
+export interface GnfaSnapshot {
+  step: number
+  eliminated: string | null
+  states: string[]
+  edges: Array<{ from: string; to: string; label: GnfaLabel }>
+  note: string
+}
+
+export interface NfaToRegexResult {
+  // The final regex as a shared RegexNode, or null when the language is empty
+  // (the empty language has no RegexNode; render the empty-set glyph instead, A5).
+  regex: RegexNode | null
+  // true => the source recognizes the empty language; skip the parse round-trip
+  // and render the empty-set glyph (Pitfall 5).
+  isEmptyLanguage: boolean
+  // The raw simplified START->ACCEPT label (emptyset when the language is empty).
+  finalLabel: GnfaLabel
+  // The ordered per-step snapshots, snapshot 0 first.
+  steps: GnfaSnapshot[]
+}
+
+// The edge-label store: outer key = from-state, inner key = to-state. An ABSENT
+// entry IS the empty language (RESEARCH Alternatives recommends the map over a
+// dense matrix so the empty language is not stored everywhere). labelOf() makes
+// that explicit: a missing edge reads as emptyset.
+type LabelStore = Map<string, Map<string, GnfaLabel>>
+
+function labelOf(store: LabelStore, from: string, to: string): GnfaLabel {
+  return store.get(from)?.get(to) ?? { type: 'emptyset' }
+}
+
+// Fold a label into the store, UNIONing with any existing edge (Pitfall 3): two
+// parallel transitions q0--a-->q1 and q0--b-->q1 must combine to a + b, never
+// overwrite. simplify keeps the stored label reduced. An emptyset result is
+// dropped (no edge) so the store stays sparse and snapshots skip dead edges.
+function addLabel(store: LabelStore, from: string, to: string, label: GnfaLabel): void {
+  const merged = simplify(union(labelOf(store, from, to), label))
+  if (merged.type === 'emptyset') {
+    store.get(from)?.delete(to)
+    return
+  }
+  let inner = store.get(from)
+  if (!inner) {
+    inner = new Map<string, GnfaLabel>()
+    store.set(from, inner)
+  }
+  inner.set(to, merged)
+}
+
+// Build a GnfaSnapshot from the current store: every non-emptyset edge, sorted by
+// (from, to), with the remaining state ids sorted. Deterministic by construction
+// so snapshots never depend on Map insertion order (Pitfall 4).
+function snapshot(
+  step: number,
+  eliminated: string | null,
+  stateIds: string[],
+  store: LabelStore,
+  note: string
+): GnfaSnapshot {
+  const edges: GnfaSnapshot['edges'] = []
+  for (const from of stateIds) {
+    const inner = store.get(from)
+    if (!inner) continue
+    for (const to of inner.keys()) {
+      const label = inner.get(to)!
+      if (label.type === 'emptyset') continue
+      edges.push({ from, to, label })
+    }
+  }
+  edges.sort((a, b) => (a.from === b.from ? a.to.localeCompare(b.to) : a.from.localeCompare(b.from)))
+  return {
+    step,
+    eliminated,
+    states: [...stateIds].sort((a, b) => a.localeCompare(b)),
+    edges,
+    note,
+  }
+}
+
+export interface GnfaBuild {
+  start: string
+  accept: string
+  states: string[]
+  store: LabelStore
+}
+
+// Build a GNFA from an NFA (N2R-01): add one fresh START with a lambda-edge to the
+// old start, and one fresh ACCEPT with a lambda-edge from every old accept state.
+// Each NFA transition becomes a GnfaLabel edge; parallel edges union with +.
+// Pure: never mutates the input NFA (core immutability convention).
+export function buildGNFA(nfa: NFA): GnfaBuild {
+  // SAFETY-01. Cap the GNFA size before elimination so a pathological input
+  // surfaces TooLargeError here, consistent with subset.ts / brzozowski.ts,
+  // rather than driving the O(V^3) elimination loop on a huge graph. Elimination
+  // itself adds no states (it only removes them), so guarding the initial count
+  // bounds the whole run. The +2 covers the new START and ACCEPT.
+  assertWithinBounds(nfa.states.length + 2, BOUNDS.TIME_BUDGET_MS, performance.now())
+
+  const store: LabelStore = new Map()
+  const stateIds = [GNFA_START, GNFA_ACCEPT, ...nfa.states.map(s => s.id)]
+
+  // Wiring edges: START --lambda--> old start, every old accept --lambda--> ACCEPT.
+  // lambda is the concatenation identity, so these compose transparently (Pitfall 2).
+  addLabel(store, GNFA_START, nfa.startState, lambda())
+  for (const accept of nfa.acceptStates) {
+    addLabel(store, accept, GNFA_ACCEPT, lambda())
+  }
+
+  // Fold every transition. A lambda-transition has symbol === null and folds as
+  // union(R_ij, lambda); a symbol transition folds as union(R_ij, symbol(s)).
+  for (const t of nfa.transitions) {
+    addLabel(store, t.from, t.to, t.symbol === null ? lambda() : sym(t.symbol))
+  }
+
+  return { start: GNFA_START, accept: GNFA_ACCEPT, states: stateIds, store }
+}
+
+// The deterministic elimination order (Pattern 3). Interior states are eliminated
+// in ASCENDING state index: qN ids sort by their numeric suffix, anything else
+// falls back to localeCompare. START and ACCEPT are never eliminable. A fixed
+// order makes the produced regex and the snapshots reproducible run to run; the
+// order changes the regex's FORM only, never its language (this is exactly what
+// the per-step language property in plan 02 protects).
+function interiorOrder(stateIds: string[], start: string, accept: string): string[] {
+  const interior = stateIds.filter(id => id !== start && id !== accept)
+  const numeric = (id: string): number | null => {
+    const m = /^q(\d+)$/.exec(id)
+    return m ? Number(m[1]) : null
+  }
+  return [...interior].sort((a, b) => {
+    const na = numeric(a)
+    const nb = numeric(b)
+    if (na !== null && nb !== null) return na - nb
+    return a.localeCompare(b)
+  })
+}
+
+export interface EliminateResult {
+  finalLabel: GnfaLabel
+  steps: GnfaSnapshot[]
+}
+
+// Run state elimination to completion on a GNFA build (the heart of N2R-01).
+// For each interior state q, in the deterministic order, rewire every predecessor
+// i and successor j (i and j may be START/ACCEPT or equal each other; neither is q):
+//
+//   R_ij <- R_ij + R_iq (R_qq)* R_qj
+//
+// This is the standard GNFA elimination, equivalent to the course's r1 + s*r2 /
+// (r2 s*) r1 algebra (Theorem 4.18). A missing edge reads as the empty language,
+// so a missing self-loop gives star(emptyset) which simplify collapses to lambda
+// (Pitfall 1): never special-case the self-loop by skipping the term -- let the
+// identities do the work. Operates on a private copy of the store; never mutates
+// the input build.
+export function eliminate(build: GnfaBuild): EliminateResult {
+  const { start, accept } = build
+  // Work on a deep-enough copy: clone the outer and inner maps so the caller's
+  // store is untouched (the GnfaLabel nodes themselves are treated as immutable).
+  const store: LabelStore = new Map()
+  for (const [from, inner] of build.store) {
+    store.set(from, new Map(inner))
+  }
+  let stateIds = [...build.states]
+
+  const order = interiorOrder(stateIds, start, accept)
+  const steps: GnfaSnapshot[] = [
+    snapshot(0, null, stateIds, store, 'Initial GNFA: new START and ACCEPT wired with λ-edges'),
+  ]
+
+  let step = 1
+  for (const q of order) {
+    const selfLoop = star(labelOf(store, q, q))
+    // Predecessors i with an edge into q, and successors j with an edge out of q,
+    // excluding q itself. Read from the snapshot of the store BEFORE this state's
+    // rewrites so all new R_ij use q's original incident labels.
+    const preds = stateIds.filter(i => i !== q && labelOf(store, i, q).type !== 'emptyset')
+    const succs = stateIds.filter(j => j !== q && labelOf(store, q, j).type !== 'emptyset')
+
+    // Capture R_iq and R_qj before mutating the store (i->j writes never touch
+    // edges into or out of q, but capturing keeps the formula unambiguous).
+    const through = new Map<string, GnfaLabel>()
+    for (const i of preds) {
+      for (const j of succs) {
+        const path = simplify(concat(concat(labelOf(store, i, q), selfLoop), labelOf(store, q, j)))
+        through.set(`${i} ${j}`, path)
+      }
+    }
+    for (const i of preds) {
+      for (const j of succs) {
+        addLabel(store, i, j, through.get(`${i} ${j}`)!)
+      }
+    }
+
+    // Delete q and every edge incident to it.
+    store.delete(q)
+    for (const inner of store.values()) {
+      inner.delete(q)
+    }
+    stateIds = stateIds.filter(id => id !== q)
+
+    steps.push(snapshot(step, q, stateIds, store, `Eliminate ${q}: R_ij + R_iq (R_qq)* R_qj`))
+    step += 1
+  }
+
+  // Only START -> ACCEPT can remain; its label is the resulting regex. Absent
+  // (no path from start to accept) means the empty language (A5).
+  const finalLabel = simplify(labelOf(store, start, accept))
+  return { finalLabel, steps }
+}
+
+// Convert an NFA to an equivalent regex by GNFA state elimination (N2R-01/N2R-03).
+// Returns BOTH the final regex (as a RegexNode, or null + isEmptyLanguage when the
+// language is empty) AND the ordered per-step snapshots for animation. The
+// language-preserving invariant holds at every snapshot (proven by the plan 02
+// property tests). Pure; never mutates the input.
+export function nfaToRegex(nfa: NFA): NfaToRegexResult {
+  const build = buildGNFA(nfa)
+  const { finalLabel, steps } = eliminate(build)
+  const isEmptyLanguage = finalLabel.type === 'emptyset'
+  return {
+    regex: isEmptyLanguage ? null : toRegexNode(finalLabel),
+    isEmptyLanguage,
+    finalLabel,
+    steps,
   }
 }
