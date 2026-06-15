@@ -2,6 +2,15 @@ import { NFA, DFA, State, Transition, BOUNDS } from '../automata/types'
 import { lambdaClosure } from './lambda'
 import { assertWithinBounds } from './bounds'
 
+// DFA produced by the subset construction paired with the mapping that drove it.
+// nfaStateSets: each DFA state id -> sorted list of NFA state ids it represents.
+// The trap state '∅' maps to [] (empty subset). Returned as sibling data so the
+// NFA/DFA types are not mutated (NFA/DFA are shared correctness contracts).
+export interface SubsetCorrespondence {
+  dfa: DFA
+  nfaStateSets: Map<string, string[]>
+}
+
 function move(nfa: NFA, stateIds: Set<string>, symbol: string): Set<string> {
   const result = new Set<string>()
 
@@ -136,4 +145,98 @@ export function nfaToDFA(nfa: NFA, customAlphabet?: Set<string>): DFA {
     acceptStates,
     alphabet: new Set(alphabet),
   }
+}
+
+// Non-breaking wrapper that returns the DFA together with the DFA-state -> NFA-state-set
+// correspondence map. The core nfaToDFA export above is left byte-identical so every
+// existing call site and test continues to work without change.
+//
+// The SAFETY-01 assertWithinBounds guards (lines 68, 97 above) are duplicated here
+// from the same worklist logic so a too-large NFA still throws TooLargeError on this
+// path (T-05-03 mitigated). The map is built from the same bounded state set, so it
+// cannot grow beyond what the guard permits.
+export function nfaToDFAWithCorrespondence(
+  nfa: NFA,
+  customAlphabet?: Set<string>
+): SubsetCorrespondence {
+  const dfaStates = new Map<string, Set<string>>()
+  const dfaTransitions: Transition[] = []
+  const worklist: Set<string>[] = []
+
+  const startClosure = lambdaClosure(nfa, [nfa.startState])
+  const startStateName = stateSetToString(startClosure)
+  dfaStates.set(startStateName, startClosure)
+  worklist.push(startClosure)
+
+  const alphabet = customAlphabet || nfa.alphabet
+
+  const TRAP_STATE = '∅'
+  let trapStateNeeded = false
+
+  const startedAt = performance.now()
+
+  while (worklist.length > 0) {
+    assertWithinBounds(dfaStates.size, BOUNDS.TIME_BUDGET_MS, startedAt)
+
+    const currentSet = worklist.pop()!
+    const currentName = stateSetToString(currentSet)
+
+    for (const symbol of alphabet) {
+      const moveResult = move(nfa, currentSet, symbol)
+      const targetClosure = lambdaClosure(nfa, Array.from(moveResult))
+
+      if (targetClosure.size === 0) {
+        trapStateNeeded = true
+        dfaTransitions.push({ from: currentName, to: TRAP_STATE, symbol })
+        continue
+      }
+
+      let targetName = findExistingState(dfaStates, targetClosure)
+
+      if (targetName === null) {
+        targetName = stateSetToString(targetClosure)
+        dfaStates.set(targetName, targetClosure)
+        worklist.push(targetClosure)
+        assertWithinBounds(dfaStates.size, BOUNDS.TIME_BUDGET_MS, startedAt)
+      }
+
+      dfaTransitions.push({ from: currentName, to: targetName, symbol })
+    }
+  }
+
+  if (trapStateNeeded) {
+    dfaStates.set(TRAP_STATE, new Set())
+    for (const symbol of alphabet) {
+      dfaTransitions.push({ from: TRAP_STATE, to: TRAP_STATE, symbol })
+    }
+  }
+
+  const states: State[] = Array.from(dfaStates.keys()).map(id => ({ id }))
+
+  const acceptStates: string[] = []
+  for (const [stateName, stateSet] of dfaStates) {
+    for (const nfaAccept of nfa.acceptStates) {
+      if (stateSet.has(nfaAccept)) {
+        acceptStates.push(stateName)
+        break
+      }
+    }
+  }
+
+  const dfa: DFA = {
+    states,
+    transitions: dfaTransitions,
+    startState: startStateName,
+    acceptStates,
+    alphabet: new Set(alphabet),
+  }
+
+  // Convert the internal Set<string> map to sorted string[] for the public surface
+  // (no Set in the public shape; matches the cache's array convention).
+  const nfaStateSets = new Map<string, string[]>()
+  for (const [dfaId, nfaSet] of dfaStates) {
+    nfaStateSets.set(dfaId, Array.from(nfaSet).sort())
+  }
+
+  return { dfa, nfaStateSets }
 }
