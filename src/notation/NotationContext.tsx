@@ -8,6 +8,9 @@ export interface NotationContextValue {
 
 // Undefined sentinel so useNotation can distinguish "used outside provider"
 // from a provider that legitimately resolved to the default value.
+// Context and provider must co-locate here; context is consumed by useNotation
+// to avoid a circular import. Fast-refresh can tree-shake the context export.
+// eslint-disable-next-line react-refresh/only-export-components
 export const NotationContext = createContext<NotationContextValue | undefined>(undefined)
 
 const STORAGE_KEY = 'regex-fsm:notation-mode'
