@@ -12,15 +12,17 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'cytoscape-vendor': ['cytoscape'],
+        // Vite 8 (Rolldown) rejects the object form of manualChunks; the function
+        // form preserves the same two-vendor split. minify is dropped to use the
+        // Oxc default (esbuild minify is deprecated in Vite 8).
+        manualChunks(id) {
+          if (id.includes('node_modules/react')) return 'react-vendor'
+          if (id.includes('node_modules/cytoscape')) return 'cytoscape-vendor'
         },
       },
     },
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
-    minify: 'esbuild',
     target: 'esnext',
   },
   test: {
