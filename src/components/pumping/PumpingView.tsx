@@ -330,11 +330,13 @@ export default function PumpingView(): JSX.Element {
   }, [isPlaying, speed, reducedMotion, clampedStep, totalSteps])
 
   // Stage card class: applies .active treatment to the currently-shown stage.
+  // Inactive cards use text-text-mid (not text-text-low + opacity-60) so the
+  // text stays above the WCAG AA 4.5:1 contrast floor when the card is dimmed.
   const stageCardClass = (idx: number) =>
     'rounded-xl border p-4 flex flex-col gap-2 transition-colors ' +
     (idx === clampedStep
       ? 'is-active border-state-active bg-state-active-soft'
-      : 'border-border bg-surface opacity-60')
+      : 'border-border bg-surface')
 
   // Suggest-witness button: fills the input with the proven witness for this p.
   const handleSuggestWitness = useCallback(() => {
@@ -402,7 +404,7 @@ export default function PumpingView(): JSX.Element {
 
         {/* Stage 0: pick-p */}
         <div className={stageCardClass(0)}>
-          <span className="text-xs font-mono text-text-low uppercase tracking-wide">
+          <span className="text-xs font-mono text-text-mid uppercase tracking-wide">
             Stage 1 — Adversary picks p
           </span>
           <p className="font-sans text-sm text-text-hi">
@@ -412,7 +414,7 @@ export default function PumpingView(): JSX.Element {
 
         {/* Stage 1: choose-w */}
         <div className={stageCardClass(1)}>
-          <span className="text-xs font-mono text-text-low uppercase tracking-wide">
+          <span className="text-xs font-mono text-text-mid uppercase tracking-wide">
             Stage 2 — You (prover) choose witness w
           </span>
           {clampedStep === 1 && mode === 'play' ? (
@@ -450,7 +452,7 @@ export default function PumpingView(): JSX.Element {
               )}
             </div>
           ) : (
-            <p className="font-mono text-sm text-text-hi">
+            <p className="font-mono text-sm text-text-mid">
               {effectiveWitness !== null
                 ? `w = ${effectiveWitness}`
                 : mode === 'demo'
@@ -462,7 +464,7 @@ export default function PumpingView(): JSX.Element {
 
         {/* Stage 2: split */}
         <div className={stageCardClass(2)}>
-          <span className="text-xs font-mono text-text-low uppercase tracking-wide">
+          <span className="text-xs font-mono text-text-mid uppercase tracking-wide">
             Stage 3 — Adversary splits w = xyz
           </span>
           {clampedStep >= 2 && effectiveSplit !== null ? (
@@ -480,7 +482,7 @@ export default function PumpingView(): JSX.Element {
               </p>
             </div>
           ) : (
-            <p className="font-sans text-sm text-text-low">
+            <p className="font-sans text-sm text-text-mid">
               The adversary chooses a legal split once you have set the witness.
             </p>
           )}
@@ -488,7 +490,7 @@ export default function PumpingView(): JSX.Element {
 
         {/* Stage 3: choose-i */}
         <div className={stageCardClass(3)}>
-          <span className="text-xs font-mono text-text-low uppercase tracking-wide">
+          <span className="text-xs font-mono text-text-mid uppercase tracking-wide">
             Stage 4 — You (prover) choose pump exponent i
           </span>
           {clampedStep === 3 && mode === 'play' ? (
@@ -537,7 +539,7 @@ export default function PumpingView(): JSX.Element {
               </div>
             </div>
           ) : (
-            <p className="font-mono text-sm text-text-hi">
+            <p className="font-mono text-sm text-text-mid">
               {effectiveI !== null ? `i = ${effectiveI}` : 'Advance to this stage to choose i.'}
             </p>
           )}
@@ -545,7 +547,7 @@ export default function PumpingView(): JSX.Element {
 
         {/* Stage 4: verdict */}
         <div className={stageCardClass(4)}>
-          <span className="text-xs font-mono text-text-low uppercase tracking-wide">
+          <span className="text-xs font-mono text-text-mid uppercase tracking-wide">
             Stage 5 — Verdict
           </span>
           {clampedStep === 4 && effectiveResult !== null ? (
@@ -565,7 +567,7 @@ export default function PumpingView(): JSX.Element {
               )}
             </div>
           ) : (
-            <p className="font-sans text-sm text-text-low">
+            <p className="font-sans text-sm text-text-mid">
               The verdict will appear once all moves are made.
             </p>
           )}
