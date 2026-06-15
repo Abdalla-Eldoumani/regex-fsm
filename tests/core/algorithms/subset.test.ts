@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { nfaToDFA } from '@/core/algorithms/subset'
 import { buildNFA } from '@/core/algorithms/thompson'
 import { parse } from '@/core/regex/parser'
+import { simulateDFA } from '@/core/algorithms/simulate'
 import { validateDFA, isDeterministic } from '@/core/automata/dfa'
 
 describe('subset construction', () => {
@@ -190,22 +191,37 @@ describe('subset construction', () => {
       expect(dfa.alphabet).toEqual(new Set(['a', 'b']))
     })
 
-    it('converts a*b+c? to DFA', () => {
+    // 03-01 parse fix: a*b+c? = union(a*b, c?) (the + at b+c is union). The DFA
+    // must accept exactly L(a*b) ∪ {λ, c}: empty and c via the optional arm, a*b
+    // via the left arm; a lone "a" or an a*b chased by c is in neither arm.
+    it('converts a*b+c? = union(a*b, c?) to DFA: accepts empty, b, c, ab; rejects a, abc', () => {
       const ast = parse('a*b+c?')
       const nfa = buildNFA(ast)
       const dfa = nfaToDFA(nfa)
 
       expect(isDeterministic(dfa)).toBe(true)
       expect(dfa.alphabet).toEqual(new Set(['a', 'b', 'c']))
+
+      const accept = ['', 'b', 'c', 'ab', 'aab']
+      const reject = ['a', 'abc', 'aabbc', 'bc', 'aa']
+      accept.forEach(s => expect(simulateDFA(dfa, s).accepted).toBe(true))
+      reject.forEach(s => expect(simulateDFA(dfa, s).accepted).toBe(false))
     })
 
-    it('converts (a+b)*c to DFA', () => {
+    // 03-01 parse fix: (a+b)*c = (a|b)*c (the + inside the group is union), so the
+    // DFA accepts any string of a's and b's followed by exactly one trailing c.
+    it('converts (a+b)*c = (a|b)*c to DFA: accepts c, ac, bac; rejects empty, ab', () => {
       const ast = parse('(a+b)*c')
       const nfa = buildNFA(ast)
       const dfa = nfaToDFA(nfa)
 
       expect(isDeterministic(dfa)).toBe(true)
       expect(() => validateDFA(dfa)).not.toThrow()
+
+      const accept = ['c', 'ac', 'bc', 'abc', 'bac', 'aaac']
+      const reject = ['', 'ab', 'abcc', 'ca']
+      accept.forEach(s => expect(simulateDFA(dfa, s).accepted).toBe(true))
+      reject.forEach(s => expect(simulateDFA(dfa, s).accepted).toBe(false))
     })
 
     it('converts nested groups to DFA', () => {
