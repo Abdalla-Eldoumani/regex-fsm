@@ -11,8 +11,8 @@ interface StepExplanationProps {
 export function StepExplanation({ step, mode, isComplete, accepted }: StepExplanationProps) {
   if (!step) {
     return (
-      <div className="p-4 bg-background border border-border rounded-xl">
-        <div className="text-sm text-text-tertiary italic">
+      <div className="p-4 bg-surface border border-border rounded-lg">
+        <div className="text-sm text-text-low italic">
           No simulation in progress.
         </div>
       </div>
@@ -80,23 +80,24 @@ export function StepExplanation({ step, mode, isComplete, accepted }: StepExplan
   const additionalInfo = getAdditionalInfo()
 
   return (
-    <div className="p-4 bg-background border border-border rounded-xl shadow-sm">
+    <div className="p-4 bg-surface border border-border rounded-lg shadow-sm">
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">
           {isComplete ? (
-            <span className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold ${accepted ? 'bg-success text-white' : 'bg-error text-white'}`}>
+            <span className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold ${accepted ? 'bg-success text-on-state' : 'bg-error text-on-state'}`}>
               {accepted ? '✓' : '✗'}
             </span>
           ) : (
-            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary-light text-primary text-xs font-bold">
+            /* step arrow uses brand chrome (UI chrome indicator, not a state role) */
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-brand-tint text-brand-hover text-xs font-bold">
               →
             </span>
           )}
         </div>
         <div className="flex-1">
-          <div className="text-sm text-text-primary leading-relaxed font-medium">{explanation}</div>
+          <div className="text-sm text-text leading-relaxed font-medium">{explanation}</div>
           {additionalInfo && (
-            <div className="mt-2 text-xs text-text-secondary italic pl-3 border-l-2 border-secondary-light">{additionalInfo}</div>
+            <div className="mt-2 text-xs text-text-mid italic pl-3 border-l-2 border-border">{additionalInfo}</div>
           )}
         </div>
       </div>

@@ -121,22 +121,22 @@ export function TheoryPanel({ topic }: TheoryPanelProps) {
   }
 
   return (
-    <div className="p-4 bg-surface0 rounded-lg">
-      <h3 className="text-lg font-semibold text-text mb-4">{topicTitles[topic]}</h3>
+    <div className="p-4 bg-surface rounded-lg">
+      <h3 className="text-lg font-semibold text-text-hi mb-4">{topicTitles[topic]}</h3>
       <div className="space-y-2">
         {sections.map((section, index) => (
-          <div key={index} className="border border-overlay0 rounded">
+          <div key={index} className="border border-border rounded">
             <button
               onClick={() => toggleSection(index)}
-              className="w-full px-4 py-2 text-left flex items-center justify-between hover:bg-surface1 transition-colors"
+              className="w-full px-4 min-h-[44px] text-left flex items-center justify-between hover:bg-surface-raised transition-colors"
             >
-              <span className="font-medium text-text">{section.title}</span>
-              <span className="text-subtext0">
+              <span className="font-medium text-text-hi">{section.title}</span>
+              <span className="text-text-mid">
                 {expandedSections.has(index) ? '−' : '+'}
               </span>
             </button>
             {expandedSections.has(index) && (
-              <div className="px-4 py-3 bg-base text-sm text-subtext1 leading-relaxed border-t border-overlay0">
+              <div className="px-4 py-3 bg-surface-raised text-sm text-text leading-relaxed border-t border-border">
                 {section.content}
               </div>
             )}

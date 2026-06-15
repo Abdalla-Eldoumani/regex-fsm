@@ -6,12 +6,12 @@ interface ButtonProps {
 }
 
 export function Button({ label, onClick, disabled = false, variant = 'primary' }: ButtonProps) {
-  const baseClasses = 'px-4 py-2 rounded-lg font-medium transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed'
+  const baseClasses = 'px-4 min-h-[44px] rounded-lg font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed'
 
   const variantClasses = {
-    primary: 'bg-primary hover:bg-primary-hover text-white focus:ring-primary shadow-primary/25',
-    secondary: 'bg-white border border-border text-text-secondary hover:text-text-primary hover:bg-secondary-light focus:ring-border',
-    danger: 'bg-error hover:bg-error/90 text-white focus:ring-error shadow-error/25',
+    primary: 'bg-brand hover:bg-brand-hover text-on-brand',
+    secondary: 'bg-surface-raised border border-border text-text-mid hover:text-text-hi hover:border-border-strong',
+    danger: 'bg-error hover:bg-error/90 text-on-brand',
   }
 
   return (

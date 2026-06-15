@@ -111,8 +111,12 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       }
     }, [automaton, onNodeClick, onEdgeClick])
 
-    // Highlight effect — use batch mode for performance
-    useEffect(() => {
+    // Apply the current highlight set. The class swap is a static path
+    // highlight with no JS-driven Cytoscape tween, so it is correct under
+    // prefers-reduced-motion by construction (DESIGN-04: edge traversal becomes
+    // a static highlight, the active pulse stops). Kept as a stable callback so
+    // the matchMedia change listener below can re-run it.
+    const applyHighlights = useCallback(() => {
       const cy = cyRef.current
       if (!cy) return
 
@@ -129,6 +133,26 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       })
       cy.endBatch()
     }, [highlightStates, highlightEdges])
+
+    // Highlight effect — use batch mode for performance.
+    useEffect(() => {
+      applyHighlights()
+    }, [applyHighlights])
+
+    // Reduced-motion effect (DESIGN-04). The highlight above never starts an
+    // animated transition, so the only work here is re-applying the current
+    // highlight state when the user toggles the OS reduce-motion setting live,
+    // so the graph reflects the change without recreating the instance.
+    useEffect(() => {
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)')
+      const handleChange = () => {
+        applyHighlights()
+      }
+      prefersReduced.addEventListener('change', handleChange)
+      return () => {
+        prefersReduced.removeEventListener('change', handleChange)
+      }
+    }, [applyHighlights])
 
     return <div ref={containerRef} className="w-full h-full" />
   }

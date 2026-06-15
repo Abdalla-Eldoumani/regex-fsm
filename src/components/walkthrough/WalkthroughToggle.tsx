@@ -33,10 +33,11 @@ export function WalkthroughToggle() {
 
   return (
     <div className="relative" ref={menuRef}>
+      {/* icon-only trigger: min 44x44px touch target */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={state.active}
-        className="cursor-pointer w-9 h-9 rounded-xl bg-surface-hover border border-border flex items-center justify-center text-text-secondary hover:text-primary hover:border-primary/50 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="cursor-pointer min-w-[44px] min-h-[44px] rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-mid hover:text-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         title="Guided Tours"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
@@ -45,21 +46,22 @@ export function WalkthroughToggle() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-72 bg-surface border border-border rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in">
-          <div className="px-4 py-3 border-b border-border bg-gradient-to-r from-primary/10 via-transparent to-secondary/10">
-            <h3 className="text-sm font-display font-bold text-text-primary">Guided Tours</h3>
-            <p className="text-xs text-text-tertiary mt-0.5">Learn how the app works</p>
+        /* dropdown: surface-overlay (menus are the overlay surface tier) */
+        <div className="absolute right-0 top-full mt-2 w-72 bg-surface-overlay border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border bg-surface-raised">
+            <h3 className="text-sm font-display font-bold text-text-hi">Guided Tours</h3>
+            <p className="text-xs text-text-mid mt-0.5">Learn how the app works</p>
           </div>
           <div className="py-2 max-h-80 overflow-y-auto">
             {allWalkthroughs.map(wt => (
               <button
                 key={wt.id}
                 onClick={() => handleSelect(wt)}
-                className="cursor-pointer w-full text-left px-4 py-3 hover:bg-surface-hover transition-colors"
+                className="cursor-pointer w-full text-left px-4 min-h-[44px] flex flex-col justify-center hover:bg-surface-raised transition-colors"
               >
-                <div className="text-sm font-semibold text-text-primary">{wt.name}</div>
-                <div className="text-xs text-text-tertiary mt-0.5">{wt.description}</div>
-                <div className="text-[10px] text-text-muted mt-1">{wt.steps.length} steps</div>
+                <div className="text-sm font-semibold text-text-hi">{wt.name}</div>
+                <div className="text-xs text-text-mid mt-0.5">{wt.description}</div>
+                <div className="text-[10px] text-text-low mt-1">{wt.steps.length} steps</div>
               </button>
             ))}
           </div>
