@@ -237,26 +237,34 @@ body {
   --hero-loop: calc(var(--dur-pulse) * 5);
 }
 
+/* SVG-native breathing glow at the pulse cadence. The DOM .is-active uses a
+   box-shadow breathe, but box-shadow is a no-op on SVG, so the active node here
+   breathes via a drop-shadow filter on the same --dur-pulse so the hero and a
+   simulation state share the visible pulse cadence, not just the color. */
+@keyframes hero-node-glow {
+  0%, 100% { filter: drop-shadow(0 0 1px var(--color-state-active-soft)); }
+  50%      { filter: drop-shadow(0 0 7px var(--color-state-active)); }
+}
+
 /* The active overlay layered over each node circle: state-active fill, thicker
-   stroke, and the shared breathe glow. Each node's overlay runs its own beat
-   keyframe (set on the element) so only the current node is lit. */
+   stroke, and the breathing glow. Each node's overlay runs its own beat keyframe
+   (set on the element) so only the current node is lit; the glow only reads while
+   the overlay is faded in for that beat. */
 .hero-automaton .hero-node-active {
   fill: var(--color-state-active);
   stroke: var(--color-state-active);
   stroke-width: 3;
   opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
   animation: hero-node-beat-0 var(--hero-loop) var(--ease-in-out) infinite,
-             breathe var(--dur-pulse) var(--ease-in-out) infinite;
+             hero-node-glow var(--dur-pulse) var(--ease-in-out) infinite;
 }
 .hero-automaton .hero-node-active[data-beat='1'] {
   animation: hero-node-beat-1 var(--hero-loop) var(--ease-in-out) infinite,
-             breathe var(--dur-pulse) var(--ease-in-out) infinite;
+             hero-node-glow var(--dur-pulse) var(--ease-in-out) infinite;
 }
 .hero-automaton .hero-node-active[data-beat='2'] {
   animation: hero-node-beat-2 var(--hero-loop) var(--ease-in-out) infinite,
-             breathe var(--dur-pulse) var(--ease-in-out) infinite;
+             hero-node-glow var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
 /* The tape head marker advancing across the cells, eased like edge traversal. */
