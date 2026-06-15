@@ -1,4 +1,5 @@
 import { ChangeEvent, memo } from 'react'
+import { useNotation } from '@/notation/useNotation'
 
 interface RegexInputProps {
   value: string
@@ -9,6 +10,8 @@ interface RegexInputProps {
 }
 
 export const RegexInput = memo(function RegexInput({ value, onChange, alphabet, onAlphabetChange, error }: RegexInputProps) {
+  const { glyphs } = useNotation()
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value)
   }
@@ -16,6 +19,11 @@ export const RegexInput = memo(function RegexInput({ value, onChange, alphabet, 
   const handleAlphabetChange = (e: ChangeEvent<HTMLInputElement>) => {
     onAlphabetChange(e.target.value)
   }
+
+  // The placeholder example changes with the active notation mode.
+  // The editable input value is always verbatim (never rewritten).
+  const unionGlyph = glyphs.union
+  const placeholder = unionGlyph === '+' ? '(a + b)*abb' : '(a|b)*abb'
 
   return (
     <div className="flex flex-col gap-3">
@@ -48,7 +56,7 @@ export const RegexInput = memo(function RegexInput({ value, onChange, alphabet, 
               ? 'border-error'
               : 'border-border'
           }`}
-          placeholder="(a|b)*abb"
+          placeholder={placeholder}
         />
         {error && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-error">
@@ -70,7 +78,7 @@ export const RegexInput = memo(function RegexInput({ value, onChange, alphabet, 
 
       <div className="flex flex-wrap gap-2">
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-tint border border-border text-text-mid text-xs font-medium">
-          <span className="font-mono text-brand-hover font-bold">|</span> union
+          <span className="font-mono text-brand-hover font-bold">{unionGlyph}</span> union
         </span>
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-tint border border-border text-text-mid text-xs font-medium">
           <span className="font-mono text-brand-hover font-bold">*</span> star
