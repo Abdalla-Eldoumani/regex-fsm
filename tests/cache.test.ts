@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { LRUCache } from '../src/core/cache/LRUCache'
 import { parseKey, thompsonKey, subsetKey, minimizeKey, layoutKey } from '../src/core/cache/keys'
 import { RegexNode } from '../src/core/regex/ast'
@@ -294,5 +294,81 @@ describe('cachedAlgorithms', () => {
 
     // Cache size should not increase on second call
     expect(stats2.parse).toBe(stats1.parse)
+  })
+
+  it('cached minimizeDFA returns the real reduced DFA, not the stub input', async () => {
+    const { minimizeDFA, clearCache } = await import('../src/core/cachedAlgorithms')
+    clearCache()
+
+    // Non-minimal DFA accepting strings that end in 'a': q0,q1 are equivalent
+    // non-accepting and q2,q3 are equivalent accepting, so the minimal DFA has 2
+    // states. The former stub returned this 4-state input unchanged; the real
+    // Moore implementation must reduce it.
+    const dfa: DFA = {
+      states: [
+        { id: 'q0', label: 'q0' },
+        { id: 'q1', label: 'q1' },
+        { id: 'q2', label: 'q2' },
+        { id: 'q3', label: 'q3' },
+      ],
+      transitions: [
+        { from: 'q0', to: 'q2', symbol: 'a' },
+        { from: 'q0', to: 'q1', symbol: 'b' },
+        { from: 'q1', to: 'q3', symbol: 'a' },
+        { from: 'q1', to: 'q0', symbol: 'b' },
+        { from: 'q2', to: 'q2', symbol: 'a' },
+        { from: 'q2', to: 'q1', symbol: 'b' },
+        { from: 'q3', to: 'q3', symbol: 'a' },
+        { from: 'q3', to: 'q0', symbol: 'b' },
+      ],
+      startState: 'q0',
+      acceptStates: ['q2', 'q3'],
+      alphabet: new Set(['a', 'b']),
+    }
+
+    const result = minimizeDFA(dfa)
+    // Strictly fewer states than the input proves the stub is gone via the cached
+    // path. Asserted as a strict reduction against the input size, not a hardcoded
+    // minimal count.
+    expect(result.dfa.states.length).toBeLessThan(dfa.states.length)
+
+    // A second call hits the cache and must return the same real reduced result,
+    // not a recomputed stub. JSON.stringify alone drops Map fields, so compare a
+    // plain-object snapshot of the result (Maps flattened to entry arrays).
+    const snapshot = (r: typeof result) => ({
+      dfa: { ...r.dfa, alphabet: [...r.dfa.alphabet] },
+      stateMapping: [...r.stateMapping.entries()],
+      mergedStates: [...r.mergedStates.entries()],
+      description: r.description,
+    })
+    const second = minimizeDFA(dfa)
+    expect(second.dfa.states.length).toBe(result.dfa.states.length)
+    expect(JSON.stringify(snapshot(second))).toBe(JSON.stringify(snapshot(result)))
+  })
+
+  it('evicts a persisted cache written under the old CACHE_VERSION on load', async () => {
+    // CACHE_VERSION is module-private, so assert the observable eviction behavior:
+    // loadFromStorage discards the whole persisted cache when the stored version
+    // does not match the current one. A fresh module instance is needed because
+    // loadFromStorage runs once per singleton (guarded by `initialized`).
+    vi.resetModules()
+    localStorage.setItem(
+      'regexfsm_cache',
+      JSON.stringify({
+        version: '1.1.0',
+        parse: [],
+        thompson: [],
+        subset: [],
+        minimize: [],
+      })
+    )
+
+    const { algorithmCache } = await import('../src/core/cache/algorithmCache')
+    // getStats triggers init() -> loadFromStorage, which evicts on version mismatch.
+    algorithmCache.getStats()
+
+    expect(localStorage.getItem('regexfsm_cache')).toBeNull()
+
+    vi.resetModules()
   })
 })
