@@ -27,7 +27,7 @@ export function ResultPanel({ verdict }: { verdict: Equivalence | null }): JSX.E
         data-testid="challenge-result-success"
         className="flex items-start gap-3 rounded-xl border border-success/30 bg-success/10 p-4"
       >
-        {/* Check mark — aria-hidden because the text below carries the meaning */}
+        {/* Check mark -- aria-hidden because the text below carries the meaning */}
         <svg
           aria-hidden="true"
           className="mt-0.5 h-5 w-5 shrink-0 text-success"
@@ -67,7 +67,7 @@ export function ResultPanel({ verdict }: { verdict: Equivalence | null }): JSX.E
       className="flex flex-col gap-3 rounded-xl border border-error/30 bg-error/10 p-4"
     >
       <div className="flex items-start gap-3">
-        {/* Warning triangle — aria-hidden; the text below is the announcement */}
+        {/* Warning triangle -- aria-hidden; the text below is the announcement */}
         <svg
           aria-hidden="true"
           className="mt-0.5 h-5 w-5 shrink-0 text-error"
