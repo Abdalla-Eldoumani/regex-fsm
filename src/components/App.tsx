@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { parse, buildNFA, nfaToDFA, minimizeDFA, asuDirectDFA, brzozowskiDFA } from '@/core/cachedAlgorithms'
 import { simulateNFA, simulateDFA, SimulationResult } from '@/core/algorithms/simulate'
-import { DFA } from '@/core/automata/types'
+import { DFA, TooLargeError } from '@/core/automata/types'
+import { TooLargeNotice } from './common/TooLargeNotice'
 import { RegexInput } from './input/RegexInput'
 import { StringInput } from './input/StringInput'
 import { PatternBuilder } from './input/PatternBuilder'
@@ -44,14 +45,16 @@ function App() {
   }, [alphabet])
 
   // Memoized automata computation
-  const { nfa, dfa, error, constructionInfo } = useMemo(() => {
+  const { nfa, dfa, error, tooLarge, constructionInfo } = useMemo(() => {
+    const nulls = { nfa: null, dfa: null, error: '', tooLarge: null, constructionInfo: '' }
+
     // If we have a direct DFA (from pattern builder), use that
     if (directDfa) {
-      return { nfa: null, dfa: directDfa, error: '', constructionInfo: 'Direct DFA construction (pattern builder)' }
+      return { nfa: null, dfa: directDfa, error: '', tooLarge: null, constructionInfo: 'Direct DFA construction (pattern builder)' }
     }
 
     if (!debouncedRegex || !autoBuild) {
-      return { nfa: null, dfa: null, error: '', constructionInfo: '' }
+      return nulls
     }
 
     try {
@@ -78,7 +81,7 @@ function App() {
           generatedDfa = minimized.dfa
         }
 
-        return { nfa: generatedNfa, dfa: generatedDfa, error: '', constructionInfo: "Thompson's Construction + Subset Construction" }
+        return { nfa: generatedNfa, dfa: generatedDfa, error: '', tooLarge: null, constructionInfo: "Thompson's Construction + Subset Construction" }
       }
 
       // Direct methods - compute alphabet from AST
@@ -103,21 +106,24 @@ function App() {
 
       if (constructionMethod === 'asu') {
         const result = asuDirectDFA(ast, alphaSet)
-        return { nfa: null, dfa: result.dfa, error: '', constructionInfo: result.description }
+        return { nfa: null, dfa: result.dfa, error: '', tooLarge: null, constructionInfo: result.description }
       }
 
       if (constructionMethod === 'brzozowski') {
         const result = brzozowskiDFA(ast, alphaSet)
-        return { nfa: null, dfa: result.dfa, error: '', constructionInfo: result.description }
+        return { nfa: null, dfa: result.dfa, error: '', tooLarge: null, constructionInfo: result.description }
       }
 
-      return { nfa: null, dfa: null, error: '', constructionInfo: '' }
+      return nulls
     } catch (err) {
+      // TooLargeError is surfaced via the shared notice, not the inline parse-error
+      // box. Ordinary errors (parse failures, invalid regex) use the inline box.
+      if (err instanceof TooLargeError) {
+        return { ...nulls, tooLarge: { message: err.message, partial: err.partial } }
+      }
       return {
-        nfa: null,
-        dfa: null,
+        ...nulls,
         error: err instanceof Error ? err.message : 'Unknown error occurred',
-        constructionInfo: ''
       }
     }
   }, [debouncedRegex, testString, shouldMinimize, useLetterNames, autoBuild, directDfa, constructionMethod, effectiveAlphabet])
@@ -440,15 +446,21 @@ function App() {
                  </div>
               </div>
               <div className="flex-1 relative bg-bg">
-                <AutomatonView
-                  automaton={dfa}
-                  title=""
-                  error={error}
-                  mode="dfa"
-                  highlightStates={dfaHighlightStates}
-                  highlightEdges={dfaHighlightEdges}
-                  simulationResult={dfaSimResult}
-                />
+                {tooLarge ? (
+                  <div className="p-6">
+                    <TooLargeNotice message={tooLarge.message} partial={tooLarge.partial} />
+                  </div>
+                ) : (
+                  <AutomatonView
+                    automaton={dfa}
+                    title=""
+                    error={error}
+                    mode="dfa"
+                    highlightStates={dfaHighlightStates}
+                    highlightEdges={dfaHighlightEdges}
+                    simulationResult={dfaSimResult}
+                  />
+                )}
               </div>
             </article>
           )}
