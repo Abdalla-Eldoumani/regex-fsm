@@ -1,5 +1,6 @@
-import { NFA, DFA, State, Transition } from '../automata/types'
+import { NFA, DFA, State, Transition, BOUNDS } from '../automata/types'
 import { lambdaClosure } from './lambda'
+import { assertWithinBounds } from './bounds'
 
 function move(nfa: NFA, stateIds: Set<string>, symbol: string): Set<string> {
   const result = new Set<string>()
@@ -52,7 +53,20 @@ export function nfaToDFA(nfa: NFA, customAlphabet?: Set<string>): DFA {
   const TRAP_STATE = '∅'
   let trapStateNeeded = false
 
+  // SAFETY-01. The worklist loop is unbounded: a 2^n NFA determinizes to 2^n
+  // DFA states and would otherwise hang the tab. assertWithinBounds throws
+  // TooLargeError when the discovered-state count crosses BOUNDS.MAX_DFA_STATES
+  // or the wall-clock budget is spent. The guard only ever throws; it never
+  // alters the success path, so every construction below 256 states is
+  // byte-identical to before this cap (the exact-acceptance suite proves it).
+  const startedAt = performance.now()
+
   while (worklist.length > 0) {
+    // Time budget first, in case a construction stays under the state cap but
+    // grinds (degenerate lambda structure). count here is the states found so
+    // far; the start state is already seeded, so it is never zero.
+    assertWithinBounds(dfaStates.size, BOUNDS.TIME_BUDGET_MS, startedAt)
+
     const currentSet = worklist.pop()!
     const currentName = stateSetToString(currentSet)
 
@@ -76,6 +90,11 @@ export function nfaToDFA(nfa: NFA, customAlphabet?: Set<string>): DFA {
         targetName = stateSetToString(targetClosure)
         dfaStates.set(targetName, targetClosure)
         worklist.push(targetClosure)
+        // Check AFTER recording a newly discovered state, never on the success
+        // path of a small build. The cap fires on strictly greater than 256,
+        // so a DFA that lands exactly at the cap is still produced; only a true
+        // blow-up (e.g. 2^n) trips it. Throws TooLargeError; never truncates.
+        assertWithinBounds(dfaStates.size, BOUNDS.TIME_BUDGET_MS, startedAt)
       }
 
       dfaTransitions.push({
