@@ -119,7 +119,7 @@ function App() {
         constructionInfo: ''
       }
     }
-  }, [debouncedRegex, alphabet, testString, shouldMinimize, useLetterNames, autoBuild, directDfa, constructionMethod, effectiveAlphabet])
+  }, [debouncedRegex, testString, shouldMinimize, useLetterNames, autoBuild, directDfa, constructionMethod, effectiveAlphabet])
 
   // Memoized simulation results
   const nfaSimResult = useMemo<SimulationResult | null>(() => {
