@@ -70,16 +70,20 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
   // evaluated as code (threat T-04-12).
   const [symbolValue, setSymbolValue] = useState('')
 
-  // Transition add: need two state ids. Prepopulate from selection when possible.
+  // Add transition inputs: source and target state ids typed by the user.
   const [transFromId, setTransFromId] = useState('')
   const [transToId, setTransToId] = useState('')
 
-  // Insert λ into the symbol input at the current cursor position.
+  // Mobile bottom-sheet: expanded/collapsed state. Separate from <details> to
+  // keep a single state instance shared by both desktop and mobile renders.
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Insert λ into the symbol input.
   function insertLambda() {
     setSymbolValue(prev => prev + LAMBDA)
   }
 
-  // Resolve the canonical symbol: the UI accepts λ (U+03BB), null means λ-move.
+  // Resolve the canonical symbol: '' or 'λ' both mean a λ-move (null).
   function resolveSymbol(raw: string): string | null {
     const trimmed = raw.trim()
     if (trimmed === '' || trimmed === LAMBDA) return null
@@ -99,7 +103,6 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
     const from = transFromId.trim()
     const to = transToId.trim()
     if (!from || !to) return
-    // Verify both state ids exist in the working automaton before dispatching.
     const ids = new Set(working.states.map(s => s.id))
     if (!ids.has(from) || !ids.has(to)) return
     dispatchers.addTransition(from, to, resolveSymbol(symbolValue))
@@ -120,157 +123,14 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
   const isAccept =
     selectedNodeId !== null && working.acceptStates.includes(selectedNodeId)
 
-  return (
-    // At lg+ the panel sits to the right of the graph (rendered by EditorView).
-    // At narrow widths it is a collapsible bottom sheet via <details>.
-    <div
-      data-testid="editor-panel"
-      className="bg-surface border border-border rounded-2xl overflow-hidden"
-    >
-      {/* Desktop heading: always visible at lg+ */}
-      <div className="hidden lg:flex items-center gap-2 px-4 py-3 border-b border-border bg-surface-raised">
-        <div className="w-1.5 h-5 bg-gradient-to-b from-brand to-brand-pressed rounded-full" />
-        <span className="font-display font-semibold text-text-hi text-sm">Editor Controls</span>
-      </div>
-
-      {/* Mobile: bottom-sheet wrapped in <details> */}
-      <details className="lg:hidden group" open={false}>
-        <summary className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border bg-surface-raised cursor-pointer min-h-[44px] select-none list-none">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-5 bg-gradient-to-b from-brand to-brand-pressed rounded-full" />
-            <span className="font-display font-semibold text-text-hi text-sm">Editor Controls</span>
-          </div>
-          {/* Chevron rotates via group-open CSS class */}
-          <svg
-            className="h-4 w-4 text-text-mid transition-transform group-open:rotate-180"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              fillRule="evenodd"
-              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </summary>
-      </details>
-
-      {/* Panel body — shown always on lg+, toggled by <details> on mobile.
-          Wrapping in a separate div lets Tailwind hide/show via lg:block without
-          conflicting with the details open/close behaviour. */}
-      <div className="hidden lg:block">
-        <PanelBody
-          selectedState={selectedState}
-          selectedEdge={selectedEdge}
-          selectedNodeId={selectedNodeId}
-          selectedEdgeId={selectedEdgeId}
-          hasSelection={hasSelection}
-          isStart={isStart}
-          isAccept={isAccept}
-          renameValue={renameValue}
-          setRenameValue={setRenameValue}
-          symbolValue={symbolValue}
-          setSymbolValue={setSymbolValue}
-          transFromId={transFromId}
-          setTransFromId={setTransFromId}
-          transToId={transToId}
-          setTransToId={setTransToId}
-          insertLambda={insertLambda}
-          handleRenameSubmit={handleRenameSubmit}
-          handleAddTransition={handleAddTransition}
-          handleRelabelTransition={handleRelabelTransition}
-          dispatchers={dispatchers}
-          working={working}
-        />
-      </div>
-
-      {/* Mobile body inside <details>: toggled by summary above */}
-      <details className="lg:hidden" open={false}>
-        <summary className="sr-only">Editor controls</summary>
-        <PanelBody
-          selectedState={selectedState}
-          selectedEdge={selectedEdge}
-          selectedNodeId={selectedNodeId}
-          selectedEdgeId={selectedEdgeId}
-          hasSelection={hasSelection}
-          isStart={isStart}
-          isAccept={isAccept}
-          renameValue={renameValue}
-          setRenameValue={setRenameValue}
-          symbolValue={symbolValue}
-          setSymbolValue={setSymbolValue}
-          transFromId={transFromId}
-          setTransFromId={setTransFromId}
-          transToId={transToId}
-          setTransToId={setTransToId}
-          insertLambda={insertLambda}
-          handleRenameSubmit={handleRenameSubmit}
-          handleAddTransition={handleAddTransition}
-          handleRelabelTransition={handleRelabelTransition}
-          dispatchers={dispatchers}
-          working={working}
-        />
-      </details>
-    </div>
-  )
-}
-
-// The actual panel content — extracted so it can appear once for desktop and
-// once (inside <details>) for mobile without duplicating markup logic.
-interface PanelBodyProps {
-  selectedState: { id: string; label?: string } | null
-  selectedEdge: { id: string; from: string; to: string; symbol: string | null } | null
-  selectedNodeId: string | null
-  selectedEdgeId: string | null
-  hasSelection: boolean
-  isStart: boolean
-  isAccept: boolean
-  renameValue: string
-  setRenameValue: (v: string) => void
-  symbolValue: string
-  setSymbolValue: (v: string) => void
-  transFromId: string
-  setTransFromId: (v: string) => void
-  transToId: string
-  setTransToId: (v: string) => void
-  insertLambda: () => void
-  handleRenameSubmit: (e: React.FormEvent) => void
-  handleAddTransition: (e: React.FormEvent) => void
-  handleRelabelTransition: (e: React.FormEvent) => void
-  dispatchers: AutomatonEditorDispatchers
-  working: WorkingAutomaton
-}
-
-function PanelBody({
-  selectedState,
-  selectedEdge,
-  selectedNodeId,
-  selectedEdgeId,
-  hasSelection,
-  isStart,
-  isAccept,
-  renameValue,
-  setRenameValue,
-  symbolValue,
-  setSymbolValue,
-  transFromId,
-  setTransFromId,
-  transToId,
-  setTransToId,
-  insertLambda,
-  handleRenameSubmit,
-  handleAddTransition,
-  handleRelabelTransition,
-  dispatchers,
-  working,
-}: PanelBodyProps): JSX.Element {
   const inputBase =
     'w-full min-h-[44px] px-3 py-2 bg-bg border border-border rounded-lg text-sm text-text-hi font-mono placeholder:text-text-low focus:outline-none focus:border-brand-hover'
 
-  return (
+  // Panel body — shared markup rendered once. Visibility is controlled by the
+  // outer container's responsive classes, not by duplicating the body.
+  const body = (
     <div className="divide-y divide-border">
-      {/* Current selection status */}
+      {/* Selection status */}
       <div className="px-4 py-3">
         {hasSelection ? (
           <p className="text-xs text-text-mid font-mono">
@@ -278,7 +138,7 @@ function PanelBody({
               <>
                 State: <span className="text-text-hi">{selectedNodeId}</span>
                 {selectedState?.label && selectedState.label !== selectedNodeId && (
-                  <> &quot;{selectedState.label}&quot;</>
+                  <> &ldquo;{selectedState.label}&rdquo;</>
                 )}
               </>
             )}
@@ -288,7 +148,7 @@ function PanelBody({
                 {selectedEdge && (
                   <>
                     ({selectedEdge.from} &rarr; {selectedEdge.to},{' '}
-                    {selectedEdge.symbol ?? 'λ'})
+                    {selectedEdge.symbol ?? LAMBDA})
                   </>
                 )}
               </>
@@ -301,7 +161,7 @@ function PanelBody({
         )}
       </div>
 
-      {/* State actions: context-sensitive to selection */}
+      {/* State actions */}
       {selectedNodeId && (
         <div className="px-4 py-4 space-y-3">
           <Section title="Selected State">
@@ -330,7 +190,6 @@ function PanelBody({
             </div>
           </Section>
 
-          {/* Rename */}
           <Section title="Rename">
             <form onSubmit={handleRenameSubmit} className="flex gap-2">
               <input
@@ -351,7 +210,7 @@ function PanelBody({
         </div>
       )}
 
-      {/* Transition relabel: shown when an edge is selected */}
+      {/* Edge relabel */}
       {selectedEdgeId && (
         <div className="px-4 py-4 space-y-3">
           <Section title="Selected Edge">
@@ -373,15 +232,14 @@ function PanelBody({
                   type="text"
                   value={symbolValue}
                   onChange={e => setSymbolValue(e.target.value)}
-                  placeholder="a, b, or λ"
+                  placeholder={'a, b, or ' + LAMBDA}
                   className={inputBase + ' flex-1'}
                   aria-label="Transition symbol"
                   data-testid="symbol-input"
-                  // maxLength: practical safety bound; not a security mechanism.
                   maxLength={64}
                 />
                 <PanelButton onClick={insertLambda} data-testid="lambda-btn">
-                  <span aria-hidden="true">{'λ'}</span>
+                  <span aria-hidden="true">{LAMBDA}</span>
                   <span className="sr-only">Insert lambda</span>
                 </PanelButton>
               </div>
@@ -393,7 +251,7 @@ function PanelBody({
         </div>
       )}
 
-      {/* Add transition: available whenever two or more states exist */}
+      {/* Add transition */}
       {working.states.length >= 2 && (
         <div className="px-4 py-4 space-y-3">
           <Section title="Add Transition">
@@ -425,14 +283,14 @@ function PanelBody({
                   type="text"
                   value={symbolValue}
                   onChange={e => setSymbolValue(e.target.value)}
-                  placeholder={'Symbol or ' + 'λ'}
+                  placeholder={'Symbol or ' + LAMBDA}
                   className={inputBase + ' flex-1'}
-                  aria-label="Transition symbol"
+                  aria-label="Transition symbol for new edge"
                   data-testid="add-symbol-input"
                   maxLength={64}
                 />
                 <PanelButton onClick={insertLambda}>
-                  <span aria-hidden="true">{'λ'}</span>
+                  <span aria-hidden="true">{LAMBDA}</span>
                   <span className="sr-only">Insert lambda</span>
                 </PanelButton>
               </div>
@@ -458,7 +316,7 @@ function PanelBody({
         </div>
       )}
 
-      {/* Usage hint when no states exist yet */}
+      {/* Empty-state hint */}
       {working.states.length === 0 && (
         <div className="px-4 py-4">
           <p className="text-xs text-text-low text-center">
@@ -466,6 +324,54 @@ function PanelBody({
           </p>
         </div>
       )}
+    </div>
+  )
+
+  return (
+    <div
+      data-testid="editor-panel"
+      className="bg-surface border border-border rounded-2xl overflow-hidden"
+    >
+      {/* Panel header — the toggle button is only visible on mobile (<lg).
+          On lg+ the header is decorative only; the body is always shown. */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-raised">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-5 bg-gradient-to-b from-brand to-brand-pressed rounded-full" />
+          <span className="font-display font-semibold text-text-hi text-sm">Editor Controls</span>
+        </div>
+        {/* Collapse toggle — only rendered and interactable on mobile */}
+        <button
+          className="lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center text-text-mid hover:text-text-hi transition-colors"
+          onClick={() => setMobileOpen(o => !o)}
+          aria-expanded={mobileOpen}
+          aria-controls="editor-panel-body"
+        >
+          <svg
+            className={`h-4 w-4 transition-transform ${mobileOpen ? 'rotate-180' : ''}`}
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span className="sr-only">{mobileOpen ? 'Collapse' : 'Expand'} editor controls</span>
+        </button>
+      </div>
+
+      {/* Panel body:
+          - lg+: always visible (lg:block; the mobile toggle is hidden)
+          - mobile: shown/hidden via aria-expanded state (block when open, hidden when closed)
+          Single state instance — no content duplication. */}
+      <div
+        id="editor-panel-body"
+        className={`${mobileOpen ? 'block' : 'hidden'} lg:block`}
+      >
+        {body}
+      </div>
     </div>
   )
 }
