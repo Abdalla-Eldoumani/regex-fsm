@@ -219,5 +219,31 @@ export function getStylesheet(): StyleRule[] {
         'overlay-padding': 6,
       },
     },
+    // Cross-pane linked highlight: brand-hover halo + a thicker border outline.
+    // Distinct from node.active (amber, a state-ROLE color) and node:selected
+    // (the editor selection halo). Applied programmatically via the highlightLinked
+    // renderer prop; never set by user interaction directly.
+    // Non-color cue: border-width 4 (thicker than the default 2) so color is
+    // never the only distinguishing signal (DESIGN_SYSTEM + automata-correctness).
+    {
+      selector: 'node.linked',
+      style: {
+        'overlay-color': c.brandHover,
+        'overlay-opacity': 0.30,
+        'overlay-padding': 8,
+        'border-color': c.brandHover,
+        'border-width': 4,
+      },
+    },
+    // Edge cross-pane highlight (optional complement to the node halo).
+    {
+      selector: 'edge.linked',
+      style: {
+        'line-color': c.brandHover,
+        'target-arrow-color': c.brandHover,
+        width: 2.5,
+        'z-index': 10,
+      },
+    },
   ]
 }
