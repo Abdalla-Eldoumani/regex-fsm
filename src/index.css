@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@tailwind utilities;
 
 @theme {
   --color-background: #11111b;
