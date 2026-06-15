@@ -65,7 +65,7 @@ export function ClosureControls({
         <button
           type="button"
           onClick={isPlaying ? onPause : onPlay}
-          disabled={!isPlaying && currentStep === totalSteps - 1}
+          disabled={totalSteps === 0 || (!isPlaying && currentStep === totalSteps - 1)}
           className={
             'cursor-pointer px-6 min-h-[44px] rounded-lg text-sm font-semibold text-on-brand ' +
             'shadow-sm transition-all flex items-center gap-2 min-w-[110px] justify-center ' +
@@ -109,7 +109,7 @@ export function ClosureControls({
             onChange={e => onSpeedChange(Number(e.target.value))}
             className={
               'px-3 py-1 bg-surface-overlay border border-border rounded text-sm font-medium ' +
-              'text-text-hi hover:border-border-strong focus:outline-none cursor-pointer transition-all'
+              'text-text-hi hover:border-border-strong focus-visible:outline-none cursor-pointer transition-all'
             }
             title="Construction speed"
             aria-label="Closure construction animation speed"
