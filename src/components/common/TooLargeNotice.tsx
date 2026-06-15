@@ -1,3 +1,5 @@
+import type { JSX } from 'react'
+
 // TooLargeNotice: the single SAFETY-01 surface for constructions that hit a hard
 // cap. Reused by EditorView (Plan 05) and shared-URL decode (Plan 12). The icon
 // is aria-hidden; the role=status text is the accessible announcement.
