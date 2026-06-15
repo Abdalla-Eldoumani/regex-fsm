@@ -1,13 +1,35 @@
 import { Token, RegexNode } from './ast'
 import { tokenize } from './tokenizer'
+import { TooLargeError, BOUNDS } from '../automata/types'
 
 class Parser {
   private tokens: Token[]
   private pos: number
+  // Tracks recursive call depth through parseUnion/parseConcat/parseRepeat/parseAtom.
+  // The real recursion that grows with paren nesting is parseAtom's LPAREN branch
+  // calling parseUnion, which recurses through the whole grammar again. We bound
+  // the total depth so pathological input throws TooLargeError instead of
+  // overflowing the JS call stack (SAFETY-01, ASVS V5/V11/V12).
+  // Counts paren nesting depth only (one increment per `(` entered). Each open
+  // paren causes parseAtom -> parseUnion -> ... recursion; counting parens rather
+  // than grammar-method calls keeps the bound proportional to user-visible nesting.
+  // BOUNDS.MAX_PARSE_DEPTH = 300 clears all existing tests (deepest is ((((a)))) = 4
+  // levels) by a wide margin and only trips on pathological input (500+ parens).
+  private depth = 0
 
   constructor(tokens: Token[]) {
     this.tokens = tokens
     this.pos = 0
+  }
+
+  private enterParen(): void {
+    if (++this.depth > BOUNDS.MAX_PARSE_DEPTH) {
+      throw new TooLargeError('parser-depth', BOUNDS.MAX_PARSE_DEPTH)
+    }
+  }
+
+  private exitParen(): void {
+    this.depth--
   }
 
   private current(): Token {
@@ -137,10 +159,17 @@ class Parser {
     }
 
     if (this.match('LPAREN')) {
-      this.advance()
-      const node = this.parseUnion()
-      this.expect('RPAREN')
-      return node
+      // The only recursion site that grows with user-visible nesting. Track
+      // paren depth and throw before the JS call stack overflows.
+      this.enterParen()
+      try {
+        this.advance()
+        const node = this.parseUnion()
+        this.expect('RPAREN')
+        return node
+      } finally {
+        this.exitParen()
+      }
     }
 
     throw new Error(
