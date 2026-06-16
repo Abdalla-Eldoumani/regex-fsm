@@ -163,7 +163,7 @@ export function PatternBuilder({ onInsert, onBuildDFA }: PatternBuilderProps) {
             <select
               value={selectedTemplateId}
               onChange={(e) => handleTemplateChange(e.target.value)}
-              className="w-full px-4 min-h-[44px] bg-surface border border-border hover:border-border-strong rounded-lg text-sm text-text-hi focus:outline-none transition-all cursor-pointer"
+              className="w-full px-4 min-h-[44px] bg-surface border border-border hover:border-border-strong rounded-lg text-sm text-text-hi focus-visible:outline-none transition-all cursor-pointer"
             >
               <option value="">Choose a pattern...</option>
               {Object.entries(categorizedTemplates).map(([category, templates]) => (
@@ -190,7 +190,7 @@ export function PatternBuilder({ onInsert, onBuildDFA }: PatternBuilderProps) {
                     value={parameters[param.name] || ''}
                     onChange={(e) => handleParameterChange(param.name, e.target.value)}
                     placeholder={param.placeholder}
-                    className="w-full px-4 min-h-[44px] bg-surface border border-border hover:border-border-strong rounded-lg text-sm font-mono text-text-hi placeholder:text-text-low focus:outline-none transition-all"
+                    className="w-full px-4 min-h-[44px] bg-surface border border-border hover:border-border-strong rounded-lg text-sm font-mono text-text-hi placeholder:text-text-low focus-visible:outline-none transition-all"
                   />
                 </div>
               ))}
