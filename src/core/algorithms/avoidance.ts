@@ -185,23 +185,22 @@ export function buildNotStartsWithDFA(
   const states: State[] = []
   const acceptStates: string[] = []
 
-  // Prefix tracking states
+  // Prefix tracking states. Each qi means i characters of the prefix have been
+  // read so far, so qi has NOT yet matched the full pattern. A string that ends
+  // in any qi is a proper prefix of the pattern (or diverges later), so it does
+  // not start with the full pattern and must be accepted. Mirrors the all-non-trap
+  // accepting convention of buildAvoidanceDFA and buildNotEndsWithDFA.
   for (let i = 0; i < n; i++) {
     states.push({ id: `q${i}`, label: `q${i}` })
-    // These states are accepting only if they can't complete the prefix
-    // But actually, q0..q(n-1) need more input to determine
-    // Wait - for "not starts with", we accept if we diverged from the prefix
+    acceptStates.push(`q${i}`)
   }
 
-  // Trap state (matched full prefix)
+  // Trap state (matched the full prefix): the only non-accepting state.
   states.push({ id: '∅', label: '∅' })
 
-  // Accept state (diverged from prefix, can accept anything)
+  // Accept state (diverged from the prefix, can accept anything)
   states.push({ id: 'qA', label: 'qA' })
   acceptStates.push('qA')
-
-  // q0 is also accepting (empty string doesn't start with non-empty pattern)
-  acceptStates.push('q0')
 
   const transitions: Transition[] = []
 
