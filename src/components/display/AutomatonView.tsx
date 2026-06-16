@@ -6,7 +6,8 @@ import { Tabs } from '../common/Tabs'
 import { TransitionTable } from './TransitionTable'
 import { StateList } from './StateList'
 import { SimulationModal } from '../simulation/SimulationModal'
-import { exportAsPNG, exportAsSVG } from '@/visualization/export'
+import { ShareButton } from '../share/ShareButton'
+import { ExportMenu } from '../share/ExportMenu'
 
 interface AutomatonViewProps {
   automaton: Automaton | null
@@ -16,6 +17,9 @@ interface AutomatonViewProps {
   highlightEdges?: string[]
   simulationResult?: SimulationResult | null
   mode?: 'nfa' | 'dfa'
+  // When provided, the Share button is shown in the action row and builds the
+  // hash URL for the current scratchpad (the parent owns the conversion).
+  onBuildShareHash?: () => string
 }
 
 export function AutomatonView({
@@ -25,6 +29,7 @@ export function AutomatonView({
   highlightEdges = [],
   simulationResult = null,
   mode = 'nfa',
+  onBuildShareHash,
 }: AutomatonViewProps) {
   const [activeTab, setActiveTab] = useState('graph')
   const [isSimulationModalOpen, setIsSimulationModalOpen] = useState(false)
@@ -54,23 +59,9 @@ export function AutomatonView({
     { id: 'info', label: 'Info' },
   ]
 
-  const handleExportPNG = () => {
-    const cy = graphRef.current?.getCytoscapeInstance()
-    if (cy) {
-      const filename = `automaton.png`
-      exportAsPNG(cy, filename)
-    }
-  }
-
-  const handleExportSVG = () => {
-    // SVG export is model-driven now (the corrected automatonToSVG), so it takes
-    // the authoritative automaton rather than the Cytoscape handle. Plan 04 owns
-    // the fuller export menu; this keeps the existing SVG button working.
-    if (automaton) {
-      const filename = `automaton.svg`
-      exportAsSVG(automaton, filename)
-    }
-  }
+  // The cy handle for the Export menu's PNG path. Read at click time from the
+  // mounted graph; the menu owns both the handle accessor and the automaton model.
+  const getCy = useCallback(() => graphRef.current?.getCytoscapeInstance(), [])
 
   if (error) {
     return (
@@ -104,7 +95,7 @@ export function AutomatonView({
       <div className="px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-surface sticky top-0 z-10">
         <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setIsSimulationModalOpen(true)}
             className="cursor-pointer min-h-[44px] px-4 py-2 text-xs font-semibold text-on-brand bg-brand hover:bg-brand-hover border border-brand/50 rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95 flex items-center gap-2"
@@ -115,22 +106,14 @@ export function AutomatonView({
             Simulate
           </button>
 
-          {activeTab === 'graph' && (
-            <>
-              <button
-                onClick={handleExportPNG}
-                className="cursor-pointer min-h-[44px] px-4 py-2 text-xs font-semibold text-text-mid hover:text-brand-hover border border-border hover:border-border-strong bg-surface-raised hover:bg-surface-overlay rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95"
-              >
-                PNG
-              </button>
-              <button
-                onClick={handleExportSVG}
-                className="cursor-pointer min-h-[44px] px-4 py-2 text-xs font-semibold text-text-mid hover:text-brand-hover border border-border hover:border-border-strong bg-surface-raised hover:bg-surface-overlay rounded-lg transition-all shadow-sm hover:scale-105 active:scale-95"
-              >
-                SVG
-              </button>
-            </>
-          )}
+          {/* Share copies the hash URL for the whole scratchpad, so it is offered
+              on every tab when the parent supplies the builder. */}
+          {onBuildShareHash && <ShareButton buildHash={onBuildShareHash} />}
+
+          {/* Export folds in the legacy bare PNG/SVG buttons plus the new text
+              formats. It is shown on the graph tab, where the cy handle for the
+              PNG path is live and the SVG/PNG actions are in context. */}
+          {activeTab === 'graph' && <ExportMenu automaton={automaton} getCy={getCy} />}
 
           {(activeTab === 'table' || activeTab === 'states') && (
             <button
