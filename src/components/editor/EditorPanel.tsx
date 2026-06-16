@@ -4,7 +4,7 @@ import type { AutomatonEditorDispatchers } from '@/hooks/useAutomatonEditor'
 import type { WorkingAutomaton } from '@/editor/editorTypes'
 
 // Lambda glyph for display alongside the symbol input. Clicking it inserts λ
-// into the input — plain string insertion, never eval or RegExp construction.
+// into the input -- plain string insertion, never eval or RegExp construction.
 const LAMBDA = 'λ'
 
 interface EditorPanelProps {
@@ -153,7 +153,7 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
   const inputBase =
     'w-full min-h-[44px] px-3 py-2 bg-bg border border-border rounded-lg text-sm text-text-hi font-mono placeholder:text-text-low focus-visible:outline-none focus:border-brand-hover'
 
-  // Panel body — shared markup rendered once. Visibility is controlled by the
+  // Panel body -- shared markup rendered once. Visibility is controlled by the
   // outer container's responsive classes, not by duplicating the body.
   const body = (
     <div className="divide-y divide-border">
@@ -375,14 +375,14 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
       data-testid="editor-panel"
       className="bg-surface border border-border rounded-2xl overflow-hidden"
     >
-      {/* Panel header — the toggle button is only visible on mobile (<lg).
+      {/* Panel header -- the toggle button is only visible on mobile (<lg).
           On lg+ the header is decorative only; the body is always shown. */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-raised">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-5 bg-gradient-to-b from-brand to-brand-pressed rounded-full" />
           <span className="font-display font-semibold text-text-hi text-sm">Editor Controls</span>
         </div>
-        {/* Collapse toggle — only rendered and interactable on mobile */}
+        {/* Collapse toggle -- only rendered and interactable on mobile */}
         <button
           className="lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center text-text-mid hover:text-text-hi transition-colors"
           onClick={() => setMobileOpen(o => !o)}
@@ -408,7 +408,7 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
       {/* Panel body:
           - lg+: always visible (lg:block; the mobile toggle is hidden)
           - mobile: shown/hidden via aria-expanded state (block when open, hidden when closed)
-          Single state instance — no content duplication. */}
+          Single state instance -- no content duplication. */}
       <div
         id="editor-panel-body"
         className={`${mobileOpen ? 'block' : 'hidden'} lg:block`}
