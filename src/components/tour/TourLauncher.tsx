@@ -2,10 +2,10 @@ import { useRef } from 'react'
 import type { JSX } from 'react'
 import { useTour } from '@/hooks/useTour'
 
-// The header trigger that replaces WalkthroughToggle in both Layout slots (the
-// swap itself happens in a later plan). It reuses the chrome-button shape at the
-// same 44px footprint so the header layout and the 768px row are unchanged. It
-// is a labeled button (not icon-only): aria-haspopup="dialog" and aria-expanded
+// The header trigger that launches the guided tour from both Layout slots. It
+// uses the chrome-button shape at the same 44px footprint so the header layout
+// and the 768px row are unchanged. It is a labeled button (not icon-only):
+// aria-haspopup="dialog" and aria-expanded
 // reflect the tour state, and it opens the one course path. The element that
 // launched the tour is recorded as the controller's restore target, so focus
 // returns here on close (2.4.3).
