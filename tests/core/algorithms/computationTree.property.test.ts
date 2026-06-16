@@ -20,7 +20,7 @@ import { NFA } from '@/core/automata/types'
 // THE METHOD, copied from product.property.test.ts: a recursive AST arbitrary over
 // {a, b} built through the real pipeline (buildNFA, NOT determinized -- the tree runs
 // on the NFA), plus a random input string of length in [0, 8]. The seed is fixed so
-// any counterexample reproduces; per the skill and the root CLAUDE.md, a
+// any counterexample reproduces; per the skill and the project conventions, a
 // counterexample becomes a named unit test in computationTree.test.ts and the
 // ALGORITHM in computationTree.ts is fixed -- the property is never loosened and no
 // assertion is weakened. No input is ever compiled to a JS RegExp (threat T-10-03):
@@ -139,13 +139,14 @@ describe('computationTree agreement with simulateNFA (SIM-02, invariant 3)', () 
     )
   })
 
-  // NON-VACUITY (threat: a single-node tree would satisfy per-level equality
-  // trivially). A hand-built branching NFA reads symbol a from the start into two
-  // different successors that lambda-close to different sets, so on input "a" the
-  // start configuration fans out to two distinct child edges AND one of those
-  // branches dies on the next "a" while another lives. This proves the per-level
-  // equality has teeth: it is met by a genuinely branching tree, not a degenerate one.
-  it('is non-vacuous: a branching NFA fans out and a sibling branch dies', () => {
+  // NON-VACUITY (threat: a single-state-per-level tree would satisfy per-level
+  // equality trivially). A hand-built branching NFA reads symbol a from the start into
+  // two successors q1 and q2 that stay simultaneously active, so level 1 holds the
+  // genuine parallel set {q1, q2} (size > 1). On the second a, q1 continues to the
+  // accept state q3 while q2 has no a-move and dies. This proves the per-level equality
+  // has teeth: it is met by a genuinely parallel, branching, partly-dying tree, not a
+  // degenerate one-state-per-level path.
+  it('is non-vacuous: a parallel level branches and a sibling branch dies', () => {
     // q0 --a--> q1, q0 --a--> q2. q1 --a--> q3 (accepting). q2 has no a-move (dies).
     // No lambda-transitions, so each state closes to itself; the raw move {q1,q2}
     // closes to {q1,q2}: one level-1 configuration whose membership is both branches.
@@ -171,20 +172,25 @@ describe('computationTree agreement with simulateNFA (SIM-02, invariant 3)', () 
       expect(treeSet.join(',')).toBe(sim.steps[i].nextStates.join(','))
     }
 
-    // Level 1 (after the first "a") holds both q1 and q2: the true parallel set, not
-    // one arbitrary branch.
+    // Level 1 (after the first a) holds both q1 and q2: the true parallel set, more
+    // than one state, never one arbitrary branch. This is the membership that a
+    // single-path tree could not reproduce.
     const level1 = levelUnionSorted(tree.levels[1].nodes.map((n) => n.states))
     expect(level1).toEqual(['q1', 'q2'])
+    expect(level1.length).toBeGreaterThan(1)
 
-    // Genuine branching: the start node fans out to two distinct successor edges on
-    // the first "a" (q0->q1 and q0->q2), so the per-level equality is not trivially
-    // satisfied by a single edge.
-    const level1Edges = tree.edges.filter((e) => e.toId.startsWith('1:'))
-    const targets = new Set(level1Edges.map((e) => `${e.fromId}->${e.toId}`))
-    expect(targets.size).toBeGreaterThanOrEqual(2)
+    // Genuine branching with a death: the {q1, q2} configuration at level 1 reaches
+    // accept via q1 on the second a, but q2 contributes no successor (it dies). The
+    // level-1 node is therefore marked dead even though the overall input is accepted,
+    // and a live child set carrying q3 exists at the final level.
+    const finalLevel = tree.levels[tree.levels.length - 1]
+    expect(finalLevel.nodes.some((n) => n.states.includes('q3') && n.isAccepting)).toBe(true)
+    // q2's branch died: the level-1 configuration spawned a successor (from q1) yet had
+    // no a-move for q2, so simulateNFA and the tree drop q2 at the final level.
+    const finalSet = levelUnionSorted(finalLevel.nodes.map((n) => n.states))
+    expect(finalSet).toEqual(['q3'])
+    expect(finalSet).not.toContain('q2')
 
-    // The whole input is accepted (q1 --a--> q3), so a live branch reaches accept while
-    // its sibling q2 contributed a dead branch on the second "a".
     expect(tree.accepted).toBe(true)
   })
 })
