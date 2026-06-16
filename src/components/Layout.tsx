@@ -1,8 +1,76 @@
-import { memo, useEffect } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { WalkthroughToggle } from './walkthrough/WalkthroughToggle'
 import { NotationProvider } from '@/notation/NotationContext'
 import { NotationToggle } from '@/notation/NotationToggle'
+
+// The source link. Kept as a plain <a> (not <Link>) so it forces a full page
+// load to the GitHub redirect, the existing behavior.
+function GithubLink() {
+  return (
+    <a
+      href="/github"
+      className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-low hover:text-brand-hover transition-all hover:scale-110 active:scale-95"
+      aria-label="Source on GitHub"
+    >
+      <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+      </svg>
+    </a>
+  )
+}
+
+// Compact md-only overflow for the secondary chrome. Adding a seventh nav link
+// pushes the notation toggle, the guided-tours trigger, and the source link past
+// the 768px row, so at md they collapse behind one 44px trigger that opens a
+// menu holding all three. The click-outside dismiss mirrors WalkthroughToggle.
+// At lg the controls render inline instead and this trigger is not mounted.
+function SecondaryMenu() {
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen])
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(open => !open)}
+        className="cursor-pointer min-w-[44px] min-h-[44px] rounded-lg bg-surface-raised border border-border flex items-center justify-center text-text-mid hover:text-brand-hover transition-colors"
+        title="More"
+        aria-label="More options"
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        data-testid="nav-secondary-menu"
+      >
+        {/* horizontal ellipsis -- the text label below carries the meaning for AT */}
+        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M6 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM11.5 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM17 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 bg-surface-overlay border border-border rounded-lg shadow-lg z-50 p-3 flex flex-col gap-3 items-start">
+          <NotationToggle />
+          <div className="flex items-center gap-3">
+            <WalkthroughToggle />
+            <GithubLink />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const Layout = memo(function Layout() {
   const location = useLocation()
@@ -113,16 +181,32 @@ const Layout = memo(function Layout() {
              >
                Challenges
              </NavLink>
-             <NotationToggle />
-             <WalkthroughToggle />
-             <a
-               href="/github"
-               className="min-h-[44px] min-w-[44px] flex items-center justify-center text-text-low hover:text-brand-hover transition-all hover:scale-110 active:scale-95"
+             {/* Simulation nav link */}
+             <NavLink
+               to="/simulate"
+               className={({ isActive }) =>
+                 'min-h-[44px] min-w-[44px] flex items-center px-1 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors ' +
+                 (isActive
+                   ? 'bg-brand-tint text-brand-hover border border-brand/30'
+                   : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
+               }
              >
-               <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
-                 <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-               </svg>
-             </a>
+               Simulate
+             </NavLink>
+             {/* Secondary chrome (notation toggle, guided tours, source link).
+                 Seven nav links plus these three controls overflow the 768px row,
+                 so at md they live behind a single compact "more" trigger and the
+                 tagline pill stays dropped; at lg there is room to show them all
+                 inline. The links themselves never collapse -- every route stays
+                 one tap away at md. */}
+             <div className="hidden lg:flex items-center gap-3">
+               <NotationToggle />
+               <WalkthroughToggle />
+               <GithubLink />
+             </div>
+             <div className="lg:hidden">
+               <SecondaryMenu />
+             </div>
           </div>
         </div>
       </header>
