@@ -76,9 +76,11 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }): J
 }
 
 // The discoverable header trigger. A 44px chrome button in the SecondaryMenu
-// shape, a magnifier glyph that is aria-hidden plus the accessible name, and from
-// sm+ a font-mono hint pill naming the keybinding so the chord is learnable. It
-// reports aria-expanded reflecting the palette state.
+// shape, a magnifier glyph that is aria-hidden plus a stable aria-label, and from
+// 2xl+ a font-mono hint pill naming the keybinding so the chord is learnable. The
+// hint is held to 2xl+ so the inline trigger stays compact through the tighter lg
+// and xl bands (the keybinding is still discoverable there: the global chord
+// works and the pill returns at 2xl). It reports aria-expanded reflecting state.
 export function PaletteOpenButton(): JSX.Element {
   const { isOpen, open } = useCommandPalette()
 
@@ -86,8 +88,8 @@ export function PaletteOpenButton(): JSX.Element {
     <button
       type="button"
       onClick={open}
-      className="cursor-pointer min-w-[44px] min-h-[44px] px-2 sm:px-3 rounded-lg bg-surface-raised border border-border flex items-center gap-2 text-sm font-medium text-text-mid hover:text-brand-hover transition-colors"
-      title="Search and commands"
+      className="cursor-pointer min-w-[44px] min-h-[44px] px-2 2xl:px-3 rounded-lg bg-surface-raised border border-border flex items-center gap-2 text-sm font-medium text-text-mid hover:text-brand-hover transition-colors"
+      aria-label="Search and commands"
       aria-haspopup="dialog"
       aria-expanded={isOpen}
       aria-controls={PALETTE_DIALOG_ID}
@@ -106,8 +108,10 @@ export function PaletteOpenButton(): JSX.Element {
           clipRule="evenodd"
         />
       </svg>
-      <span className="sr-only sm:hidden">Search and commands</span>
-      <span className="hidden sm:inline-flex items-center gap-1 font-mono text-xs text-text-low">
+      <span
+        className="hidden 2xl:inline-flex items-center gap-1 font-mono text-xs text-text-low"
+        aria-hidden="true"
+      >
         <kbd className="px-1.5 py-0.5 rounded border border-border bg-surface">Ctrl</kbd>
         <kbd className="px-1.5 py-0.5 rounded border border-border bg-surface">K</kbd>
       </span>
