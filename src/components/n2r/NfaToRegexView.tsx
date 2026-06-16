@@ -6,6 +6,7 @@ import { GNFA_PRESETS, regexToSourceNfa } from '@/core/algorithms/gnfaPresets'
 import { RegexResultPanel } from './RegexResultPanel'
 import { EliminationControls } from './EliminationControls'
 import { AutomatonGraph } from '@/visualization/renderer'
+import { GraphSummary } from '@/components/a11y'
 import { TooLargeNotice } from '@/components/common/TooLargeNotice'
 import { TooLargeError, BOUNDS } from '@/core/automata/types'
 import type { NFA } from '@/core/automata/types'
@@ -345,10 +346,12 @@ export default function NfaToRegexView(): JSX.Element {
               style={{ minHeight: '420px' }}
             >
               {transientAutomaton && (
-                <AutomatonGraph
-                  automaton={transientAutomaton}
-                  highlightStates={highlightStates}
-                />
+                <GraphSummary automaton={transientAutomaton} ariaLabel="State diagram for the current elimination step">
+                  <AutomatonGraph
+                    automaton={transientAutomaton}
+                    highlightStates={highlightStates}
+                  />
+                </GraphSummary>
               )}
             </div>
 
