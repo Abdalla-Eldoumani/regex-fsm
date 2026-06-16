@@ -236,6 +236,69 @@ test('a concept lesson opens its matching route with the dialog still open', asy
 })
 
 // ---------------------------------------------------------------------------
+// BACK ACROSS ROUTES (proves H1 + H2): Next navigates forward to a route-linked
+// lesson, and Back navigates symmetrically to the prior route-linked lesson's
+// route. Stepping forward from / lands on /closure at the closure lesson; one
+// Back lands on /n2r at the NFA-to-regex lesson. The route following Back proves
+// navigation is a reaction to committed step state in BOTH directions, not a
+// forward-only side effect inside the Next handler. Desktop viewport so every
+// route is reachable without the compact-header menu.
+// ---------------------------------------------------------------------------
+test('Back navigates to the prior route-linked lesson route', async ({ page }) => {
+  await gotoLoadedHome(page)
+  await openCoursePath(page)
+
+  // Forward to the closure lesson (step 7). next() navigates as it advances, so
+  // the URL settles on /closure once that lesson is active.
+  for (let i = 0; i < 6; i++) {
+    await page.locator('[data-testid="tour-next"]').click()
+    await page.waitForTimeout(60)
+  }
+  expect(await readCounter(page)).toBe('7 / 8')
+  await expect(page).toHaveURL(/\/closure/)
+
+  // Back must follow the route the other way: step 6 is the NFA-to-regex lesson
+  // on /n2r. If prev() only decremented the index (the H2 bug) the URL would
+  // stay on /closure and the view would mismatch the dialog.
+  await page.locator('[data-testid="tour-back"]').click()
+  await page.waitForTimeout(150)
+  expect(await readCounter(page)).toBe('6 / 8')
+  await expect(page).toHaveURL(/\/n2r/)
+})
+
+// ---------------------------------------------------------------------------
+// CONTROLLER aria-expanded (proves M1): when the tour is open exactly one
+// VISIBLE launcher reports aria-expanded="true". The three width-gated slots all
+// read the same state, so before the fix every mounted launcher announced the
+// dialog as expanded. Desktop viewport: the inline lg launcher is the visible
+// controller and the others are display:none.
+// ---------------------------------------------------------------------------
+test('only the controller launcher reports aria-expanded when open', async ({ page }) => {
+  await gotoLoadedHome(page)
+
+  // Closed: no visible launcher is expanded.
+  const expandedWhenClosed = await page
+    .locator('[data-testid="tour-launch"]:visible[aria-expanded="true"]')
+    .count()
+  expect(expandedWhenClosed).toBe(0)
+
+  await openCoursePath(page)
+
+  // Open: exactly one VISIBLE launcher is expanded (the controller), and it
+  // points at the dialog via aria-controls.
+  const expandedWhenOpen = await page
+    .locator('[data-testid="tour-launch"]:visible[aria-expanded="true"]')
+    .count()
+  expect(expandedWhenOpen).toBe(1)
+
+  const controls = await page
+    .locator('[data-testid="tour-launch"]:visible[aria-expanded="true"]')
+    .getAttribute('aria-controls')
+  expect(controls).toBe('tour-dialog-panel')
+  await expect(page.locator('#tour-dialog-panel')).toBeVisible()
+})
+
+// ---------------------------------------------------------------------------
 // REMOVAL (TOUR-04): the old walkthrough is absent from the live DOM. Zero
 // data-walkthrough anchors complements the Plan 03 source grep.
 // ---------------------------------------------------------------------------
