@@ -312,7 +312,7 @@ function App() {
               <div>
                 <div className="flex flex-wrap items-center gap-3 mb-2">
                   <div className="flex items-center gap-2">
-                    {/* Decorative accent bar — brand chrome, not a state color */}
+                    {/* Decorative accent bar -- brand chrome, not a state color */}
                     <div className="w-1.5 h-6 bg-gradient-to-b from-brand to-brand-pressed rounded-full"></div>
                     <h2 className="text-xl font-display font-bold text-text-hi">Pattern</h2>
                   </div>
