@@ -31,7 +31,20 @@ export interface TourState {
   isOpen: boolean
   pathId: string | null
   stepIndex: number
+  // The DOM id of the launcher that opened the tour. The three width-gated
+  // launcher slots all read the same state, so this records WHICH one is the
+  // live controller. Only that launcher reports aria-expanded="true"; the others
+  // report false. Held in state (not a ref) so the comparison is a pure render
+  // read, never a ref access during render. Null when the tour is closed.
+  activeTriggerId: string | null
 }
+
+// The dialog's DOM id. Shared so every launcher can point aria-controls at the
+// one dialog and the dialog can carry the matching id, wiring the
+// aria-haspopup="dialog" relationship. A static id (not useId) is required
+// because the id must be identical across the three launcher slots and the
+// single dialog instance.
+export const TOUR_DIALOG_ID = 'tour-dialog-panel'
 
 // The eight valid navigation targets. A lesson route must be one of these so
 // the controller can never navigate off-origin or to an unknown path; the data
