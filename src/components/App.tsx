@@ -186,7 +186,7 @@ function App() {
           <Hero />
         </section>
 
-        <section data-walkthrough="input-section" className="bg-surface rounded-3xl shadow-lg border border-border hover:border-border-strong transition-all duration-300 p-8 md:p-10">
+        <section className="bg-surface rounded-3xl shadow-lg border border-border hover:border-border-strong transition-all duration-300 p-8 md:p-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative">
             <div className="lg:col-span-2 space-y-6">
               <div>
@@ -197,17 +197,17 @@ function App() {
                 </div>
                 <p className="text-sm text-text-mid mb-5 ml-3.5">Enter a regular expression to generate the automata.</p>
                 <div className="space-y-4">
-                  <div data-walkthrough="pattern-builder">
+                  <div>
                     <PatternBuilder onInsert={handlePatternInsert} />
                   </div>
-                  <div data-walkthrough="regex-input">
+                  <div>
                     <RegexInput value={regex} onChange={setRegex} alphabet={alphabet} onAlphabetChange={setAlphabet} error={error} />
                   </div>
                 </div>
               </div>
             </div>
             <div className="space-y-6">
-               <div data-walkthrough="test-string">
+               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1.5 h-6 bg-gradient-to-b from-brand-hover to-brand rounded-full"></div>
                   <h2 className="text-xl font-display font-bold text-text-hi">Test String</h2>
@@ -215,7 +215,7 @@ function App() {
                 <p className="text-sm text-text-mid mb-5 ml-3.5">Simulate how the machine processes input.</p>
                 <StringInput value={testString} onChange={setTestString} />
               </div>
-              <div data-walkthrough="options-panel">
+              <div>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1.5 h-6 bg-gradient-to-b from-brand-pressed to-brand rounded-full"></div>
                   <h2 className="text-xl font-display font-bold text-text-hi">Options</h2>
@@ -245,7 +245,7 @@ function App() {
                 </div>
 
                 {/* Construction Method Selector */}
-                <div data-walkthrough="construction-method" className="mt-4 p-4 bg-bg/50 rounded-xl border border-border space-y-3">
+                <div className="mt-4 p-4 bg-bg/50 rounded-xl border border-border space-y-3">
                   <div className="text-xs font-semibold text-text-mid uppercase tracking-wider">Construction Method</div>
                   <div className="flex flex-col gap-2">
                     {([
@@ -302,7 +302,7 @@ function App() {
           </div>
         </section>
 
-        <section data-walkthrough="simulation-section" className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden hover:border-border-strong transition-all duration-300">
+        <section className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden hover:border-border-strong transition-all duration-300">
            <div className="border-b border-border p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-brand-tint via-transparent to-brand-tint relative">
              <div className="relative">
                 <div className="flex items-center gap-2 mb-1">
@@ -311,7 +311,7 @@ function App() {
                 </div>
                 <p className="text-sm text-text-mid ml-3.5">Step through the state transitions.</p>
              </div>
-             <div data-walkthrough="simulation-mode" className="flex p-1.5 bg-bg/60 rounded-xl border border-border shadow-inner relative">
+             <div className="flex p-1.5 bg-bg/60 rounded-xl border border-border shadow-inner relative">
                 <button
                   onClick={() => setSimulationMode('nfa')}
                   disabled={isDirectMethod}
@@ -378,7 +378,7 @@ function App() {
           !isDirectMethod && simulationMode === 'both' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'
         }`}>
           {!isDirectMethod && (simulationMode === 'nfa' || simulationMode === 'both') && (
-            <article data-walkthrough="nfa-view" className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-border-strong group">
+            <article className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-border-strong group">
               <div className="p-5 border-b border-border bg-gradient-to-r from-brand-tint to-transparent flex justify-between items-center relative">
                  <div className="relative z-10">
                    <h3 className="font-display font-bold text-text-hi flex items-center gap-3">
@@ -426,7 +426,7 @@ function App() {
           )}
 
           {(simulationMode === 'dfa' || simulationMode === 'both' || isDirectMethod) && (
-            <article data-walkthrough="dfa-view" className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-border-strong group">
+            <article className="bg-surface rounded-3xl shadow-lg border border-border overflow-hidden flex flex-col h-[700px] transition-all duration-300 hover:border-border-strong group">
                <div className="p-5 border-b border-border bg-gradient-to-r from-brand-tint to-transparent flex justify-between items-center relative">
                  <div className="relative z-10">
                    <h3 className="font-display font-bold text-text-hi flex items-center gap-3">
@@ -467,7 +467,7 @@ function App() {
         </section>
 
         {dfa && (
-          <section data-walkthrough="statistics">
+          <section>
              <div className="bg-surface rounded-3xl shadow-lg border border-border p-8 md:p-10 hover:border-border-strong transition-all duration-300">
                <div className="flex items-center gap-2 mb-8">
                  <div className="w-1.5 h-6 bg-gradient-to-b from-brand to-brand-pressed rounded-full"></div>

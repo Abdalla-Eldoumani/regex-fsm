@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
-import { WalkthroughProvider } from './components/walkthrough/WalkthroughProvider'
+import { TourProvider } from './components/tour'
 // Fonts before ./index.css so the @font-face rules register before tokens apply.
 import '@fontsource-variable/space-grotesk'
 import '@fontsource-variable/hanken-grotesk'
@@ -37,7 +37,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
-        <WalkthroughProvider>
+        <TourProvider>
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
               <Route element={<Layout />}>
@@ -54,7 +54,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               </Route>
             </Routes>
           </Suspense>
-        </WalkthroughProvider>
+        </TourProvider>
       </BrowserRouter>
     </ErrorBoundary>
   </React.StrictMode>,
