@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { JSX } from 'react'
 import { AutomatonGraph } from '@/visualization/renderer'
+import { GraphSummary } from '@/components/a11y'
 import { dfaStateForNfaSet } from '@/core/algorithms/dfaStateForNfaSet'
 import type { SubsetCorrespondence } from '@/core/algorithms/subset'
 import type { NFA } from '@/core/automata/types'
@@ -113,7 +114,9 @@ export function SideBySidePanel({
             className="rounded-xl border border-border bg-surface overflow-hidden"
             style={{ minHeight: '360px' }}
           >
-            <AutomatonGraph automaton={nfa} highlightStates={nfaActiveSet} />
+            <GraphSummary automaton={nfa} ariaLabel="NFA state diagram">
+              <AutomatonGraph automaton={nfa} highlightStates={nfaActiveSet} />
+            </GraphSummary>
           </div>
         </div>
 
@@ -133,7 +136,9 @@ export function SideBySidePanel({
             className="rounded-xl border border-border bg-surface overflow-hidden"
             style={{ minHeight: '360px' }}
           >
-            <AutomatonGraph automaton={correspondence.dfa} highlightStates={dfaHighlight} />
+            <GraphSummary automaton={correspondence.dfa} ariaLabel="Determinized DFA state diagram">
+              <AutomatonGraph automaton={correspondence.dfa} highlightStates={dfaHighlight} />
+            </GraphSummary>
           </div>
         </div>
       </div>

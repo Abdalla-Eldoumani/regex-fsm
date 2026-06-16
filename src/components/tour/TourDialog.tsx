@@ -99,7 +99,7 @@ export function TourDialog(): JSX.Element | null {
                 id={titleId}
                 data-tour-title
                 tabIndex={-1}
-                className="text-xl font-display font-bold text-text-hi focus:outline-none"
+                className="text-xl font-display font-bold text-text-hi focus-visible:outline-none"
               >
                 {currentLesson.title}
               </h2>

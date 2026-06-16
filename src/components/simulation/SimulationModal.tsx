@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Automaton } from '@/core/automata/types'
 import { SimulationPanel } from './SimulationPanel'
 import { AutomatonGraph } from '@/visualization/renderer'
+import { GraphSummary } from '@/components/a11y'
 
 interface SimulationModalProps {
   automaton: Automaton
@@ -87,11 +88,13 @@ export function SimulationModal({
                 <h3 className="text-lg font-semibold text-text-hi">Automaton Graph</h3>
               </div>
               <div className="h-[calc(100%-64px)]">
-                <AutomatonGraph
-                  automaton={automaton}
-                  highlightStates={highlightStates}
-                  highlightEdges={highlightEdges}
-                />
+                <GraphSummary automaton={automaton} ariaLabel="State diagram">
+                  <AutomatonGraph
+                    automaton={automaton}
+                    highlightStates={highlightStates}
+                    highlightEdges={highlightEdges}
+                  />
+                </GraphSummary>
               </div>
             </div>
 
@@ -110,7 +113,7 @@ export function SimulationModal({
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="w-full px-4 min-h-[44px] bg-surface-raised border border-border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus:outline-none transition-all"
+                    className="w-full px-4 min-h-[44px] bg-surface-raised border border-border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus-visible:outline-none transition-all"
                     placeholder="Enter string to simulate..."
                     autoFocus
                   />
