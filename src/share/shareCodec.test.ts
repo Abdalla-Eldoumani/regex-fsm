@@ -27,10 +27,16 @@ import { BOUNDS } from '@/core/automata/types'
 // real compress/decompress for every functional case and only wrap decompress in a
 // spy so its call count is observable. vi.mock is hoisted, so importActual restores
 // the genuine implementations.
-vi.mock('lz-string', async () => {
-  const actual = await vi.importActual<typeof import('lz-string')>('lz-string')
+vi.mock(import('lz-string'), async (importOriginal) => {
+  const actual = await importOriginal()
+  // lz-string ships as CommonJS, so under the bundler the named exports can sit
+  // behind a default-interop wrapper; spreading the namespace alone does not
+  // reliably carry them. List both functions explicitly so the production module's
+  // `import { compressToEncodedURIComponent, decompressFromEncodedURIComponent }`
+  // resolves, and only decompress is wrapped in a spy.
   return {
     ...actual,
+    compressToEncodedURIComponent: actual.compressToEncodedURIComponent,
     decompressFromEncodedURIComponent: vi.fn(actual.decompressFromEncodedURIComponent),
   }
 })
