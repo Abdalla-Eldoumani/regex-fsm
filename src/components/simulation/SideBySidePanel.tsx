@@ -104,7 +104,7 @@ export function SideBySidePanel({
             <span className="text-xs font-sans text-text-low uppercase tracking-wide">
               NFA
             </span>
-            <span className="text-xs font-mono text-text-mid">
+            <span className="text-xs font-mono text-text-mid" data-testid="sim-nfa-panel-label">
               active set {formatSet(nfaActiveSet)}
             </span>
           </div>
