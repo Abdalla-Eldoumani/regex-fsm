@@ -7,6 +7,7 @@ import type { ComplementResult, ComplementStep } from '@/core/algorithms/complem
 import { nfaToDFA } from '@/core/algorithms/subset'
 import { GNFA_PRESETS, regexToSourceNfa } from '@/core/algorithms/gnfaPresets'
 import { AutomatonGraph } from '@/visualization/renderer'
+import { GraphSummary } from '@/components/a11y'
 import { TooLargeNotice } from '@/components/common/TooLargeNotice'
 import { TooLargeError } from '@/core/automata/types'
 import type { DFA } from '@/core/automata/types'
@@ -549,10 +550,12 @@ export default function ClosureView(): JSX.Element {
               style={{ minHeight: '420px' }}
             >
               {transientAutomaton && (
-                <AutomatonGraph
-                  automaton={transientAutomaton}
-                  highlightStates={highlightStates}
-                />
+                <GraphSummary automaton={transientAutomaton} ariaLabel="State diagram for the current construction step">
+                  <AutomatonGraph
+                    automaton={transientAutomaton}
+                    highlightStates={highlightStates}
+                  />
+                </GraphSummary>
               )}
             </div>
 
