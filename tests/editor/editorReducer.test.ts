@@ -178,7 +178,7 @@ describe('toggleAccept', () => {
 
   it('is a no-op when the state id does not exist', () => {
     // Guard: toggling accept on a nonexistent id must leave acceptStates unchanged
-    // so phantom ids never accumulate (WR-03 — mirrors setStart existence check).
+    // so phantom ids never accumulate (WR-03 -- mirrors setStart existence check).
     const base = run([
       { type: 'addState', x: 0, y: 0 },
       { type: 'toggleAccept', id: 's0' },
