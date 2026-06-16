@@ -119,7 +119,7 @@ export function chooseWorstSplit(
 /**
  * The contradiction finder. Given the language oracle and the adversary's split,
  * return a pump exponent i with xy^i z ∉ L, VERIFIED by calling member() on the
- * built string (never asserted — automata-correctness invariant 8). Try i in the
+ * built string (never asserted -- automata-correctness invariant 8). Try i in the
  * order 0, 2, 3, ..., maxI: i = 1 is skipped because xy^1 z = w, which is in L by
  * construction, so it can never be the contradiction. i = 0 (delete y) and i = 2
  * (double y) are the canonical exits. Returns null only when no exit exists
@@ -151,7 +151,7 @@ export function findPumpExit(
  * inLanguage is false: a completed, predicate-verified contradiction.
  *
  * If findPumpExit returns null (it must not for the canonical witnesses), i is
- * left null and the verdict reflects the unpumped witness, which stays in L —
+ * left null and the verdict reflects the unpumped witness, which stays in L --
  * surfacing the bug rather than faking a contradiction.
  */
 export function playDemoRound(lang: NonRegularLanguage, p: number): GameState {
