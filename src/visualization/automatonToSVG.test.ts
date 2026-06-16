@@ -239,6 +239,33 @@ describe('automatonToSVG', () => {
     expect(first).toContain('>q2<')
   })
 
+  // Purity contract: the serializer must never write into the caller's positions
+  // object. getPositions returns the live cached entry.positions by reference, so a
+  // fallback write for a partially-cached automaton would corrupt the layout cache
+  // for every later render or export of that automaton. The fix clones positions
+  // before any fallback assignment; this pins it.
+  it('does not mutate the caller positions object when a state has no position', () => {
+    const a: Automaton = {
+      states: [{ id: 'q0' }, { id: 'q1' }, { id: 'q2' }],
+      transitions: [
+        { from: 'q0', to: 'q1', symbol: 'a' },
+        { from: 'q1', to: 'q2', symbol: 'b' },
+      ],
+      startState: 'q0',
+      acceptStates: ['q2'],
+      alphabet: new Set(['a', 'b']),
+    }
+    // q2 is missing a position, so the serializer must fall back for it.
+    const positions = pts({ q0: [100, 100], q1: [300, 100] })
+    const before = structuredClone(positions)
+    const svg = automatonToSVG(a, positions, COLORS)
+    // The input object is unchanged: no fallback coordinate was written back into it.
+    expect(positions).toEqual(before)
+    expect(positions).not.toHaveProperty('q2')
+    // The missing state still renders (the fallback applied to the clone, not the input).
+    expect(svg).toContain('>q2<')
+  })
+
   it('fills the background with the supplied background color', () => {
     const a: Automaton = {
       states: [{ id: 'q0' }],
