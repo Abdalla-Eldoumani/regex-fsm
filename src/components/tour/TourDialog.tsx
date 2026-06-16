@@ -2,6 +2,7 @@ import { useId, useRef } from 'react'
 import type { JSX } from 'react'
 import { useTour } from '@/hooks/useTour'
 import { useTourDialog } from '@/hooks/useTourDialog'
+import { TOUR_DIALOG_ID } from '@/types/tour'
 
 // The tour step surface: a bottom sheet at the 360px floor, a centered card at
 // md+. It is a role="dialog" aria-modal container labelled by the step title.
@@ -55,6 +56,7 @@ export function TourDialog(): JSX.Element | null {
     >
       <div
         ref={panelRef}
+        id={TOUR_DIALOG_ID}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
