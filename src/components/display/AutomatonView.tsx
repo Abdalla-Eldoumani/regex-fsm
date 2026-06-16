@@ -63,10 +63,12 @@ export function AutomatonView({
   }
 
   const handleExportSVG = () => {
-    const cy = graphRef.current?.getCytoscapeInstance()
-    if (cy) {
+    // SVG export is model-driven now (the corrected automatonToSVG), so it takes
+    // the authoritative automaton rather than the Cytoscape handle. Plan 04 owns
+    // the fuller export menu; this keeps the existing SVG button working.
+    if (automaton) {
       const filename = `automaton.svg`
-      exportAsSVG(cy, filename)
+      exportAsSVG(automaton, filename)
     }
   }
 
