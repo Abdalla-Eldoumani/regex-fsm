@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import type { JSX } from 'react'
 import { simulateDFA, simulateNFA } from '@/core/algorithms/simulate'
-import { nfaToDFA } from '@/core/algorithms/subset'
+import { nfaToDFA, nfaToDFAWithCorrespondence } from '@/core/algorithms/subset'
+import type { SubsetCorrespondence } from '@/core/algorithms/subset'
 import { computationTree } from '@/core/algorithms/computationTree'
 import type { ComputationTreeResult } from '@/core/algorithms/computationTree'
 import { GNFA_PRESETS, regexToSourceNfa } from '@/core/algorithms/gnfaPresets'
@@ -12,6 +13,7 @@ import type { DFA, NFA } from '@/core/automata/types'
 import { InputTape } from './InputTape'
 import { SimulationStepControls } from './SimulationStepControls'
 import { ComputationTree } from './ComputationTree'
+import { SideBySidePanel } from './SideBySidePanel'
 
 // SimulationView: the /simulate route. A reduced-motion-aware stepped run modeled
 // on ClosureView (closure/ClosureView.tsx). It reuses that view's proven pieces:
@@ -21,13 +23,15 @@ import { ComputationTree } from './ComputationTree'
 // the GNFA_PRESETS source picker so the view is never blank on load, the
 // clampedStep, and the TooLargeNotice catch on a determinization blow-up.
 //
-// This plan delivers the DFA run end to end (SIM-01): the single active DFA state
-// lights on the graph via highlightStates, and the InputTape consumes the input
-// symbol by symbol from one shared step index, showing the verdict on the final
-// frame. The NFA-run and side-by-side modes are present-but-inert tabs here; the
-// later waves fill them in. The view never feeds a string into a JS RegExp; the
-// source flows through the bespoke parse (regexToSourceNfa) and the run through
-// simulateDFA (T-10-05).
+// The DFA run (SIM-01) lights the single active DFA state via highlightStates and
+// consumes the tape from one shared step index, showing the verdict on the final
+// frame. The NFA run (SIM-02) lights the WHOLE lambda-closed active set and renders
+// the computation tree in lockstep. The side-by-side run (SIM-03) drives an NFA panel
+// and its determinized-DFA panel from that same NFA run on one shared step and one
+// tape: the determinized state lit on the right is exactly the subset equal to the
+// NFA active set on the left (the nfaStateSets correspondence). The view never feeds a
+// string into a JS RegExp; the source flows through the bespoke parse (regexToSourceNfa)
+// and the runs through simulateNFA / simulateDFA (T-10-05).
 
 // The mode selector values. Only 'dfa' renders a run in this plan.
 type SimMode = 'dfa' | 'nfa' | 'side'
@@ -176,21 +180,40 @@ export default function SimulationView(): JSX.Element {
     }
   }, [sourceResult, input])
 
-  // The run that drives the shared step index for the current mode. The DFA run can
-  // stop early on a trap frame; the NFA run always has input.length + 1 frames. Both
-  // start at position 0, so totalSteps >= 1 whenever a source is selected.
-  const activeRun = mode === 'nfa' ? nfaRun : run
+  // The subset correspondence for the side-by-side run (SIM-03). nfaToDFAWithCorrespondence
+  // returns { dfa, nfaStateSets }: the RAW subset DFA (state ids ARE the NFA subsets, the
+  // teaching point) plus the map from each DFA state to its NFA-state set. It can throw
+  // TooLargeError on a 2^n source; catch it here and surface a 'too-large' marker so the
+  // side-by-side region degrades to TooLargeNotice instead of hanging (SAFETY-01 / T-10-09).
+  const correspondence = useMemo<
+    { kind: 'ok'; value: SubsetCorrespondence } | { kind: 'too-large'; message: string; partial?: { states: number } } | null
+  >(() => {
+    if (sourceResult.kind !== 'dfa') return null
+    try {
+      return { kind: 'ok', value: nfaToDFAWithCorrespondence(sourceResult.nfa) }
+    } catch (e) {
+      if (e instanceof TooLargeError) return { kind: 'too-large', message: e.message, partial: e.partial }
+      throw e
+    }
+  }, [sourceResult])
+
+  // The run that drives the shared step index for the current mode. The NFA run drives
+  // BOTH the nfa mode and the side-by-side mode, so the side panels step on the same
+  // lambda-closed active set the tape and the NFA graph use. The DFA run can stop early
+  // on a trap frame; the NFA run always has input.length + 1 frames. Both start at
+  // position 0, so totalSteps >= 1 whenever a source is selected.
+  const activeRun = mode === 'dfa' ? run : nfaRun
   const totalSteps = activeRun ? activeRun.steps.length : 0
 
   const rawStep = stepState.key === stepKey ? stepState.step : 0
   const clampedStep = totalSteps > 0 ? Math.min(rawStep, totalSteps - 1) : 0
 
-  // Auto-play interval: advance one step every `speed` ms. Drives the DFA and NFA
-  // runs (side-by-side is inert this wave). Bails under reduced motion so the
-  // experience degrades to a static prev/next step-through, and stops at the last
+  // Auto-play interval: advance one step every `speed` ms. Drives all three runs (DFA,
+  // NFA, and side-by-side) off the single shared step index. Bails under reduced motion
+  // so the experience degrades to a static prev/next step-through, and stops at the last
   // step (the ClosureView interval pattern).
   useEffect(() => {
-    if (mode === 'side' || !isPlaying || reducedMotion || totalSteps === 0) return
+    if (!isPlaying || reducedMotion || totalSteps === 0) return
     const interval = setInterval(() => {
       setStepState(prev => {
         const next = prev.step + 1
@@ -565,16 +588,64 @@ export default function SimulationView(): JSX.Element {
               <ComputationTree result={tree.result} currentStep={clampedStep} />
             ) : null}
           </>
-        ) : sourceResult.kind === 'dfa' ? (
-          // Side-by-side is present-but-inert in this plan; the synced NFA + DFA
-          // panels land in the next wave. The tab stays reachable so the mode row
-          // is complete.
-          <div
-            data-testid="sim-mode-placeholder"
-            className="flex items-center justify-center rounded-xl border border-border bg-surface p-8 text-sm text-text-low min-h-[200px] text-center"
-          >
-            The side-by-side NFA and determinized-DFA run, kept in step-for-step sync, comes to this view next.
-          </div>
+        ) : sourceResult.kind === 'dfa' && mode === 'side' ? (
+          // Side-by-side synced run (SIM-03). A 2^n determinization surfaces
+          // TooLargeNotice (sim-side-toolarge) instead of rendering the panels, so a
+          // blow-up degrades gracefully rather than hanging the tab (SAFETY-01).
+          correspondence && correspondence.kind === 'too-large' ? (
+            <div data-testid="sim-side-toolarge" className="p-1">
+              <TooLargeNotice message={correspondence.message} partial={correspondence.partial} />
+            </div>
+          ) : correspondence && correspondence.kind === 'ok' ? (
+            <>
+              {/* One shared tape above both panels, driven by the same step index that
+                  drives the NFA active set the panels project (one tape, one step). */}
+              <div data-testid="sim-tape" className="rounded-xl border border-border bg-surface px-4">
+                <InputTape input={input} currentPosition={tapePosition} accepted={tapeAccepted} />
+              </div>
+
+              {/* Controls: the single shared step index drives the tape AND both panels,
+                  so advancing the controls advances both graphs together. */}
+              <div className="rounded-xl border border-border bg-surface p-4">
+                <SimulationStepControls
+                  currentStep={clampedStep}
+                  totalSteps={totalSteps}
+                  isPlaying={isPlaying}
+                  speed={speed}
+                  reducedMotion={reducedMotion}
+                  onPrev={handlePrev}
+                  onNext={handleNext}
+                  onPlay={handlePlay}
+                  onPause={handlePause}
+                  onReset={handleReset}
+                  onSpeedChange={handleSpeedChange}
+                />
+              </div>
+
+              {/* Step note in course notation (lambda for the position-0 start frame). */}
+              <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4">
+                <span className="text-xs font-sans text-text-low uppercase tracking-wide">
+                  Step {clampedStep + 1} of {totalSteps}
+                </span>
+                <span className="text-sm font-mono text-text-mid">
+                  {frame && frame.symbol === null
+                    ? 'start -- both panels begin at the λ-closure of q₀ (λ)'
+                    : frame
+                      ? `reading '${frame.symbol}'`
+                      : ''}
+                </span>
+              </div>
+
+              {/* The synced panels: the NFA active set (highlightStates = frame.nextStates,
+                  the same set the tape steps on) on the left, its single determinized
+                  state on the right, both amber .active, kept in sync by the one step. */}
+              <SideBySidePanel
+                nfa={sourceResult.nfa}
+                correspondence={correspondence.value}
+                nfaActiveSet={highlightStates}
+              />
+            </>
+          ) : null
         ) : (
           <div className="flex items-center justify-center rounded-xl border border-border bg-surface p-8 text-sm text-text-low min-h-[200px]">
             Select a source above to begin the run.
