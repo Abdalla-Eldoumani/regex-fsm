@@ -84,7 +84,7 @@ function buildExplanation(
         }
       }
       return {
-        plain: `The adversary picks the worst-case split: x = "${lambdaDisplay(split.x)}", y = "${lambdaDisplay(split.y)}", z = "${lambdaDisplay(split.z)}". The y-block is the repeated segment — the cycle of edges in the DFA proof (§4.3.2).`,
+        plain: `The adversary picks the worst-case split: x = "${lambdaDisplay(split.x)}", y = "${lambdaDisplay(split.y)}", z = "${lambdaDisplay(split.z)}". The y-block is the repeated segment -- the cycle of edges in the DFA proof (§4.3.2).`,
         notation: `x = ${lambdaDisplay(split.x)}, y = ${lambdaDisplay(split.y)}, z = ${lambdaDisplay(split.z)}; |xy| = ${split.x.length + split.y.length} ≤ ${p}, |y| = ${split.y.length} ≥ 1`,
       }
     case 'choose-i':
@@ -115,7 +115,7 @@ function buildExplanation(
 export default function PumpingView(): JSX.Element {
   const { glyphs } = useNotation()
 
-  // Language selection — never blank (NONREGULAR_LANGUAGES[0] is always present).
+  // Language selection -- never blank (NONREGULAR_LANGUAGES[0] is always present).
   const [selectedLanguageId, setSelectedLanguageId] = useState<string>(
     NONREGULAR_LANGUAGES[0].id
   )
@@ -408,7 +408,7 @@ export default function PumpingView(): JSX.Element {
         {/* Stage 0: pick-p */}
         <div className={stageCardClass(0)}>
           <span className="text-xs font-mono text-text-mid uppercase tracking-wide">
-            Stage 1 — Adversary picks p
+            Stage 1 -- Adversary picks p
           </span>
           <p className="font-sans text-sm text-text-hi">
             The adversary commits to pumping length <span className="font-mono">p = {p}</span>.
@@ -418,7 +418,7 @@ export default function PumpingView(): JSX.Element {
         {/* Stage 1: choose-w */}
         <div className={stageCardClass(1)}>
           <span className="text-xs font-mono text-text-mid uppercase tracking-wide">
-            Stage 2 — You (prover) choose witness w
+            Stage 2 -- You (prover) choose witness w
           </span>
           {clampedStep === 1 && mode === 'play' ? (
             <div className="flex flex-col gap-2">
@@ -468,7 +468,7 @@ export default function PumpingView(): JSX.Element {
         {/* Stage 2: split */}
         <div className={stageCardClass(2)}>
           <span className="text-xs font-mono text-text-mid uppercase tracking-wide">
-            Stage 3 — Adversary splits w = xyz
+            Stage 3 -- Adversary splits w = xyz
           </span>
           {clampedStep >= 2 && effectiveSplit !== null ? (
             <div className="flex flex-col gap-2">
@@ -502,7 +502,7 @@ export default function PumpingView(): JSX.Element {
         {/* Stage 3: choose-i */}
         <div className={stageCardClass(3)}>
           <span className="text-xs font-mono text-text-mid uppercase tracking-wide">
-            Stage 4 — You (prover) choose pump exponent i
+            Stage 4 -- You (prover) choose pump exponent i
           </span>
           {clampedStep === 3 && mode === 'play' ? (
             <div className="flex flex-col gap-2">
@@ -562,7 +562,7 @@ export default function PumpingView(): JSX.Element {
         {/* Stage 4: verdict */}
         <div className={stageCardClass(4)}>
           <span className="text-xs font-mono text-text-mid uppercase tracking-wide">
-            Stage 5 — Verdict
+            Stage 5 -- Verdict
           </span>
           {clampedStep === 4 && effectiveResult !== null ? (
             <div className="flex flex-col gap-2">
@@ -572,11 +572,11 @@ export default function PumpingView(): JSX.Element {
               {!effectiveResult.inLanguage ? (
                 // Contradiction: the real, predicate-verified result (not asserted).
                 <p className="font-sans text-sm text-error font-medium" data-testid="pumping-verdict-contradiction">
-                  {effectiveResult.pumped} ∉ {lang.label} — contradiction!
+                  {effectiveResult.pumped} ∉ {lang.label} -- contradiction!
                 </p>
               ) : (
                 <p className="font-sans text-sm text-text-mid">
-                  {effectiveResult.pumped} ∈ {lang.label} — still in L. Choose a different i.
+                  {effectiveResult.pumped} ∈ {lang.label} -- still in L. Choose a different i.
                 </p>
               )}
             </div>
