@@ -44,10 +44,31 @@ export function useTourDialog(
     ;(heading ?? panel.querySelector<HTMLElement>(FOCUSABLE))?.focus()
   }, [isOpen, stepIndex, panelRef])
 
-  // Restore focus to the launcher when the dialog closes (2.4.3).
+  // Restore focus to the launcher when the dialog closes (2.4.3). The recorded
+  // trigger can be display:none if the viewport crossed a breakpoint mid-tour
+  // (the launcher slots are width-gated, e.g. flex md:hidden), and .focus() on a
+  // hidden node is a no-op that silently drops focus to <body>. So after trying
+  // the trigger, confirm focus actually landed on it; if it did not, the trigger
+  // is hidden, so fall back to the first launcher that DOES accept focus. This
+  // "did the focus take" probe is used rather than an offsetParent/visibility
+  // read because layout is not computed in the unit environment, so a geometry
+  // check would misreport every node as hidden.
   useEffect(() => {
     if (isOpen) return
-    triggerRef.current?.focus()
+    const trigger = triggerRef.current
+    // No trigger recorded means the tour was never opened (e.g. the initial
+    // mount), so there is nothing to restore and focus must not be moved.
+    if (!trigger) return
+    trigger.focus()
+    if (document.activeElement === trigger) return
+    // The recorded trigger was hidden and focus did not take; restore to the
+    // first launcher that accepts focus so it never falls through to the body.
+    const launchers = document.querySelectorAll<HTMLElement>('[data-testid="tour-launch"]')
+    for (const launcher of launchers) {
+      if (launcher === trigger) continue
+      launcher.focus()
+      if (document.activeElement === launcher) return
+    }
   }, [isOpen, triggerRef])
 
   // Key handling: Escape closes (2.1.2), Arrow keys advance / retreat as an
