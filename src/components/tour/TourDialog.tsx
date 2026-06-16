@@ -101,7 +101,7 @@ export function TourDialog(): JSX.Element | null {
               >
                 {currentLesson.title}
               </h2>
-              <span className="shrink-0 text-xs font-mono text-text-low" data-testid="tour-counter">
+              <span className="shrink-0 text-xs font-mono text-text-mid" data-testid="tour-counter">
                 {stepNumber} / {totalSteps}
               </span>
             </div>
