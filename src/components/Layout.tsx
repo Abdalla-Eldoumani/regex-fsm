@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { WalkthroughToggle } from './walkthrough/WalkthroughToggle'
+import { TourLauncher } from './tour'
 import { NotationProvider } from '@/notation/NotationContext'
 import { NotationToggle } from '@/notation/NotationToggle'
 
@@ -23,7 +23,8 @@ function GithubLink() {
 // Compact md-only overflow for the secondary chrome. Adding a seventh nav link
 // pushes the notation toggle, the guided-tours trigger, and the source link past
 // the 768px row, so at md they collapse behind one 44px trigger that opens a
-// menu holding all three. The click-outside dismiss mirrors WalkthroughToggle.
+// menu holding all three. The click-outside dismiss follows the shared dropdown
+// menu pattern -- mousedown outside the menu closes it.
 // At lg the controls render inline instead and this trigger is not mounted.
 function SecondaryMenu() {
   const [isOpen, setIsOpen] = useState(false)
@@ -63,7 +64,7 @@ function SecondaryMenu() {
         <div className="absolute right-0 top-full mt-2 bg-surface-overlay border border-border rounded-lg shadow-lg z-50 p-3 flex flex-col gap-3 items-start">
           <NotationToggle />
           <div className="flex items-center gap-3">
-            <WalkthroughToggle />
+            <TourLauncher />
             <GithubLink />
           </div>
         </div>
@@ -201,7 +202,7 @@ const Layout = memo(function Layout() {
                  one tap away at md. */}
              <div className="hidden lg:flex items-center gap-3">
                <NotationToggle />
-               <WalkthroughToggle />
+               <TourLauncher />
                <GithubLink />
              </div>
              <div className="lg:hidden">
