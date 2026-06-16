@@ -1,6 +1,7 @@
-import { useRef } from 'react'
+import { useId, useRef } from 'react'
 import type { JSX } from 'react'
 import { useTour } from '@/hooks/useTour'
+import { TOUR_DIALOG_ID } from '@/types/tour'
 
 // The header trigger that launches the guided tour from both Layout slots. It
 // uses the chrome-button shape at the same 44px footprint so the header layout
@@ -12,16 +13,26 @@ import { useTour } from '@/hooks/useTour'
 export function TourLauncher(): JSX.Element {
   const { open, close, state, triggerRef } = useTour()
   const buttonRef = useRef<HTMLButtonElement>(null)
+  // A stable per-instance id. Each of the three width-gated slots gets its own,
+  // so the controller can be identified without reading a ref during render.
+  const triggerId = useId()
 
   function handleClick() {
     if (state.isOpen) {
       close()
       return
     }
-    // Record the launching control so focus restores to it on close.
+    // Record the launching control so focus restores to it on close, and pass
+    // this instance's id so only this slot reports aria-expanded while open.
     triggerRef.current = buttonRef.current
-    open('course')
+    open('course', triggerId)
   }
+
+  // Only the launcher that actually opened the tour is the controller, so only
+  // it reports aria-expanded="true". The three width-gated slots all read the
+  // same global state; comparing this instance's id to the recorded controller
+  // id (a pure state read, never a ref access during render) picks out the one.
+  const isController = state.isOpen && state.activeTriggerId === triggerId
 
   return (
     <button
@@ -31,7 +42,8 @@ export function TourLauncher(): JSX.Element {
       className="cursor-pointer min-w-[44px] min-h-[44px] px-3 rounded-lg bg-surface-raised border border-border flex items-center gap-2 text-sm font-medium text-text-mid hover:text-brand-hover transition-colors"
       title="Guided tour"
       aria-haspopup="dialog"
-      aria-expanded={state.isOpen}
+      aria-expanded={isController}
+      aria-controls={TOUR_DIALOG_ID}
       data-testid="tour-launch"
     >
       <svg
