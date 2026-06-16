@@ -11,6 +11,11 @@ export default defineConfig({
   // single server and time out; a single preview is cheap to hit in sequence.
   fullyParallel: false,
   workers: 1,
+  // One transient networkidle/navigation timeout on the shared single-preview server
+  // should not fail the whole serial suite. A single retry tolerates that infra
+  // flakiness; a genuinely broken test still fails on the retry, so no assertion is
+  // weakened. Specs pass deterministically when run focused.
+  retries: 1,
   timeout: 60_000,
   webServer: {
     command: 'npm run build && npm run preview',

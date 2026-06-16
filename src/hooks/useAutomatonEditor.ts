@@ -2,6 +2,7 @@ import { useReducer, useMemo, useCallback, useState } from 'react'
 import { Automaton } from '@/core/automata/types'
 import { editorReducer, initialEditorState } from '@/editor/editorReducer'
 import { toAutomaton } from '@/editor/toAutomaton'
+import { loadAutomaton } from '@/editor/loadAutomaton'
 import { WorkingAutomaton } from '@/editor/editorTypes'
 
 // Returned shape — plan 05's EditorPanel and EditorView consume this API.
@@ -41,8 +42,19 @@ export interface UseAutomatonEditorResult {
   lastEditNonce: number
 }
 
-export function useAutomatonEditor(): UseAutomatonEditorResult {
-  const [working, dispatch] = useReducer(editorReducer, initialEditorState)
+// An optional initial automaton pre-loads the editor (the find-the-bug path);
+// calling with no argument is the empty editor, byte-for-byte the prior behavior.
+//
+// The lazy useReducer initializer (the third argument) runs ONCE on mount: when
+// initial is given it converts it to working state with loadAutomaton, otherwise it
+// returns initialEditorState. Because it runs only on mount, a later change to
+// initial does NOT reload the editor. That is deliberate: the find-the-bug view
+// remounts this editor subtree with a React key when the exercise changes, so a new
+// broken machine loads on selection without this hook reacting to prop changes.
+export function useAutomatonEditor(initial?: Automaton): UseAutomatonEditorResult {
+  const [working, dispatch] = useReducer(editorReducer, initial, a =>
+    a ? loadAutomaton(a) : initialEditorState
+  )
 
   // Track structural edits (add/remove state or transition) via a nonce so
   // consumers can clear stale simulation highlights (Pitfall 6). A separate
