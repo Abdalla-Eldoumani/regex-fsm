@@ -200,6 +200,46 @@ describe('buildNotStartsWithDFA', () => {
       expect(simulateDFA(dfa, 'aa').accepted).toBe(false)
     })
   })
+
+  describe('proper-prefix acceptance regression', () => {
+    // A proper prefix of the pattern has not yet completed the pattern, so it
+    // does not start with the full pattern and must be accepted. The earlier
+    // construction left the intermediate prefix-tracking states out of the
+    // accept set, so a proper prefix ended in a non-accepting state and was
+    // wrongly rejected.
+    it('accepts proper prefixes of "abc" over the alphabet {a, b}', () => {
+      // The alphabet has no 'c', so the full pattern can never be read; every
+      // string here is a proper prefix or a divergence and must be accepted.
+      const alphabet = new Set(['a', 'b'])
+      const { dfa } = buildNotStartsWithDFA('abc', alphabet)
+
+      expect(simulateDFA(dfa, '').accepted).toBe(true)
+      expect(simulateDFA(dfa, 'a').accepted).toBe(true)
+      expect(simulateDFA(dfa, 'ab').accepted).toBe(true)
+    })
+
+    it('accepts proper prefixes and divergences of "abc" but rejects the full prefix over {a, b, c}', () => {
+      // With 'c' in the alphabet the full pattern is readable, so "abc" reaches
+      // the full-match sink and any extension self-loops there. This block drives
+      // the corrected accept set: every prefix-tracking state accepts, only the
+      // sink rejects.
+      const alphabet = new Set(['a', 'b', 'c'])
+      const { dfa } = buildNotStartsWithDFA('abc', alphabet)
+
+      // Proper prefixes do not start with the full pattern.
+      expect(simulateDFA(dfa, '').accepted).toBe(true)
+      expect(simulateDFA(dfa, 'a').accepted).toBe(true)
+      expect(simulateDFA(dfa, 'ab').accepted).toBe(true)
+
+      // A divergence on the third symbol accepts: "aba" reaches the diverged
+      // accept sink because its third symbol is not 'c'.
+      expect(simulateDFA(dfa, 'aba').accepted).toBe(true)
+
+      // The full prefix reaches the sink, and any extension stays there.
+      expect(simulateDFA(dfa, 'abc').accepted).toBe(false)
+      expect(simulateDFA(dfa, 'abcc').accepted).toBe(false)
+    })
+  })
 })
 
 describe('buildNotEndsWithDFA', () => {
