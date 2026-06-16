@@ -110,7 +110,7 @@ export function SimulationModal({
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="w-full px-4 min-h-[44px] bg-surface-raised border border-border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus:outline-none transition-all"
+                    className="w-full px-4 min-h-[44px] bg-surface-raised border border-border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus-visible:outline-none transition-all"
                     placeholder="Enter string to simulate..."
                     autoFocus
                   />
