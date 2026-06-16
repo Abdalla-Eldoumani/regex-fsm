@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { WalkthroughToggle } from './walkthrough/WalkthroughToggle'
+import { TourLauncher } from './tour'
 import { NotationProvider } from '@/notation/NotationContext'
 import { NotationToggle } from '@/notation/NotationToggle'
 
@@ -23,9 +23,14 @@ function GithubLink() {
 // Compact md-only overflow for the secondary chrome. Adding a seventh nav link
 // pushes the notation toggle, the guided-tours trigger, and the source link past
 // the 768px row, so at md they collapse behind one 44px trigger that opens a
-// menu holding all three. The click-outside dismiss mirrors WalkthroughToggle.
+// menu holding all three. The click-outside dismiss follows the shared dropdown
+// menu pattern -- mousedown outside the menu closes it.
 // At lg the controls render inline instead and this trigger is not mounted.
-function SecondaryMenu() {
+// showTour controls whether the launcher sits inside the menu: at md it does
+// (one row, the tour with the other secondary controls); below md the launcher
+// is mounted standalone in the header so its node survives a tour-control click,
+// and the menu carries only the notation toggle and source link.
+function SecondaryMenu({ showTour = true }: { showTour?: boolean }) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -63,7 +68,7 @@ function SecondaryMenu() {
         <div className="absolute right-0 top-full mt-2 bg-surface-overlay border border-border rounded-lg shadow-lg z-50 p-3 flex flex-col gap-3 items-start">
           <NotationToggle />
           <div className="flex items-center gap-3">
-            <WalkthroughToggle />
+            {showTour && <TourLauncher />}
             <GithubLink />
           </div>
         </div>
@@ -201,12 +206,23 @@ const Layout = memo(function Layout() {
                  one tap away at md. */}
              <div className="hidden lg:flex items-center gap-3">
                <NotationToggle />
-               <WalkthroughToggle />
+               <TourLauncher />
                <GithubLink />
              </div>
              <div className="lg:hidden">
                <SecondaryMenu />
              </div>
+          </div>
+          {/* Below md the full nav row is dropped, so surface the guided tour
+              and the secondary menu here, keeping the tour reachable at the
+              360px floor. The launcher is mounted directly (not inside the
+              dismissable menu) so its node never unmounts mid-tour: focus
+              restores to it on close even after a control was clicked, which a
+              click-outside dropdown would break (2.4.3). The notation toggle and
+              source link stay in the menu since they are secondary. */}
+          <div className="flex md:hidden items-center gap-2">
+            <TourLauncher />
+            <SecondaryMenu showTour={false} />
           </div>
         </div>
       </header>
