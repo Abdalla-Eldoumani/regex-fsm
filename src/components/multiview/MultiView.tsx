@@ -278,7 +278,7 @@ export default function MultiView(): JSX.Element {
             onChange={e => setRegex(e.target.value)}
             placeholder="e.g. (a+b)*abb"
             spellCheck={false}
-            className="flex-1 min-w-0 bg-transparent font-mono text-text-hi text-sm focus:outline-none placeholder:text-text-low"
+            className="flex-1 min-w-0 bg-transparent font-mono text-text-hi text-sm focus-visible:outline-none placeholder:text-text-low"
           />
           {derivation.parseError && (
             <span className="text-xs text-error shrink-0">{derivation.parseError}</span>
