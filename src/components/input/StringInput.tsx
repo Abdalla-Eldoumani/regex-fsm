@@ -17,7 +17,7 @@ export const StringInput = memo(function StringInput({ value, onChange, placehol
         type="text"
         value={value}
         onChange={handleChange}
-        className="w-full px-5 min-h-[44px] py-3 bg-surface border border-border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus:outline-none transition-all"
+        className="w-full px-5 min-h-[44px] py-3 bg-surface border border-border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus-visible:outline-none transition-all"
         placeholder={placeholder}
       />
       {value === '' && (
