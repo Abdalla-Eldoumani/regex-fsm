@@ -126,7 +126,7 @@ export function EditorView(): JSX.Element {
                   <circle cx="12" cy="12" r="9" />
                   <path d="M12 8v4m0 4h.01" strokeLinecap="round" />
                 </svg>
-                <p className="text-sm text-text-low font-medium">Tap the canvas to add a state</p>
+                <p className="text-sm text-text-low font-medium">Tap the canvas to add a state, or use Add state in the panel</p>
                 <p className="text-xs text-text-low">Drag from a state node handle to draw transitions</p>
               </div>
             </div>
