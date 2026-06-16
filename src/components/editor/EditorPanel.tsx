@@ -23,6 +23,7 @@ function PanelButton({
   variant = 'secondary',
   type = 'button',
   'data-testid': testId,
+  'aria-label': ariaLabel,
 }: {
   onClick: () => void
   disabled?: boolean
@@ -30,6 +31,7 @@ function PanelButton({
   variant?: 'primary' | 'secondary' | 'danger'
   type?: 'button' | 'submit'
   'data-testid'?: string
+  'aria-label'?: string
 }) {
   const base =
     'min-h-[44px] min-w-[44px] px-3 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed'
@@ -45,6 +47,7 @@ function PanelButton({
       onClick={onClick}
       disabled={disabled}
       data-testid={testId}
+      aria-label={ariaLabel}
       className={`${base} ${variants[variant]}`}
     >
       {children}
@@ -127,6 +130,19 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
     setRelabelSymbol('')
   }
 
+  // Keyboard path to creating a state: the canvas tap is pointer-only, so a
+  // keyboard or screen-reader user needs a button. The reducer assigns the id and
+  // makes the first state the start; we only supply a position. Lay states on a
+  // deterministic grid derived from the current count so repeated presses do not
+  // stack one node on top of the last (each gets a distinct cell).
+  function handleAddState() {
+    const n = working.states.length
+    const cols = 4
+    const x = 120 + (n % cols) * 140
+    const y = 120 + Math.floor(n / cols) * 140
+    dispatchers.addStateAt(x, y)
+  }
+
   const selectedState = working.states.find(s => s.id === selectedNodeId) ?? null
   const selectedEdge = working.transitions.find(e => e.id === selectedEdgeId) ?? null
   const hasSelection = selectedNodeId !== null || selectedEdgeId !== null
@@ -135,12 +151,27 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
     selectedNodeId !== null && working.acceptStates.includes(selectedNodeId)
 
   const inputBase =
-    'w-full min-h-[44px] px-3 py-2 bg-bg border border-border rounded-lg text-sm text-text-hi font-mono placeholder:text-text-low focus:outline-none focus:border-brand-hover'
+    'w-full min-h-[44px] px-3 py-2 bg-bg border border-border rounded-lg text-sm text-text-hi font-mono placeholder:text-text-low focus-visible:outline-none focus:border-brand-hover'
 
   // Panel body — shared markup rendered once. Visibility is controlled by the
   // outer container's responsive classes, not by duplicating the body.
   const body = (
     <div className="divide-y divide-border">
+      {/* Add state: the keyboard-operable path to creating a state, mounted
+          unconditionally (not gated on a selection or on a state count) so the
+          FIRST state is reachable without touching the canvas. Placed first so a
+          keyboard user reaches it before the selection-dependent controls. */}
+      <div className="px-4 py-3">
+        <PanelButton
+          onClick={handleAddState}
+          variant="primary"
+          data-testid="editor-add-state"
+          aria-label="Add a new state"
+        >
+          Add state
+        </PanelButton>
+      </div>
+
       {/* Selection status */}
       <div className="px-4 py-3">
         {hasSelection ? (
@@ -332,7 +363,7 @@ export function EditorPanel({ working, dispatchers }: EditorPanelProps): JSX.Ele
       {working.states.length === 0 && (
         <div className="px-4 py-4">
           <p className="text-xs text-text-low text-center">
-            Tap the canvas to add your first state.
+            Tap the canvas or choose Add state to create your first state.
           </p>
         </div>
       )}
