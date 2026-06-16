@@ -119,7 +119,7 @@ test('clicking the regex span highlights NFA states via the linked class', async
   const regexBtnVisible = await regexBtn.isVisible()
 
   if (!regexBtnVisible) {
-    // Fragments absent or regex pane shows plain text — graceful absence path.
+    // Fragments absent or regex pane shows plain text -- graceful absence path.
     // This is correct behavior (plan: "graceful absence" if fragments deferred).
     // Mark test as skipped-equivalent by asserting the regex is shown as text.
     await expect(page.locator('text=ab')).toBeVisible()
@@ -171,7 +171,7 @@ test('editing the regex clears stale selection highlights', async ({ page }) => 
     const statusBar = page.locator('text=Selected in')
     await expect(statusBar).toBeVisible()
 
-    // Now change the regex — the source change invalidates the selection (VIEW-03).
+    // Now change the regex -- the source change invalidates the selection (VIEW-03).
     const input = page.locator('#multiview-regex-input')
     await input.fill('a')
     await waitForDerivation(page)
