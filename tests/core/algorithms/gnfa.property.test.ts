@@ -25,7 +25,7 @@ import { NFA, Transition } from '@/core/automata/types'
 // decide language equivalence over an EXHAUSTIVE bounded string battery (full
 // enumeration, not sampling), decided ONLY by simulate. No `new RegExp` (threat
 // T-03-04), no shape or string comparison (skill invariant 8). The seed is fixed so
-// any counterexample reproduces; per the skill and the root CLAUDE.md, a
+// any counterexample reproduces; per the project conventions, a
 // counterexample becomes a named unit test in gnfa.test.ts and the ALGORITHM in
 // gnfa.ts is fixed -- the property is never loosened and no assertion is weakened.
 
