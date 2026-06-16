@@ -30,7 +30,7 @@ export interface AutomatonGraphProps {
   // ids so onSelect reports the editor's own id and the panel match is exact
   // after a deletion. Omitted on read-only panes, which keep the index ids.
   edgeIds?: ReadonlyArray<string | undefined>
-  // Additive edit props — all optional so existing call sites are unchanged.
+  // Additive edit props -- all optional so existing call sites are unchanged.
   editable?: boolean
   onAddStateAt?: (x: number, y: number) => void
   // Called with (sourceId, targetId) after the user completes an edge draw.
@@ -84,7 +84,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       getCytoscapeInstance: () => cyRef.current,
     }))
 
-    // Instance lifecycle effect — only depends on automaton, savePositions, and editable.
+    // Instance lifecycle effect -- only depends on automaton, savePositions, and editable.
     // Edgehandles is initialised here (inside the lifecycle) so it is tied to the
     // Cytoscape instance and torn down with it on destroy.
     useEffect(() => {
@@ -139,11 +139,11 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       }
     }, [automaton, edgeIds, savePositions, editable])
 
-    // Read-only event listener effect — separate so callback changes don't recreate
+    // Read-only event listener effect -- separate so callback changes don't recreate
     // the Cytoscape instance. Also wires the select/unselect -> onSelect handler
     // for NON-editable panes, so MultiView read-only panes emit selection for
     // cross-pane highlighting. The editable path has its own handler below that
-    // additionally handles bgTap and ehcomplete. Guard: only bind once — if
+    // additionally handles bgTap and ehcomplete. Guard: only bind once -- if
     // editable is true the editable effect owns select/unselect.
     useEffect(() => {
       const cy = cyRef.current
@@ -202,7 +202,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       }
     }, [automaton, onNodeClick, onEdgeClick, onSelect, editable])
 
-    // Edit-mode event listener effect — only active when editable. Kept separate
+    // Edit-mode event listener effect -- only active when editable. Kept separate
     // from the read-only effect so the non-editable render path is untouched.
     useEffect(() => {
       const cy = cyRef.current
@@ -221,7 +221,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       // ehcomplete fires when the user finishes drawing an edge with edgehandles.
       // Read only the source and target ids; remove the temporary edge before
       // calling back so React re-adds the real edge from authoritative reducer
-      // state (Pitfall 3 — the extension's edge shape must never become the model).
+      // state (Pitfall 3 -- the extension's edge shape must never become the model).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const completeHandler = (_evt: cytoscape.EventObject, source: any, target: any, addedEdge: any) => {
         addedEdge.remove()
@@ -272,8 +272,8 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
     // Apply the current highlight sets. All class swaps are static (no JS-driven
     // Cytoscape tween) so this is correct under prefers-reduced-motion by
     // construction (DESIGN-04). Two separate concerns batched together:
-    //   .active  — amber simulation role (highlightStates / highlightEdges)
-    //   .linked  — brand-hover cross-pane halo (highlightLinked)
+    //   .active  -- amber simulation role (highlightStates / highlightEdges)
+    //   .linked  -- brand-hover cross-pane halo (highlightLinked)
     // Kept as a stable callback so the matchMedia change listener can re-run it.
     const applyHighlights = useCallback(() => {
       const cy = cyRef.current
@@ -299,7 +299,7 @@ export const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphPro
       cy.endBatch()
     }, [highlightStates, highlightEdges, highlightLinked])
 
-    // Highlight effect — use batch mode for performance.
+    // Highlight effect -- use batch mode for performance.
     useEffect(() => {
       applyHighlights()
     }, [applyHighlights])
