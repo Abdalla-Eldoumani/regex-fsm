@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { TourLauncher } from './tour'
+import { MobileNav } from './nav'
 import { CommandPalette, CommandPaletteProvider, PaletteOpenButton } from './command'
 import { NotationProvider } from '@/notation/NotationContext'
 import { NotationToggle } from '@/notation/NotationToggle'
@@ -223,17 +224,20 @@ const Layout = memo(function Layout() {
                <SecondaryMenu showPalette />
              </div>
           </div>
-          {/* Below md the full nav row is dropped, so surface the guided tour
-              and the secondary menu here, keeping the tour reachable at the
-              360px floor. The launcher is mounted directly (not inside the
-              dismissable menu) so its node never unmounts mid-tour: focus
-              restores to it on close even after a control was clicked, which a
-              click-outside dropdown would break (2.4.3). The palette trigger sits
-              inside the menu (showPalette) rather than standalone so three 44px
-              controls plus the logo do not overflow the 360px floor; Ctrl/Cmd+K
-              and the menu both still open it. The notation toggle and source link
-              stay in the menu since they are secondary. */}
+          {/* Below md the full nav row is dropped, so surface the mobile nav,
+              the guided tour, and the secondary menu here, keeping every route
+              reachable at the 360px floor. MobileNav is the primary affordance
+              below md (it reaches all eight routes), so it sits first. It and the
+              launcher are mounted directly (NOT inside the dismissable menu) so
+              their nodes never unmount mid-interaction: focus restores to each on
+              close even after a control was clicked, which a click-outside
+              dropdown would break (2.4.3). The palette trigger sits inside the
+              menu (showPalette) rather than standalone so the sub-md cluster plus
+              the logo do not overflow the 360px floor; Ctrl/Cmd+K and the menu
+              both still open it. The notation toggle and source link stay in the
+              menu since they are secondary. */}
           <div className="flex md:hidden items-center gap-2">
+            <MobileNav />
             <TourLauncher />
             <SecondaryMenu showTour={false} showPalette />
           </div>
