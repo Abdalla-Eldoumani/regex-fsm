@@ -39,7 +39,7 @@ function RegexPane({
     )
   }
 
-  // Without fragment map: plain mono text — no interaction from this pane.
+  // Without fragment map: plain mono text -- no interaction from this pane.
   // This is the graceful absence described in the plan.
   if (!fragments || fragments.size === 0) {
     return (
@@ -240,7 +240,7 @@ export default function MultiView(): JSX.Element {
     return resolve(selection, derivation.maps)
   }, [selection, derivation.maps])
 
-  // Selection handlers — one per graph pane. Each stores pane identity + node ids.
+  // Selection handlers -- one per graph pane. Each stores pane identity + node ids.
   const handleNfaSelect = useCallback((nodeIds: string[]) => {
     setSelection(nodeIds.length === 0 ? null : { pane: 'nfa', nodeIds })
   }, [setSelection])
@@ -287,7 +287,7 @@ export default function MultiView(): JSX.Element {
         </div>
       </div>
 
-      {/* Mobile tab switcher — hidden on lg and above */}
+      {/* Mobile tab switcher -- hidden on lg and above */}
       <div className="lg:hidden max-w-7xl w-full mx-auto px-4 sm:px-6 pb-2">
         <div
           role="tablist"
@@ -325,7 +325,7 @@ export default function MultiView(): JSX.Element {
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-8 flex-1">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 h-full">
 
-          {/* REGEX PANE — DOM, always visible */}
+          {/* REGEX PANE -- DOM, always visible */}
           <div
             id="panel-regex"
             role="tabpanel"
