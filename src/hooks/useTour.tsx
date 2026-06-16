@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Lesson, LearningPath, TourState } from '@/types/tour'
@@ -77,6 +77,11 @@ export function useTourState(): TourContextValue {
   }, [])
 
   const next = useCallback(() => {
+    // Pure updater: compute the next step only. Navigation is a reaction to the
+    // committed state in the effect below, never a side effect inside setState.
+    // An updater must be pure -- StrictMode double-invokes it in dev and
+    // concurrent React may discard and re-run it, so a navigate() here would
+    // fire twice or be dropped.
     setState(prev => {
       const path = prev.pathId ? tourPaths[prev.pathId] : undefined
       if (!path) return prev
@@ -85,13 +90,9 @@ export function useTourState(): TourContextValue {
       if (nextIndex >= path.lessons.length) {
         return { ...prev, isOpen: false }
       }
-      const lesson = path.lessons[nextIndex]
-      // Navigate first so the target view begins mounting, then advance.
-      const href = lessonHref(lesson)
-      if (href) navigate(href)
       return { ...prev, stepIndex: nextIndex }
     })
-  }, [navigate])
+  }, [])
 
   const prev = useCallback(() => {
     setState(prevState => ({
@@ -112,6 +113,23 @@ export function useTourState(): TourContextValue {
     state.isOpen && currentPath
       ? currentPath.lessons[state.stepIndex] ?? null
       : null
+
+  // Navigate as a REACTION to committed step state, not inside a setState
+  // updater. Keyed on the open flag and the step index, this fires once per
+  // committed step in BOTH directions: Next lands on the new lesson's route and
+  // Back lands on the prior lesson's route, so the view behind the dialog always
+  // matches the step. It navigates ONLY when the target lesson carries a route;
+  // a concept-only lesson (no route) leaves the learner on the current view.
+  // The href is an internal allow-list value from the lesson data, never user
+  // input, so this can never target an off-origin path.
+  useEffect(() => {
+    if (!state.isOpen || !currentLesson) return
+    const href = lessonHref(currentLesson)
+    if (href) navigate(href)
+    // currentLesson is a stable reference for a given (isOpen, stepIndex) pair
+    // and navigate is stable, so the full dependency list still fires the effect
+    // exactly once per committed step.
+  }, [state.isOpen, state.stepIndex, currentLesson, navigate])
 
   return useMemo(
     () => ({
