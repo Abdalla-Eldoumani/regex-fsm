@@ -9,7 +9,7 @@ function NotFoundGithub() {
           backgroundSize: '50px 50px',
           opacity: 0.3
         }}></div>
-        {/* Ambient glows — reduced-motion reset in index.css collapses these */}
+        {/* Ambient glows -- reduced-motion reset in index.css collapses these */}
         <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-brand/20 rounded-full mix-blend-screen filter blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-brand-pressed/20 rounded-full mix-blend-screen filter blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
