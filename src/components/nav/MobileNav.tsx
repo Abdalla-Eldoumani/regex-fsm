@@ -145,8 +145,14 @@ export function MobileNav(): JSX.Element {
               onClick={() => setIsOpen(false)}
               className={({ isActive }) =>
                 'min-h-[44px] flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ' +
+                // The active row sits on bg-brand-tint over the surface-overlay
+                // panel, where text-brand-hover (#948BF7) only reaches 4.39:1 and
+                // fails AA. text-text-hi clears it comfortably; the brand tint,
+                // the brand border, and aria-current keep the active cue from
+                // ever riding on color alone (A11Y-04). The desktop row sits on
+                // bg-surface, where text-brand-hover passes, so it is unchanged.
                 (isActive
-                  ? 'bg-brand-tint text-brand-hover border border-brand/30'
+                  ? 'bg-brand-tint text-text-hi border border-brand/30'
                   : 'text-text-mid hover:text-text-hi hover:bg-surface-raised border border-transparent')
               }
             >
