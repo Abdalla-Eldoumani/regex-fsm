@@ -236,7 +236,7 @@ const Layout = memo(function Layout() {
               the logo do not overflow the 360px floor; Ctrl/Cmd+K and the menu
               both still open it. The notation toggle and source link stay in the
               menu since they are secondary. */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-1">
             <MobileNav />
             <TourLauncher />
             <SecondaryMenu showTour={false} showPalette />
