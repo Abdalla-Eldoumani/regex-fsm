@@ -6,6 +6,14 @@ export * from './automata'
 export { lambdaClosure } from './algorithms/lambda'
 export { simulateNFA, simulateDFA } from './algorithms/simulate'
 export type { SimulationResult, SimulationStep } from './algorithms/simulate'
+export { dfaStateForNfaSet } from './algorithms/dfaStateForNfaSet'
+export { computationTree } from './algorithms/computationTree'
+export type {
+  ComputationNode,
+  ComputationEdge,
+  ComputationLevel,
+  ComputationTreeResult,
+} from './algorithms/computationTree'
 export * from './cache'
 // Export cached versions of parse, buildNFA, nfaToDFA, minimizeDFA
 export * from './cachedAlgorithms'
