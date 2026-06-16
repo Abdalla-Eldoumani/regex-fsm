@@ -22,7 +22,7 @@ import { DFA } from '@/core/automata/types'
 // battery", so Σ* \ L(A) reduces to "accepted by the complement iff NOT accepted by
 // A" across the FULL battery (including every string A rejects). The JS RegExp
 // engine is never used (threat T-07-TAMPER). The seed is fixed so a counterexample
-// reproduces; per the skill and the root CLAUDE.md, a counterexample becomes a named unit test in
+// reproduces; per the project conventions, a counterexample becomes a named unit test in
 // complement.test.ts and complement.ts is fixed -- never loosen the property.
 
 const SYMBOLS = ['a', 'b'] as const
