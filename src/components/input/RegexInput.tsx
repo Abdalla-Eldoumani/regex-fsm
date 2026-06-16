@@ -35,7 +35,7 @@ export const RegexInput = memo(function RegexInput({ value, onChange, alphabet, 
           type="text"
           value={alphabet}
           onChange={handleAlphabetChange}
-          className="w-full px-5 min-h-[44px] bg-surface border border-border rounded-lg font-mono text-sm text-text-hi placeholder:text-text-low focus:outline-none transition-all"
+          className="w-full px-5 min-h-[44px] bg-surface border border-border rounded-lg font-mono text-sm text-text-hi placeholder:text-text-low focus-visible:outline-none transition-all"
           placeholder="abc (leave empty for auto-detection)"
         />
         <p className="text-xs text-text-low mt-1.5 ml-1">
@@ -52,7 +52,7 @@ export const RegexInput = memo(function RegexInput({ value, onChange, alphabet, 
           value={value}
           onChange={handleChange}
           data-testid="regex-input"
-          className={`w-full px-5 min-h-[44px] py-3 bg-surface border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus:outline-none transition-all ${
+          className={`w-full px-5 min-h-[44px] py-3 bg-surface border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus-visible:outline-none transition-all ${
             error
               ? 'border-error'
               : 'border-border'
