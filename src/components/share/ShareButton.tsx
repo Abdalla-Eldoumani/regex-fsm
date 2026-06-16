@@ -116,10 +116,15 @@ export function ShareButton({ buildHash }: { buildHash: () => string }): JSX.Ele
       </button>
 
       {/* Screen-reader announcement on a successful copy. role=status is polite,
-          so it is read once when the text changes. */}
-      <span className="sr-only" role="status">
-        {copyState === 'copied' ? 'Share link copied to the clipboard' : ''}
-      </span>
+          so it is read once when it mounts with content. Rendered only while the
+          confirmed state holds, so no empty live region lingers in the DOM (a
+          persistent empty role=status would be picked up by broad [role=status]
+          queries elsewhere). */}
+      {copyState === 'copied' && (
+        <span className="sr-only" role="status">
+          Share link copied to the clipboard
+        </span>
+      )}
 
       {copyState === 'failed' && (
         <div
