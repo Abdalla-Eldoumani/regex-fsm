@@ -513,7 +513,7 @@ describe('subset construction', () => {
       const subset = nfaStateSets.get(startId)!
 
       // sanity cross-check: the id is set notation {q0,...}; parse it and compare
-      // (permitted in tests per RESEARCH — forbidden in view code)
+      // (permitted in tests per the research notes -- forbidden in view code)
       const parsed = startId.slice(1, -1).split(',').filter(s => s.length > 0).sort()
       expect(subset.slice().sort()).toEqual(parsed)
     })
