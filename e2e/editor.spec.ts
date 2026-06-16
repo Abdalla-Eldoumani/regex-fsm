@@ -84,7 +84,7 @@ test.describe('editor pointer interactions', () => {
     await page.waitForTimeout(200)
 
     // Add a transition between the two states using the panel form.
-    // We need state ids — they are auto-generated (s0, s1, ...) by the reducer.
+    // We need state ids -- they are auto-generated (s0, s1, ...) by the reducer.
     const fromInput = page.locator('[data-testid="trans-from-input"]')
     const toInput = page.locator('[data-testid="trans-to-input"]')
 
@@ -168,7 +168,7 @@ test.describe('editor pointer interactions', () => {
     await page.waitForTimeout(200)
 
     // The badge reflects the automaton now has a real transition.
-    // With one start, one transition — still likely NFA or DFA structurally.
+    // With one start, one transition -- still likely NFA or DFA structurally.
     const badge = page.locator('[data-testid="validity-badge"]')
     await expect(badge).toBeVisible()
     const text = await badge.textContent()
@@ -201,14 +201,14 @@ test.describe('editor keyboard navigation', () => {
       if (!el) return '0px'
       return getComputedStyle(el).outlineWidth
     })
-    // Our global rule sets outline: 2px — any non-zero value satisfies the test.
+    // Our global rule sets outline: 2px -- any non-zero value satisfies the test.
     expect(outlineWidth).not.toBe('0px')
   })
 
   test('pressing Tab past the last panel control does not trap focus inside the panel', async ({ page }) => {
     await gotoLoadedEditor(page)
 
-    // Tab many times — enough to exhaust all interactive controls on the page.
+    // Tab many times -- enough to exhaust all interactive controls on the page.
     for (let i = 0; i < 25; i++) {
       await page.keyboard.press('Tab')
     }
