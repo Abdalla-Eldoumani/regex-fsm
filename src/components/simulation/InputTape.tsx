@@ -6,7 +6,7 @@ interface InputTapeProps {
   accepted?: boolean | null
 }
 
-export const InputTape = memo(function InputTape({ input, currentPosition }: InputTapeProps) {
+export const InputTape = memo(function InputTape({ input, currentPosition, accepted }: InputTapeProps) {
   if (!input) {
     return (
       <div className="flex items-center justify-center h-24 text-text-low italic text-sm border-2 border-dashed border-border rounded-lg bg-surface">
@@ -60,6 +60,36 @@ export const InputTape = memo(function InputTape({ input, currentPosition }: Inp
           })}
         </div>
       </div>
+
+      {/* Verdict frame on the final step. accepted is null/undefined for every
+          intermediate step, so the badge appears only once the run is complete. The
+          icon and the literal word carry the meaning; the success/error color is
+          reinforcement only, never the sole signal (colorblind-safe floor). Mirrors
+          the SimulationPanel accept/reject chip. */}
+      {accepted !== null && accepted !== undefined && (
+        <div className="flex justify-center">
+          <div
+            data-testid="sim-tape-verdict"
+            className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${
+              accepted
+                ? 'bg-success/10 text-success border border-success/30'
+                : 'bg-error/10 text-error border border-error/30'
+            }`}
+          >
+            {accepted ? (
+              <>
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                Accepted
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                Rejected
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 })
