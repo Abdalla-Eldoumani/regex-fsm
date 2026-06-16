@@ -6,6 +6,7 @@ import { gradeChallenge } from '@/core/challenges/grade'
 import type { Exercise, StudentInput, GradeResult } from '@/core/challenges/types'
 import { useAutomatonEditor } from '@/hooks/useAutomatonEditor'
 import { AutomatonGraph } from '@/visualization/renderer'
+import { GraphSummary } from '@/components/a11y'
 import type { Automaton } from '@/core/automata/types'
 import { TooLargeError } from '@/core/automata/types'
 import { EditorPanel } from '@/components/editor/EditorPanel'
@@ -107,14 +108,16 @@ function AutomatonBuildSurface({
           data-testid="editor-canvas"
           className="relative flex-1 min-h-[420px] lg:min-h-[520px] bg-bg rounded-2xl border border-border overflow-hidden"
         >
-          <AutomatonGraph
-            automaton={automaton}
-            edgeIds={edgeIds}
-            editable
-            onAddStateAt={dispatchers.addStateAt}
-            onDrawEdge={dispatchers.drawEdge}
-            onSelect={dispatchers.setSelection}
-          />
+          <GraphSummary automaton={automaton} ariaLabel="State diagram of the automaton you are building">
+            <AutomatonGraph
+              automaton={automaton}
+              edgeIds={edgeIds}
+              editable
+              onAddStateAt={dispatchers.addStateAt}
+              onDrawEdge={dispatchers.drawEdge}
+              onSelect={dispatchers.setSelection}
+            />
+          </GraphSummary>
         </div>
         <div className="lg:w-72 xl:w-80 shrink-0">
           <EditorPanel working={working} dispatchers={dispatchers} />

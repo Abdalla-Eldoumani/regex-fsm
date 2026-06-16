@@ -7,6 +7,7 @@ import { minimizeDFA } from '@/core/cachedAlgorithms'
 import { TooLargeError } from '@/core/automata/types'
 import type { MinimizationResult } from '@/core/cachedAlgorithms'
 import { AutomatonGraph } from '@/visualization/renderer'
+import { GraphSummary } from '@/components/a11y'
 import { TooLargeNotice } from '@/components/common/TooLargeNotice'
 import { resolve, type Pane, type CorrespondenceMaps } from './correspondence'
 
@@ -278,7 +279,7 @@ export default function MultiView(): JSX.Element {
             onChange={e => setRegex(e.target.value)}
             placeholder="e.g. (a+b)*abb"
             spellCheck={false}
-            className="flex-1 min-w-0 bg-transparent font-mono text-text-hi text-sm focus:outline-none placeholder:text-text-low"
+            className="flex-1 min-w-0 bg-transparent font-mono text-text-hi text-sm focus-visible:outline-none placeholder:text-text-low"
           />
           {derivation.parseError && (
             <span className="text-xs text-error shrink-0">{derivation.parseError}</span>
@@ -360,11 +361,13 @@ export default function MultiView(): JSX.Element {
               {/* On mobile, only mount the active pane's canvas (RESEARCH Pitfall 4).
                   On desktop (isDesktop) all panes are always mounted. */}
               {(activeTab === 'nfa' || isDesktop) && derivation.nfa ? (
-                <AutomatonGraph
-                  automaton={derivation.nfa}
-                  highlightLinked={linked.nfa}
-                  onSelect={handleNfaSelect}
-                />
+                <GraphSummary automaton={derivation.nfa} ariaLabel="NFA state diagram">
+                  <AutomatonGraph
+                    automaton={derivation.nfa}
+                    highlightLinked={linked.nfa}
+                    onSelect={handleNfaSelect}
+                  />
+                </GraphSummary>
               ) : !derivation.nfa && derivation.parseError ? (
                 <div className="flex items-center justify-center h-full px-4 text-sm text-text-low font-mono">
                   {derivation.parseError}
@@ -397,11 +400,13 @@ export default function MultiView(): JSX.Element {
                   />
                 </div>
               ) : (activeTab === 'dfa' || isDesktop) && derivation.dfa ? (
-                <AutomatonGraph
-                  automaton={derivation.dfa}
-                  highlightLinked={linked.dfa}
-                  onSelect={handleDfaSelect}
-                />
+                <GraphSummary automaton={derivation.dfa} ariaLabel="DFA state diagram">
+                  <AutomatonGraph
+                    automaton={derivation.dfa}
+                    highlightLinked={linked.dfa}
+                    onSelect={handleDfaSelect}
+                  />
+                </GraphSummary>
               ) : !derivation.dfa && !derivation.dfaTooLarge ? (
                 <div className="flex items-center justify-center h-full text-sm text-text-low">
                   Enter a valid regex above.
@@ -430,11 +435,13 @@ export default function MultiView(): JSX.Element {
                   />
                 </div>
               ) : (activeTab === 'min' || isDesktop) && derivation.minResult ? (
-                <AutomatonGraph
-                  automaton={derivation.minResult.dfa}
-                  highlightLinked={linked.min}
-                  onSelect={handleMinSelect}
-                />
+                <GraphSummary automaton={derivation.minResult.dfa} ariaLabel="Minimized DFA state diagram">
+                  <AutomatonGraph
+                    automaton={derivation.minResult.dfa}
+                    highlightLinked={linked.min}
+                    onSelect={handleMinSelect}
+                  />
+                </GraphSummary>
               ) : !derivation.minResult && !derivation.minTooLarge ? (
                 <div className="flex items-center justify-center h-full text-sm text-text-low">
                   Enter a valid regex above.

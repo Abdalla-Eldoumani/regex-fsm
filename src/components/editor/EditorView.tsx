@@ -2,6 +2,7 @@ import type { JSX } from 'react'
 import { useMemo } from 'react'
 import { useAutomatonEditor } from '@/hooks/useAutomatonEditor'
 import { AutomatonGraph } from '@/visualization/renderer'
+import { GraphSummary } from '@/components/a11y'
 import { isDeterministic } from '@/core/automata/dfa'
 import { EditorPanel } from './EditorPanel'
 
@@ -126,19 +127,21 @@ export function EditorView(): JSX.Element {
                   <circle cx="12" cy="12" r="9" />
                   <path d="M12 8v4m0 4h.01" strokeLinecap="round" />
                 </svg>
-                <p className="text-sm text-text-low font-medium">Tap the canvas to add a state</p>
+                <p className="text-sm text-text-low font-medium">Tap the canvas to add a state, or use Add state in the panel</p>
                 <p className="text-xs text-text-low">Drag from a state node handle to draw transitions</p>
               </div>
             </div>
           )}
-          <AutomatonGraph
-            automaton={automaton}
-            edgeIds={edgeIds}
-            editable
-            onAddStateAt={dispatchers.addStateAt}
-            onDrawEdge={dispatchers.drawEdge}
-            onSelect={dispatchers.setSelection}
-          />
+          <GraphSummary automaton={automaton} ariaLabel="State diagram of the automaton you are building">
+            <AutomatonGraph
+              automaton={automaton}
+              edgeIds={edgeIds}
+              editable
+              onAddStateAt={dispatchers.addStateAt}
+              onDrawEdge={dispatchers.drawEdge}
+              onSelect={dispatchers.setSelection}
+            />
+          </GraphSummary>
         </div>
 
         {/* Control panel: sidebar on lg+, bottom-sheet on mobile */}

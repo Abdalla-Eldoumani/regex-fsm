@@ -7,6 +7,7 @@ import { computationTree } from '@/core/algorithms/computationTree'
 import type { ComputationTreeResult } from '@/core/algorithms/computationTree'
 import { GNFA_PRESETS, regexToSourceNfa } from '@/core/algorithms/gnfaPresets'
 import { AutomatonGraph } from '@/visualization/renderer'
+import { GraphSummary } from '@/components/a11y'
 import { TooLargeNotice } from '@/components/common/TooLargeNotice'
 import { TooLargeError } from '@/core/automata/types'
 import type { DFA, NFA } from '@/core/automata/types'
@@ -449,10 +450,12 @@ export default function SimulationView(): JSX.Element {
               className="rounded-xl border border-border bg-surface overflow-hidden"
               style={{ minHeight: '420px' }}
             >
-              <AutomatonGraph
-                automaton={sourceResult.dfa}
-                highlightStates={highlightStates}
-              />
+              <GraphSummary automaton={sourceResult.dfa} ariaLabel="DFA state diagram">
+                <AutomatonGraph
+                  automaton={sourceResult.dfa}
+                  highlightStates={highlightStates}
+                />
+              </GraphSummary>
             </div>
 
             {/* Input tape: consumes the string symbol by symbol from the shared
@@ -504,10 +507,12 @@ export default function SimulationView(): JSX.Element {
               className="rounded-xl border border-border bg-surface overflow-hidden"
               style={{ minHeight: '420px' }}
             >
-              <AutomatonGraph
-                automaton={sourceResult.nfa}
-                highlightStates={highlightStates}
-              />
+              <GraphSummary automaton={sourceResult.nfa} ariaLabel="NFA state diagram">
+                <AutomatonGraph
+                  automaton={sourceResult.nfa}
+                  highlightStates={highlightStates}
+                />
+              </GraphSummary>
             </div>
 
             {/* Active-set chip row: the current lambda-closed set as font-mono chips

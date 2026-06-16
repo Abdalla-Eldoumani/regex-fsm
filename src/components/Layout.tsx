@@ -1,6 +1,8 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { TourLauncher } from './tour'
+import { MobileNav } from './nav'
+import { CommandPalette, CommandPaletteProvider, PaletteOpenButton } from './command'
 import { NotationProvider } from '@/notation/NotationContext'
 import { NotationToggle } from '@/notation/NotationToggle'
 
@@ -30,7 +32,11 @@ function GithubLink() {
 // (one row, the tour with the other secondary controls); below md the launcher
 // is mounted standalone in the header so its node survives a tour-control click,
 // and the menu carries only the notation toggle and source link.
-function SecondaryMenu({ showTour = true }: { showTour?: boolean }) {
+// showPalette puts the Search and commands trigger inside the menu at md, where
+// the seven links plus this one overflow trigger already fill the 768px row, so
+// the palette stays pointer-reachable without adding a tenth item to that row;
+// below md the palette trigger is mounted standalone beside the launcher instead.
+function SecondaryMenu({ showTour = true, showPalette = false }: { showTour?: boolean; showPalette?: boolean }) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -66,6 +72,7 @@ function SecondaryMenu({ showTour = true }: { showTour?: boolean }) {
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 bg-surface-overlay border border-border rounded-lg shadow-lg z-50 p-3 flex flex-col gap-3 items-start">
+          {showPalette && <PaletteOpenButton />}
           <NotationToggle />
           <div className="flex items-center gap-3">
             {showTour && <TourLauncher />}
@@ -86,6 +93,7 @@ const Layout = memo(function Layout() {
 
   return (
     <NotationProvider>
+    <CommandPaletteProvider>
     <div className="min-h-screen bg-bg text-text">
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute inset-0" style={{
@@ -110,8 +118,10 @@ const Layout = memo(function Layout() {
           </div>
           {/* tablet (md) compresses to text-xs + gap-0.5 to fit six links + controls in 768px; lg restores text-sm + gap-3 */}
           <div className="hidden md:flex items-center gap-0.5 lg:gap-3">
-             {/* tagline pill -- decorative, only worth showing when there is room */}
-             <span className="hidden lg:inline-flex text-sm font-medium text-text-mid bg-surface-raised px-3 py-1.5 rounded-full border border-border">
+             {/* tagline pill -- decorative, only worth showing when there is room.
+                 Held to 2xl+ so the secondary cluster has room for the palette
+                 trigger and its keybinding hint without overflowing the 1440 row. */}
+             <span className="hidden 2xl:inline-flex text-sm font-medium text-text-mid bg-surface-raised px-3 py-1.5 rounded-full border border-border">
                Visualizing Regular Expressions
              </span>
              {/* Editor nav link -- min-h/min-w for 44px touch target; px-1 at md, px-3 at lg */}
@@ -205,30 +215,44 @@ const Layout = memo(function Layout() {
                  inline. The links themselves never collapse -- every route stays
                  one tap away at md. */}
              <div className="hidden lg:flex items-center gap-3">
+               <PaletteOpenButton />
                <NotationToggle />
                <TourLauncher />
                <GithubLink />
              </div>
              <div className="lg:hidden">
-               <SecondaryMenu />
+               <SecondaryMenu showPalette />
              </div>
           </div>
-          {/* Below md the full nav row is dropped, so surface the guided tour
-              and the secondary menu here, keeping the tour reachable at the
-              360px floor. The launcher is mounted directly (not inside the
-              dismissable menu) so its node never unmounts mid-tour: focus
-              restores to it on close even after a control was clicked, which a
-              click-outside dropdown would break (2.4.3). The notation toggle and
-              source link stay in the menu since they are secondary. */}
-          <div className="flex md:hidden items-center gap-2">
+          {/* Below md the full nav row is dropped, so surface the mobile nav,
+              the guided tour, and the secondary menu here, keeping every route
+              reachable at the 360px floor. MobileNav is the primary affordance
+              below md (it reaches all eight routes), so it sits first. It and the
+              launcher are mounted directly (NOT inside the dismissable menu) so
+              their nodes never unmount mid-interaction: focus restores to each on
+              close even after a control was clicked, which a click-outside
+              dropdown would break (2.4.3). The palette trigger sits inside the
+              menu (showPalette) rather than standalone so the sub-md cluster plus
+              the logo do not overflow the 360px floor; Ctrl/Cmd+K and the menu
+              both still open it. The notation toggle and source link stay in the
+              menu since they are secondary. */}
+          <div className="flex md:hidden items-center gap-1">
+            <MobileNav />
             <TourLauncher />
-            <SecondaryMenu showTour={false} />
+            <SecondaryMenu showTour={false} showPalette />
           </div>
         </div>
       </header>
 
       <Outlet />
+
+      {/* Mounted once here, a sibling of the header and Outlet inside
+          NotationProvider, so the single Ctrl/Cmd+K listener and the one dialog
+          serve every route with router + notation context (the same outlives-
+          the-route placement TourProvider uses for TourDialog). */}
+      <CommandPalette />
     </div>
+    </CommandPaletteProvider>
     </NotationProvider>
   )
 })

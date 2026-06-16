@@ -33,9 +33,12 @@ test.describe('multiview pane rendering', () => {
 
   test('all four panes show the quintuple caption (Q, Σ, δ, q₀, A)', async ({ page }) => {
     await gotoLoadedMultiView(page)
-    // The quintuple is rendered by PaneHeader for each pane.
-    const quintuples = page.locator('text=(Q, Σ, δ, q₀, A)')
-    // Four pane headers each show the quintuple.
+    // The quintuple is rendered by PaneHeader for each pane as its own element
+    // whose text is exactly the five-tuple. Match by exact text so the count is
+    // the four visible pane captions only, not the sr-only graph summaries each
+    // pane now carries (their description sentence opens with the same tuple but
+    // is not equal to it).
+    const quintuples = page.getByText('(Q, Σ, δ, q₀, A)', { exact: true })
     await expect(quintuples).toHaveCount(4)
   })
 
