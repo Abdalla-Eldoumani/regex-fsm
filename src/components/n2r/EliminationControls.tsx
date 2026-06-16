@@ -108,7 +108,7 @@ export function EliminationControls({
             onChange={e => onSpeedChange(Number(e.target.value))}
             className={
               'px-3 py-1 bg-surface-overlay border border-border rounded text-sm font-medium ' +
-              'text-text-hi hover:border-border-strong focus:outline-none cursor-pointer transition-all'
+              'text-text-hi hover:border-border-strong focus-visible:outline-none cursor-pointer transition-all'
             }
             title="Elimination speed"
             aria-label="Elimination animation speed"
