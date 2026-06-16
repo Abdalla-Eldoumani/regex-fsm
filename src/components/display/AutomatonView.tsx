@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import { Automaton } from '@/core/automata/types'
 import { SimulationResult } from '@/core/algorithms/simulate'
 import { AutomatonGraph, AutomatonGraphHandle } from '@/visualization/renderer'
+import { GraphSummary } from '../a11y'
 import { Tabs } from '../common/Tabs'
 import { TransitionTable } from './TransitionTable'
 import { StateList } from './StateList'
@@ -132,12 +133,16 @@ export function AutomatonView({
 
       <div className="flex-1 overflow-hidden relative">
         <div className={`absolute inset-0 bg-gradient-to-br from-surface to-surface-raised ${activeTab === 'graph' ? 'block' : 'hidden'}`}>
-          <AutomatonGraph
-            ref={graphRef}
-            automaton={automaton}
-            highlightStates={effectiveHighlightStates}
-            highlightEdges={effectiveHighlightEdges}
-          />
+          {/* Wrap only the graph in the role=img + sr-only summary; the legend stays
+              a sibling so it keeps its absolute position. */}
+          <GraphSummary automaton={automaton} ariaLabel="State diagram of the automaton">
+            <AutomatonGraph
+              ref={graphRef}
+              automaton={automaton}
+              highlightStates={effectiveHighlightStates}
+              highlightEdges={effectiveHighlightEdges}
+            />
+          </GraphSummary>
           {/* Legend — state-semantic tokens must match the Cytoscape graph exactly.
               The bridge in styles.ts reads --color-state-* via getComputedStyle;
               these swatches read the same variables via Tailwind utilities.
