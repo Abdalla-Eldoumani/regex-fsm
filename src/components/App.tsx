@@ -2,39 +2,122 @@ import { useState, useMemo, useCallback, useEffect } from 'react'
 import { parse, buildNFA, nfaToDFA, minimizeDFA, asuDirectDFA, brzozowskiDFA } from '@/core/cachedAlgorithms'
 import { simulateNFA, simulateDFA, SimulationResult } from '@/core/algorithms/simulate'
 import { DFA, TooLargeError } from '@/core/automata/types'
+import { decodeShareState, buildShareHash } from '@/share/shareCodec'
+import { toShareState, applyShareState, type AppShareFields } from '@/share/shareState'
+import { listSaved, saveCurrent, loadSaved, deleteSaved } from '@/share/savedLibrary'
 import { TooLargeNotice } from './common/TooLargeNotice'
 import { RegexInput } from './input/RegexInput'
 import { StringInput } from './input/StringInput'
 import { PatternBuilder } from './input/PatternBuilder'
 import { AutomatonView } from './display/AutomatonView'
 import { SimulationPanel } from './simulation/SimulationPanel'
+import { FailClosedNotice } from './share/FailClosedNotice'
+import { LoadedFromShareChip } from './share/LoadedFromShareChip'
+import { LibraryDialog } from './share/LibraryDialog'
 import { Hero } from './Hero'
 
 type ConstructionMethod = 'thompson' | 'asu' | 'brzozowski'
 
+// The default home scratchpad fields and the outcome of reading an incoming share
+// hash. status drives the chip ('loaded') and the fail-closed banner ('failed').
+interface InitialState {
+  fields: AppShareFields
+  status: 'none' | 'loaded' | 'failed'
+}
+
+const DEFAULT_FIELDS: AppShareFields = {
+  regex: '',
+  alphabet: '',
+  testString: '',
+  constructionMethod: 'thompson',
+  shouldMinimize: true,
+  useLetterNames: false,
+}
+
+// Read the incoming share hash ONCE and resolve the initial scratchpad. This is
+// the only place that touches window.location.hash. It delegates all parsing to
+// the fail-closed codec (decodeShareState never throws and returns null-or-valid):
+// a valid regex document seeds the fields and marks the view loaded-from-share; a
+// null decode, or an automaton document the home view cannot apply, leaves the
+// safe default fields and flags the calm fail-closed banner. Reading at first
+// render via a lazy useState initializer (not an effect) keeps a malformed hash
+// from ever driving a setState-in-effect cascade and keeps the load synchronous.
+function readInitialState(): InitialState {
+  if (typeof window === 'undefined') return { fields: DEFAULT_FIELDS, status: 'none' }
+  const match = /^#s=(.+)$/.exec(window.location.hash)
+  if (!match) return { fields: DEFAULT_FIELDS, status: 'none' }
+  const decoded = decodeShareState(match[1])
+  if (decoded === null) return { fields: DEFAULT_FIELDS, status: 'failed' }
+  const fields = applyShareState(decoded)
+  if (fields === null) return { fields: DEFAULT_FIELDS, status: 'failed' }
+  return { fields, status: 'loaded' }
+}
+
 function App() {
-  const [regex, setRegex] = useState('')
-  const [alphabet, setAlphabet] = useState('')
-  const [testString, setTestString] = useState('')
+  // Resolve any incoming shared link exactly once, before the first paint.
+  const [initial] = useState<InitialState>(readInitialState)
+
+  const [regex, setRegex] = useState(initial.fields.regex)
+  const [alphabet, setAlphabet] = useState(initial.fields.alphabet)
+  const [testString, setTestString] = useState(initial.fields.testString)
   const [simulationMode, setSimulationMode] = useState<'nfa' | 'dfa' | 'both'>('nfa')
   const [nfaHighlightStates, setNfaHighlightStates] = useState<string[]>([])
   const [dfaHighlightStates, setDfaHighlightStates] = useState<string[]>([])
   const [nfaHighlightEdges, setNfaHighlightEdges] = useState<string[]>([])
   const [dfaHighlightEdges, setDfaHighlightEdges] = useState<string[]>([])
   const [autoBuild, setAutoBuild] = useState(true)
-  const [shouldMinimize, setShouldMinimize] = useState(true)
-  const [useLetterNames, setUseLetterNames] = useState(false)
-  const [constructionMethod, setConstructionMethod] = useState<ConstructionMethod>('thompson')
+  const [shouldMinimize, setShouldMinimize] = useState(initial.fields.shouldMinimize)
+  const [useLetterNames, setUseLetterNames] = useState(initial.fields.useLetterNames)
+  const [constructionMethod, setConstructionMethod] = useState<ConstructionMethod>(initial.fields.constructionMethod)
 
-  // Debounced regex for heavy computation (300ms delay)
-  const [debouncedRegex, setDebouncedRegex] = useState('')
+  // Share / load-from-hash state (SHARE-01/02). loadError drives the fail-closed
+  // banner; loadedFromShare drives the loaded-from-a-shared-link chip. Both are
+  // dismissible and, once dismissed, do not reappear within the session. They are
+  // seeded from the one-time hash read so no effect-setState cascade is needed.
+  const [loadError, setLoadError] = useState(initial.status === 'failed')
+  const [loadedFromShare, setLoadedFromShare] = useState(initial.status === 'loaded')
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false)
+
+  // Direct DFA state (for pattern builder direct construction). Declared before
+  // the callbacks that call setDirectDfa so the compiler can preserve their
+  // memoization (a setter referenced before its declaration breaks the chain).
+  const [directDfa, setDirectDfa] = useState<DFA | null>(null)
+
+  // Debounced regex for heavy computation (300ms delay). Seeded from the resolved
+  // initial regex so a shared link builds its automata on the first pass.
+  const [debouncedRegex, setDebouncedRegex] = useState(initial.fields.regex)
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedRegex(regex), 300)
     return () => clearTimeout(timer)
   }, [regex])
 
-  // Direct DFA state (for pattern builder direct construction)
-  const [directDfa, setDirectDfa] = useState<DFA | null>(null)
+  // After the one-time read, strip the payload from the address bar without a
+  // navigation so a refresh starts clean and the hash is not mistaken for live
+  // state. This effect performs no setState, so it does not trigger a re-render.
+  useEffect(() => {
+    if (initial.status === 'none') return
+    window.history.replaceState(null, '', window.location.pathname + window.location.search)
+  }, [initial.status])
+
+  // Apply a validated ShareState to the home scratchpad. The codec has already run
+  // the full fail-closed validation, so this only maps the regex-document fields
+  // back onto App state (an automaton document returns null from applyShareState
+  // and is not applied here). Used by the Library load path. Decoded values flow
+  // through React state and text interpolation only, never an HTML sink (T-12-15).
+  const applyShared = useCallback((state: ReturnType<typeof decodeShareState>): boolean => {
+    if (state === null) return false
+    const fields = applyShareState(state)
+    if (fields === null) return false
+    setDirectDfa(null)
+    setRegex(fields.regex)
+    setDebouncedRegex(fields.regex)
+    setAlphabet(fields.alphabet)
+    setTestString(fields.testString)
+    setConstructionMethod(fields.constructionMethod)
+    setShouldMinimize(fields.shouldMinimize)
+    setUseLetterNames(fields.useLetterNames)
+    return true
+  }, [])
 
   // Compute effective alphabet from inputs
   const effectiveAlphabet = useMemo(() => {
@@ -174,11 +257,48 @@ function App() {
     setRegex(pattern)
   }, [])
 
+  // Snapshot the current scratchpad as a ShareState. Used by both the Share button
+  // (which builds the hash URL) and the Library dialog (which saves it). The
+  // alphabet boundary (App string <-> ShareState string[]) lives in toShareState.
+  const buildSharePayload = useCallback(() => {
+    return toShareState({
+      regex,
+      alphabet,
+      testString,
+      constructionMethod,
+      shouldMinimize,
+      useLetterNames,
+    })
+  }, [regex, alphabet, testString, constructionMethod, shouldMinimize, useLetterNames])
+
+  // The hash a Share click copies. Pure string assembly over the current state.
+  const buildHash = useCallback(() => buildShareHash(buildSharePayload()), [buildSharePayload])
+
+  // Load a saved automaton: re-validate its stored payload through the same
+  // fail-closed codec the URL surface uses (untrusted at rest), apply it on a pass,
+  // and surface the loaded-from-share chip exactly as a shared URL does.
+  const handleLibraryLoad = useCallback((id: string) => {
+    const decoded = loadSaved(id)
+    if (decoded !== null && applyShared(decoded)) {
+      setLoadedFromShare(true)
+      setIsLibraryOpen(false)
+    }
+  }, [applyShared])
+
   const isDirectMethod = constructionMethod !== 'thompson'
 
   return (
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 relative z-10">
+
+        {/* Fail-closed banner (SHARE-02): the first thing read when an incoming
+            hash failed to decode. It is a banner over the usable default, not a
+            modal, so it does not block the page. */}
+        {loadError && (
+          <section>
+            <FailClosedNotice onDismiss={() => setLoadError(false)} />
+          </section>
+        )}
 
         {/* The live-automaton signature, decorative (aria-hidden inside Hero).
             Shares the page gutter and the section rhythm of the views below. */}
@@ -190,10 +310,17 @@ function App() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative">
             <div className="lg:col-span-2 space-y-6">
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  {/* Decorative accent bar — brand chrome, not a state color */}
-                  <div className="w-1.5 h-6 bg-gradient-to-b from-brand to-brand-pressed rounded-full"></div>
-                  <h2 className="text-xl font-display font-bold text-text-hi">Pattern</h2>
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <div className="flex items-center gap-2">
+                    {/* Decorative accent bar -- brand chrome, not a state color */}
+                    <div className="w-1.5 h-6 bg-gradient-to-b from-brand to-brand-pressed rounded-full"></div>
+                    <h2 className="text-xl font-display font-bold text-text-hi">Pattern</h2>
+                  </div>
+                  {/* Loaded-from-share chip (SHARE-01): neutral chrome, shows only
+                      after a valid restore, dismissible for the session. */}
+                  {loadedFromShare && (
+                    <LoadedFromShareChip onDismiss={() => setLoadedFromShare(false)} />
+                  )}
                 </div>
                 <p className="text-sm text-text-mid mb-5 ml-3.5">Enter a regular expression to generate the automata.</p>
                 <div className="space-y-4">
@@ -297,6 +424,25 @@ function App() {
                     </span>
                   </label>
                 </div>
+
+                {/* Saved-automata library launcher (SHARE-04). One home-view
+                    control; Save current lives inside the dialog. */}
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsLibraryOpen(true)}
+                    className="cursor-pointer min-h-[44px] w-full px-4 py-2 text-xs font-semibold text-text-mid hover:text-brand-hover border border-border hover:border-border-strong bg-surface-raised hover:bg-surface-overlay rounded-lg transition-all shadow-sm flex items-center justify-center gap-2"
+                    aria-haspopup="dialog"
+                    aria-expanded={isLibraryOpen}
+                    data-testid="library-open"
+                  >
+                    {/* Bookmark glyph -- aria-hidden; the text carries the meaning. */}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4" aria-hidden="true">
+                      <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                    </svg>
+                    Saved automata
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -399,6 +545,7 @@ function App() {
                   highlightStates={simulationMode === 'nfa' || simulationMode === 'both' ? nfaHighlightStates : []}
                   highlightEdges={simulationMode === 'nfa' || simulationMode === 'both' ? nfaHighlightEdges : []}
                   simulationResult={simulationMode === 'nfa' || simulationMode === 'both' ? nfaSimResult : null}
+                  onBuildShareHash={buildHash}
                 />
               </div>
             </article>
@@ -459,6 +606,7 @@ function App() {
                     highlightStates={dfaHighlightStates}
                     highlightEdges={dfaHighlightEdges}
                     simulationResult={dfaSimResult}
+                    onBuildShareHash={buildHash}
                   />
                 )}
               </div>
@@ -487,6 +635,22 @@ function App() {
           </section>
         )}
       </main>
+
+      {/* Saved-automata library dialog (SHARE-04). Save current, list, load
+          (through the SHARE-02 validator via handleLibraryLoad), and delete.
+          Mounted only while open so its list is read fresh from storage each
+          time it opens (the dialog seeds its state from a lazy initializer). */}
+      {isLibraryOpen && (
+        <LibraryDialog
+          isOpen={isLibraryOpen}
+          onClose={() => setIsLibraryOpen(false)}
+          buildPayload={buildSharePayload}
+          onLoad={handleLibraryLoad}
+          listSaved={listSaved}
+          saveCurrent={saveCurrent}
+          deleteSaved={deleteSaved}
+        />
+      )}
 
       <footer className="mt-16 py-10 border-t border-border bg-surface relative z-10">
         <div className="max-w-7xl mx-auto px-4 text-center">

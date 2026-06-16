@@ -51,6 +51,7 @@ export const RegexInput = memo(function RegexInput({ value, onChange, alphabet, 
           type="text"
           value={value}
           onChange={handleChange}
+          data-testid="regex-input"
           className={`w-full px-5 min-h-[44px] py-3 bg-surface border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus:outline-none transition-all ${
             error
               ? 'border-error'
