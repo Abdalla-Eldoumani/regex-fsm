@@ -1,13 +1,56 @@
 import cytoscape from 'cytoscape'
+import { Automaton } from '@/core/automata/types'
+import { automatonToSVG, type SvgColors, type Pt } from './automatonToSVG'
+import { layoutCache } from './layoutCache'
 
 // Read a theme token from :root, the same bridge styles.ts uses, so an exported
 // file matches the live design tokens instead of a stale hardcoded palette.
-// Fallbacks mirror .agent/DESIGN_SYSTEM.md. Full export-color fidelity (per-role
-// fills, the non-color cues) and TikZ output are Phase 12; this only removes the
-// stale Catppuccin hex and points export at the live tokens.
+// Fallbacks mirror the design-system spec hex. This stays the live-token bridge
+// for every export path: the pure serializers take colors as an argument, and this
+// reader is where those colors are resolved at click time (after index.css loads).
 function token(name: string, fallback: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
   return value || fallback
+}
+
+// Resolve the eight export colors from the live tokens once. These are the exact
+// tokens styles.ts reads, so an exported SVG matches the on-screen graph: the
+// state-semantic fills carry through and the non-color cues (double ring, dashed
+// trap, start arrow) draw in the right colors.
+function readSvgColors(): SvgColors {
+  return {
+    bg: token('--color-bg', '#0E1117'),
+    nodeFill: token('--color-surface-raised', '#1D222D'),
+    stroke: token('--color-border-strong', '#626D86'),
+    edge: token('--color-text-mid', '#9AA3B5'),
+    text: token('--color-text-hi', '#E8EBF2'),
+    start: token('--color-state-start', '#56B4E9'),
+    accept: token('--color-state-accept', '#2BB17A'),
+    trap: token('--color-state-trap', '#CB7BB0'),
+  }
+}
+
+// Trigger a client-side download of a Blob. Shared by every export path so the
+// blob-url lifecycle (create, click, revoke) lives in one place.
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+// Download a text payload as a file. Plan 04's export menu calls this for the
+// model-driven text formats (TikZ, Markdown, CSV) produced by the pure
+// serializers, so each serializer stays a pure string function and the download
+// side effect is here.
+export function downloadText(
+  filename: string,
+  content: string,
+  mimeType: string = 'text/plain;charset=utf-8'
+): void {
+  downloadBlob(new Blob([content], { type: mimeType }), filename)
 }
 
 export function exportAsPNG(cy: cytoscape.Core, filename: string = 'automaton.png') {
@@ -19,80 +62,29 @@ export function exportAsPNG(cy: cytoscape.Core, filename: string = 'automaton.pn
   })
 
   if (png instanceof Blob) {
-    const url = URL.createObjectURL(png)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    link.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(png, filename)
   }
 }
 
-export function exportAsSVG(cy: cytoscape.Core, filename: string = 'automaton.svg') {
-  const json = cy.json()
-  const nodes = json.elements?.nodes || []
-  const edges = json.elements?.edges || []
-
-  const bg = token('--color-bg', '#0E1117')
-  const nodeFill = token('--color-surface-raised', '#1D222D')
-  const stroke = token('--color-border-strong', '#626D86')
-  const edgeColor = token('--color-text-mid', '#9AA3B5')
-  const nodeText = token('--color-text-hi', '#E8EBF2')
-
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
-    <rect width="100%" height="100%" fill="${bg}"/>
-    <g>`
-
-  nodes.forEach((node) => {
-    const x = node.position?.x || 0
-    const y = node.position?.y || 0
-    const id = node.data?.id || ''
-    svg += `<circle cx="${x}" cy="${y}" r="20" fill="${nodeFill}" stroke="${stroke}" stroke-width="2"/>
-      <text x="${x}" y="${y + 5}" text-anchor="middle" fill="${nodeText}" font-size="14">${id}</text>`
-  })
-
-  edges.forEach((edge) => {
-    const edgeData = edge.data as { source?: string; target?: string; label?: string }
-    const sourceId = edgeData.source
-    const targetId = edgeData.target
-
-    const sourceNode = nodes.find((n) => n.data?.id === sourceId)
-    const targetNode = nodes.find((n) => n.data?.id === targetId)
-
-    if (sourceNode?.position && targetNode?.position) {
-      const x1 = sourceNode.position.x
-      const y1 = sourceNode.position.y
-      const x2 = targetNode.position.x
-      const y2 = targetNode.position.y
-      svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${edgeColor}" stroke-width="2" marker-end="url(#arrowhead)"/>`
-    }
-  })
-
-  svg += `</g>
-    <defs>
-      <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-        <polygon points="0 0, 10 3, 0 6" fill="${edgeColor}"/>
-      </marker>
-    </defs>
-  </svg>`
-
-  const blob = new Blob([svg], { type: 'image/svg+xml' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
+// Corrected SVG export. The old body serialized cy.json straight-line geometry
+// inside a fixed 800x600 box, dropping labels and symbols; it is replaced by the
+// pure model-driven automatonToSVG, which fixes all seven documented defects.
+//
+// Signature change for Plan 04: exportAsSVG now takes the Automaton (the
+// authoritative model the SVG is built from) instead of the Cytoscape handle,
+// because the serializer draws from the model, not the view. Cached layout
+// positions are reused when present so the export matches the on-screen layout;
+// when absent the serializer computes its own deterministic placement. Plan 04
+// wires the AutomatonView call site to pass the automaton.
+export function exportAsSVG(automaton: Automaton, filename: string = 'automaton.svg') {
+  const cached = layoutCache.getPositions(automaton)
+  const positions: Record<string, Pt> = cached ?? {}
+  const svg = automatonToSVG(automaton, positions, readSvgColors())
+  downloadText(filename, svg, 'image/svg+xml')
 }
 
 export function exportAsJSON(cy: cytoscape.Core, filename: string = 'automaton.json') {
   const json = cy.json()
   const jsonStr = JSON.stringify(json, null, 2)
-  const blob = new Blob([jsonStr], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
+  downloadText(filename, jsonStr, 'application/json')
 }
