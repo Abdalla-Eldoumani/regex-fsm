@@ -13,7 +13,9 @@ interface TourContextValue {
   totalSteps: number
   // The launcher registers its own ref here so focus restores there on close.
   triggerRef: RefObject<HTMLElement | null>
-  open: (pathId: string) => void
+  // triggerId records which launcher slot is the controller so only that one
+  // reports aria-expanded; it is the launcher's stable useId value.
+  open: (pathId: string, triggerId?: string) => void
   close: () => void
   next: () => void
   prev: () => void
@@ -28,6 +30,7 @@ const defaultState: TourState = {
   isOpen: false,
   pathId: null,
   stepIndex: 0,
+  activeTriggerId: null,
 }
 
 export const TourContext = createContext<TourContextValue>({
@@ -63,17 +66,19 @@ export function useTourState(): TourContextValue {
   const currentPath = state.pathId ? tourPaths[state.pathId] ?? null : null
   const totalSteps = currentPath?.lessons.length ?? 0
 
-  const open = useCallback((pathId: string) => {
+  const open = useCallback((pathId: string, triggerId?: string) => {
     setState(prev => {
       // Resume the last step when re-opening the same path; start at 0 otherwise.
       const resumeIndex = prev.pathId === pathId ? prev.stepIndex : 0
-      return { isOpen: true, pathId, stepIndex: resumeIndex }
+      // Record which launcher opened the tour so only it reports aria-expanded.
+      return { isOpen: true, pathId, stepIndex: resumeIndex, activeTriggerId: triggerId ?? null }
     })
   }, [])
 
   const close = useCallback(() => {
     // Keep pathId and stepIndex so the next open resumes where the learner left.
-    setState(prev => ({ ...prev, isOpen: false }))
+    // Clear the controller id so no launcher reports aria-expanded once closed.
+    setState(prev => ({ ...prev, isOpen: false, activeTriggerId: null }))
   }, [])
 
   const next = useCallback(() => {
@@ -86,9 +91,10 @@ export function useTourState(): TourContextValue {
       const path = prev.pathId ? tourPaths[prev.pathId] : undefined
       if (!path) return prev
       const nextIndex = prev.stepIndex + 1
-      // Past the last lesson, Next finishes the tour.
+      // Past the last lesson, Next finishes the tour. Clear the controller id so
+      // no launcher reports aria-expanded after Finish.
       if (nextIndex >= path.lessons.length) {
-        return { ...prev, isOpen: false }
+        return { ...prev, isOpen: false, activeTriggerId: null }
       }
       return { ...prev, stepIndex: nextIndex }
     })
