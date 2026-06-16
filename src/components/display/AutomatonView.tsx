@@ -143,29 +143,29 @@ export function AutomatonView({
               highlightEdges={effectiveHighlightEdges}
             />
           </GraphSummary>
-          {/* Legend — state-semantic tokens must match the Cytoscape graph exactly.
+          {/* Legend -- state-semantic tokens must match the Cytoscape graph exactly.
               The bridge in styles.ts reads --color-state-* via getComputedStyle;
               these swatches read the same variables via Tailwind utilities.
               This is the no-drift contract: same token = same color in graph + legend. */}
           <div className="absolute bottom-4 left-4 p-3 bg-surface/95 backdrop-blur-sm border border-border rounded-xl shadow-lg text-xs">
             <div className="font-bold text-text-mid mb-2 uppercase tracking-wider text-[10px]">Legend</div>
             <div className="space-y-1.5">
-              {/* Start — blue; non-color cue: incoming arrow glyph */}
+              {/* Start -- blue; non-color cue: incoming arrow glyph */}
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full border-[3px] border-state-start bg-state-start-soft"></div>
                 <span className="text-text-mid">Start State</span>
               </div>
-              {/* Accept — green; non-color cue: double ring (border-double) */}
+              {/* Accept -- green; non-color cue: double ring (border-double) */}
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full border-[4px] border-double border-state-accept bg-state-accept-soft"></div>
                 <span className="text-text-mid">Accept State</span>
               </div>
-              {/* Trap — mauve; non-color cue: dashed stroke + dimmed fill */}
+              {/* Trap -- mauve; non-color cue: dashed stroke + dimmed fill */}
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full border-[2px] border-dashed border-state-trap bg-state-trap-soft opacity-80"></div>
                 <span className="text-text-mid">Trap State</span>
               </div>
-              {/* Active (simulation) — amber; non-color cue: thicker stroke
+              {/* Active (simulation) -- amber; non-color cue: thicker stroke
                   (border-[3px], matching the graph's border-width: 3 active node).
                   The ring halo stays for visual punch but the thicker border is the cue. */}
               <div className="flex items-center gap-2">
@@ -195,7 +195,7 @@ export function AutomatonView({
           {activeTab === 'info' && (
             <div className="p-8 max-w-2xl mx-auto space-y-8">
               <div className="grid grid-cols-2 gap-6">
-                {/* Stat cards — brand chrome, not state-semantic */}
+                {/* Stat cards -- brand chrome, not state-semantic */}
                 <div className="p-6 rounded-2xl bg-gradient-to-br from-brand-tint to-transparent border border-border text-center hover:border-border-strong transition-all">
                    <div className="text-xs font-bold text-text-low uppercase tracking-widest mb-3">Total States</div>
                    <div className="text-5xl font-display font-black text-brand-hover">{automaton.states.length}</div>
@@ -208,7 +208,7 @@ export function AutomatonView({
 
               <div className="space-y-6">
                 <div>
-                  {/* Start State role label — uses state-semantic token, not brand */}
+                  {/* Start State role label -- uses state-semantic token, not brand */}
                   <h4 className="text-sm font-bold text-text-mid uppercase tracking-wider mb-3 flex items-center gap-2">
                     <div className="w-1 h-4 bg-state-start rounded-full"></div>
                     Start State
@@ -219,7 +219,7 @@ export function AutomatonView({
                 </div>
 
                 <div>
-                  {/* Accept States role label — uses state-semantic token */}
+                  {/* Accept States role label -- uses state-semantic token */}
                   <h4 className="text-sm font-bold text-text-mid uppercase tracking-wider mb-3 flex items-center gap-2">
                     <div className="w-1 h-4 bg-state-accept rounded-full"></div>
                     Accept States
@@ -234,7 +234,7 @@ export function AutomatonView({
                 </div>
 
                 <div>
-                  {/* Alphabet — neutral chrome, symbols are not a state role */}
+                  {/* Alphabet -- neutral chrome, symbols are not a state role */}
                   <h4 className="text-sm font-bold text-text-mid uppercase tracking-wider mb-3 flex items-center gap-2">
                     <div className="w-1 h-4 bg-border-strong rounded-full"></div>
                     Alphabet
