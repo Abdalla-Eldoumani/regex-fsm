@@ -2,6 +2,7 @@ import type { JSX } from 'react'
 import { useMemo } from 'react'
 import { useAutomatonEditor } from '@/hooks/useAutomatonEditor'
 import { AutomatonGraph } from '@/visualization/renderer'
+import { GraphSummary } from '@/components/a11y'
 import { isDeterministic } from '@/core/automata/dfa'
 import { EditorPanel } from './EditorPanel'
 
@@ -131,14 +132,16 @@ export function EditorView(): JSX.Element {
               </div>
             </div>
           )}
-          <AutomatonGraph
-            automaton={automaton}
-            edgeIds={edgeIds}
-            editable
-            onAddStateAt={dispatchers.addStateAt}
-            onDrawEdge={dispatchers.drawEdge}
-            onSelect={dispatchers.setSelection}
-          />
+          <GraphSummary automaton={automaton} ariaLabel="State diagram of the automaton you are building">
+            <AutomatonGraph
+              automaton={automaton}
+              edgeIds={edgeIds}
+              editable
+              onAddStateAt={dispatchers.addStateAt}
+              onDrawEdge={dispatchers.drawEdge}
+              onSelect={dispatchers.setSelection}
+            />
+          </GraphSummary>
         </div>
 
         {/* Control panel: sidebar on lg+, bottom-sheet on mobile */}
