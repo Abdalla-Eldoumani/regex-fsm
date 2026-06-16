@@ -107,7 +107,7 @@ test('the DFA run consumes the tape and shows an accept-or-reject verdict frame'
 // ---------------------------------------------------------------------------
 // NFA RUN (SIM-02): more than one active state at a branching step + a
 // correct-shaped computation tree (accepting leaf for the accepting source,
-// dead branch for the dying source). The configuration-set DAG (plan 01)
+// dead branch for the dying source). The configuration-set DAG
 // merges parallel branches and only marks a node dead when its whole set loses
 // its successor, so a live accepting leaf and a dead sibling never share one
 // tree; the accept cue and the dead cue are therefore asserted across two
