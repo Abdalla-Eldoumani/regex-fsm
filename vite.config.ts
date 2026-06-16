@@ -38,7 +38,10 @@ export default defineConfig({
     testTimeout: 20000,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
-    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+    // Co-located module suites (the share codec and its siblings) live next to
+    // the code they prove under src/, so the runner discovers src/**/*.test.ts in
+    // addition to the tests/ tree.
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx', 'src/**/*.test.ts', 'src/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
