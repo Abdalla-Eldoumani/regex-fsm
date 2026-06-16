@@ -53,14 +53,19 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
   return (
     <div className="overflow-x-auto overflow-y-auto rounded-lg border border-border max-h-[800px] min-h-[400px]">
       <table className="w-full border-collapse text-sm min-w-max">
+        {/* sr-only caption names the table as the transition function δ for the same
+            automaton the diagram renders, so AT announces the table's purpose. Hidden
+            from sighted users (the visible layout is unchanged) but in the a11y tree. */}
+        <caption className="sr-only">Transition function δ for the automaton</caption>
         <thead>
           <tr className="bg-surface-raised">
-            <th className="px-4 py-3 text-left border-b border-r border-border text-text-mid font-semibold">
+            <th scope="col" className="px-4 py-3 text-left border-b border-r border-border text-text-mid font-semibold">
               State
             </th>
             {columns.map(symbol => (
               <th
                 key={symbol}
+                scope="col"
                 className="px-4 py-3 text-center border-b border-border text-text-mid font-semibold"
               >
                 {/* Symbol column header — neutral bg, not a state role */}
@@ -81,7 +86,10 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
 
             return (
               <tr key={state.id} className={`${rowClasses} transition-colors`}>
-                <td className="px-4 py-3 border-r border-border border-b border-border/50 font-mono">
+                {/* Row header: scope="row" ties this state to its δ cells for AT. It
+                    is a th, not a td, but keeps the identical className so the visual
+                    styling is unchanged (font-weight is reset by the flex content). */}
+                <th scope="row" className="px-4 py-3 border-r border-border border-b border-border/50 font-mono">
                   <div className="flex items-center gap-2 max-w-[200px]">
                     {isStartState(state.id) && (
                       // → glyph uses state-start color — matches graph and legend exactly
@@ -105,7 +113,7 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
                       <span className="text-state-trap text-xs flex-shrink-0" title="Trap State">⊗</span>
                     )}
                   </div>
-                </td>
+                </th>
                 {alphabet.map(symbol => {
                   const targets = getTransitions(state.id, symbol)
                   return (
