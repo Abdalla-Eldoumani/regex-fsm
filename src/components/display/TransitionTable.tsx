@@ -68,7 +68,7 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
                 scope="col"
                 className="px-4 py-3 text-center border-b border-border text-text-mid font-semibold"
               >
-                {/* Symbol column header — neutral bg, not a state role */}
+                {/* Symbol column header -- neutral bg, not a state role */}
                 <code className="px-2 py-1 bg-bg rounded border border-border text-text-hi font-mono text-xs">{symbol}</code>
               </th>
             ))}
@@ -92,7 +92,7 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
                 <th scope="row" className="px-4 py-3 border-r border-border border-b border-border/50 font-mono">
                   <div className="flex items-center gap-2 max-w-[200px]">
                     {isStartState(state.id) && (
-                      // → glyph uses state-start color — matches graph and legend exactly
+                      // → glyph uses state-start color -- matches graph and legend exactly
                       <span className="text-state-start text-xs flex-shrink-0" title="Start State">→</span>
                     )}
                     <span
@@ -105,11 +105,11 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
                       {state.id}
                     </span>
                     {isAcceptState(state.id) && (
-                      // ✓ glyph uses state-accept color — matches graph and legend exactly
+                      // ✓ glyph uses state-accept color -- matches graph and legend exactly
                       <span className="text-state-accept text-xs flex-shrink-0" title="Accept State">✓</span>
                     )}
                     {isTrapState(state.id) && (
-                      // ⊗ glyph uses state-trap color — matches graph and legend exactly
+                      // ⊗ glyph uses state-trap color -- matches graph and legend exactly
                       <span className="text-state-trap text-xs flex-shrink-0" title="Trap State">⊗</span>
                     )}
                   </div>
@@ -151,7 +151,7 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
         </tbody>
       </table>
 
-      {/* Legend footer — state-semantic tokens (no-drift contract) */}
+      {/* Legend footer -- state-semantic tokens (no-drift contract) */}
       <div className="mt-4 px-2 text-xs text-text-low space-y-1">
         <div className="flex items-center gap-2">
           <span className="text-state-start">→</span>
