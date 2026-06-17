@@ -13,10 +13,10 @@ import {
 // "contradiction" a lie, so each documented edge is pinned with a named test.
 //
 // The named edges come straight from 08-RESEARCH.md:
-//   Pitfall 3 — a^n b^n uses n >= 0 (course N0 includes 0), so the empty string
+//   Pitfall 3 -- a^n b^n uses n >= 0 (course N0 includes 0), so the empty string
 //               (lambda, the n = 0 case) is IN the language. A predicate that
 //               rejects "" is wrong against the stated definition.
-//   Pitfall 2 — ww = { uu : u in Sigma* } is subtle: even length is necessary but
+//   Pitfall 2 -- ww = { uu : u in Sigma* } is subtle: even length is necessary but
 //               not sufficient; the two halves must be identical. Odd length and
 //               unequal halves are the edges that catch a naive predicate.
 
@@ -38,12 +38,12 @@ describe('anbn predicate (PUMP-02, { aⁿbⁿ : n ≥ 0 })', () => {
   })
 
   it.each([
-    { s: 'aab', why: 'two a then one b — unequal counts' },
-    { s: 'abb', why: 'one a then two b — unequal counts' },
-    { s: 'ba', why: 'a b before any a — out of order, the a-run is empty' },
-    { s: 'abab', why: 'interleaved — not a-run then b-run' },
-    { s: 'b', why: 'a single b — zero a, one b' },
-    { s: 'a', why: 'a single a — one a, zero b' },
+    { s: 'aab', why: 'two a then one b -- unequal counts' },
+    { s: 'abb', why: 'one a then two b -- unequal counts' },
+    { s: 'ba', why: 'a b before any a -- out of order, the a-run is empty' },
+    { s: 'abab', why: 'interleaved -- not a-run then b-run' },
+    { s: 'b', why: 'a single b -- zero a, one b' },
+    { s: 'a', why: 'a single a -- one a, zero b' },
   ])('rejects $s ($why)', ({ s }) => {
     expect(anbn.member(s)).toBe(false)
   })
@@ -119,9 +119,9 @@ describe('anbncn predicate (bonus, { aⁿbⁿcⁿ : n ≥ 0 })', () => {
   })
 
   it.each([
-    { s: 'aabbc', why: 'two a, two b, one c — c-run short' },
-    { s: 'abcc', why: 'one a, one b, two c — c-run too long' },
-    { s: 'aabbcca', why: 'an a after the c-run — out of order' },
+    { s: 'aabbc', why: 'two a, two b, one c -- c-run short' },
+    { s: 'abcc', why: 'one a, one b, two c -- c-run too long' },
+    { s: 'aabbcca', why: 'an a after the c-run -- out of order' },
   ])('rejects $s ($why)', ({ s }) => {
     expect(anbncn.member(s)).toBe(false)
   })

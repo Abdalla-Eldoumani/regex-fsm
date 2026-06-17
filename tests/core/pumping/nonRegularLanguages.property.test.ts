@@ -12,7 +12,7 @@ import { findPumpExit } from '@/core/pumping/pumpingGame'
 // exhaustive enumeration over a bounded domain, seeded so any counterexample
 // reproduces, decided by the production predicate. Full enumeration of the legal
 // splits makes the headline property a DECISION over those splits, not a
-// probabilistic sample. Per SKILL.md and the root CLAUDE.md: if a property finds a
+// probabilistic sample. Per the project conventions: if a property finds a
 // counterexample it becomes a named unit test and the SOURCE (Plan 01) is fixed;
 // the property is never loosened and no assertion is weakened.
 //
@@ -180,7 +180,7 @@ describe('the non-regularity proof: every legal split admits a pump exit (PUMP-0
   //     x = "", y = "a", z = a^{p-1}: pumping y just changes the number of a's,
   //     which stays in a^*, so findPumpExit returns null. If the headline
   //     assertion (findPumpExit non-null) were run against this regular control it
-  //     would FAIL — which is exactly why a non-null result for a^n b^n and ww is a
+  //     would FAIL -- which is exactly why a non-null result for a^n b^n and ww is a
   //     genuine consequence of their non-regularity and not an artifact of the
   //     enumeration. This mirrors the T-07-VACUOUS guard in
   //     product.property.test.ts.

@@ -24,7 +24,7 @@ test('home route makes zero requests to external font hosts', async ({ page }) =
   await gotoLoadedHome(page)
 
   // All three fonts (Space Grotesk, Hanken Grotesk, JetBrains Mono) are
-  // self-hosted via Fontsource — no Google Fonts request should ever be made.
+  // self-hosted via Fontsource -- no Google Fonts request should ever be made.
   expect(externalFontRequests).toEqual([])
 })
 

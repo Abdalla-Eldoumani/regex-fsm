@@ -15,7 +15,7 @@ const MONO = 'JetBrains Mono Variable, ui-monospace, monospace'
 export function getStylesheet(): StyleRule[] {
   // Read each token from :root via getComputedStyle, resolved once per build
   // after index.css is loaded (called from the renderer's mount effect). The
-  // empty-string `||` fallbacks mirror .agent/DESIGN_SYSTEM.md exactly so a
+  // empty-string `||` fallbacks mirror the design tokens exactly so a
   // too-early read never yields a black or transparent node.
   const root = document.documentElement
   const style = getComputedStyle(root)

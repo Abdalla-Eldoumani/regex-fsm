@@ -339,7 +339,7 @@ export default function NfaToRegexView(): JSX.Element {
           </div>
         ) : derivation.result ? (
           <>
-            {/* Graph region — highlighted state is the eliminated state (.active) */}
+            {/* Graph region -- highlighted state is the eliminated state (.active) */}
             <div
               data-testid="n2r-canvas"
               className="rounded-xl border border-border bg-surface overflow-hidden"

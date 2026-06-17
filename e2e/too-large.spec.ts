@@ -36,7 +36,7 @@ async function selectConstructionMethod(
 // The L_9 language over {0,1}: strings whose 9th-from-last character is '1'.
 // Its minimal DFA has exactly 2^9 = 512 states (Myhill-Nerode theorem).
 // Brzozowski derivatives construct the minimal DFA directly, so it reaches
-// exactly 512 derivative classes — well above the 256-state cap
+// exactly 512 derivative classes -- well above the 256-state cap
 // (BOUNDS.MAX_DFA_STATES). This is the exact pattern verified in the unit
 // tests (tests/core/algorithms/brzozowski.test.ts). Using '+' (course-mode
 // union glyph) rather than '|'.
@@ -45,7 +45,7 @@ const BLOWUP_REGEX = '(0+1)*1(0+1)(0+1)(0+1)(0+1)(0+1)(0+1)(0+1)(0+1)'
 test('too-large construction renders TooLargeNotice and page stays interactive', async ({ page }) => {
   await gotoLoadedHome(page)
 
-  // Switch to Brzozowski — this is the verified blow-up path. It hits the
+  // Switch to Brzozowski -- this is the verified blow-up path. It hits the
   // state-cap directly because derivatives of L_9 span exactly 512 classes,
   // and the guard fires as soon as the 257th state is discovered.
   await selectConstructionMethod(page, 'brzozowski')
@@ -66,7 +66,7 @@ test('too-large construction renders TooLargeNotice and page stays interactive',
 
   // LIVENESS PROOF: The main thread must be responsive after the blow-up.
   // Type into the input and read the value back. If the tab were frozen,
-  // Playwright's fill() would time out, causing a test failure — which is the
+  // Playwright's fill() would time out, causing a test failure -- which is the
   // definitive proof of a hang. We also provide an explicit assertion.
   await regexInput.clear()
   await regexInput.fill('ab')
@@ -74,7 +74,7 @@ test('too-large construction renders TooLargeNotice and page stays interactive',
   // The notice must vanish after the simple pattern replaces the blow-up.
   await expect(notice).toBeHidden({ timeout: 5_000 })
 
-  // The input holds the value we just typed — main thread is alive.
+  // The input holds the value we just typed -- main thread is alive.
   expect(await regexInput.inputValue()).toBe('ab')
 })
 
@@ -99,9 +99,9 @@ test('TooLargeNotice shows partial state count and page remains interactive', as
   await selectConstructionMethod(page, 'thompson')
   // On Thompson with the same blow-up, the notice should eventually disappear
   // (Thompson+Subset on L_9 may or may not exceed 256 DFA states, but the page
-  // must remain responsive regardless — that is the liveness assertion).
+  // must remain responsive regardless -- that is the liveness assertion).
   await page.waitForTimeout(600)
-  // Verify the page title is still visible — main thread is alive.
+  // Verify the page title is still visible -- main thread is alive.
   await expect(page.locator('h1', { hasText: 'RegexFSM' })).toBeVisible({ timeout: 3_000 })
 })
 

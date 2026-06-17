@@ -28,7 +28,7 @@ function sym(from: string, to: string, symbol: string | null): Transition {
   return { from, to, symbol }
 }
 
-// Preset 1: a* — single self-loop, accepts any number of a's.
+// Preset 1: a* -- single self-loop, accepts any number of a's.
 // States: q0 (start + accept). One transition q0 --a--> q0.
 // Elimination is trivial and produces `a*` in one step after the initial GNFA.
 const aStarNfa: NFA = {
@@ -39,7 +39,7 @@ const aStarNfa: NFA = {
   alphabet: new Set(['a']),
 }
 
-// Preset 2: a + b — two branches from one start to two accept states.
+// Preset 2: a + b -- two branches from one start to two accept states.
 // Recognizes exactly the strings "a" and "b".
 // Layout: q0 --a--> q1, q0 --b--> q2. Both q1, q2 are accept states.
 const aOrBNfa: NFA = {
@@ -69,12 +69,12 @@ const endsInAbNfa: NFA = {
   alphabet: new Set(['a', 'b']),
 }
 
-// Preset 4: (ab)* — strings of even length alternating a then b (including empty).
+// Preset 4: (ab)* -- strings of even length alternating a then b (including empty).
 // Derived via buildNFA(parse('(ab)*')) for correctness; frozen at load time so
 // the preset is deterministic across reloads.
 const abStarNfa: NFA = buildNFA(parse('(ab)*'))
 
-// Preset 5: contains "a" — any string over {a, b} that has at least one a.
+// Preset 5: contains "a" -- any string over {a, b} that has at least one a.
 // States: q0 (start), q1 (seen a, accept).
 // q0 --a--> q1, q0 --b--> q0, q1 --a--> q1, q1 --b--> q1.
 const containsANfa: NFA = {

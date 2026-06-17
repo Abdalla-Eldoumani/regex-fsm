@@ -1,13 +1,13 @@
 import type { JSX } from 'react'
 
-// StageExplanation: a dual-row panel — a plain-language sentence (font-sans) and
+// StageExplanation: a dual-row panel -- a plain-language sentence (font-sans) and
 // a course-notation symbolic row (font-mono). The shape mirrors StepExplanation's
 // icon + text layout from the education module, adapted for the pumping game's two-
 // tier explanation requirement (PUMP-02 / UI-SPEC gate 3).
 //
 // When tone === 'contradiction', the panel uses text-error to flag the verdict
-// visually. A "!" icon is paired with the error color (never color alone — CLAUDE.md
-// colorblind requirement). The notation row is also accented with text-error so the
+// visually. A "!" icon is paired with the error color (never color alone -- the
+// project colorblind requirement). The notation row is also accented with text-error so the
 // course form of the contradiction (e.g. xy²z ∉ L) reads as a failure clearly.
 
 interface StageExplanationProps {

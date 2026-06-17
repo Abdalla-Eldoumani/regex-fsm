@@ -39,7 +39,7 @@ test.describe('notation toggle', () => {
 
   test('keyboard: ArrowRight on course option activates textbook option', async ({ page }) => {
     await gotoLoadedHome(page)
-    // Focus the course option (roving tabindex — it has tabindex=0 by default)
+    // Focus the course option (roving tabindex -- it has tabindex=0 by default)
     const courseOption = page.getByRole('radio', { name: /course/i })
     await courseOption.focus()
     // ArrowRight fires the group keydown handler which calls setMode('textbook')
@@ -95,7 +95,7 @@ test.describe('notation toggle', () => {
     await page.setViewportSize({ width: 360, height: 812 })
     await gotoLoadedHome(page)
     // At 360px the toggle is hidden (responsive hidden md:flex). Verify the body
-    // does not grow wider than the viewport — no horizontal scroll.
+    // does not grow wider than the viewport -- no horizontal scroll.
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
     expect(bodyWidth).toBeLessThanOrEqual(360)
   })

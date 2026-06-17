@@ -22,7 +22,7 @@ function readStoredMode(): NotationMode {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw === 'course' || raw === 'textbook') return raw
   } catch {
-    // Private-browsing mode or SecurityError — ignore and default.
+    // Private-browsing mode or SecurityError -- ignore and default.
   }
   return 'course'
 }

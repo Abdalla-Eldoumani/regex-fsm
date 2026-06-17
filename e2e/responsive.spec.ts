@@ -24,7 +24,7 @@ test('no horizontal scroll at 360px', async ({ page }) => {
   expect(hasOverflow).toBe(false)
 })
 
-// Exercise the three breakpoints called out in CLAUDE.md and DESIGN_SYSTEM.md.
+// Exercise the three breakpoints the project conventions call out.
 // Each must show the h1 and have no horizontal overflow. Screenshots are saved
 // alongside the spec output for manual visual review of the full breakpoint.
 const BREAKPOINTS = [

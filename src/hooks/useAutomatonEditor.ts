@@ -5,7 +5,7 @@ import { toAutomaton } from '@/editor/toAutomaton'
 import { loadAutomaton } from '@/editor/loadAutomaton'
 import { WorkingAutomaton } from '@/editor/editorTypes'
 
-// Returned shape — plan 05's EditorPanel and EditorView consume this API.
+// Returned shape -- the editor panel and editor view consume this API.
 export interface AutomatonEditorDispatchers {
   // Gesture adapters wired to AutomatonGraph edit callbacks
   addStateAt: (x: number, y: number) => void
@@ -31,7 +31,7 @@ export interface UseAutomatonEditorResult {
   // structural edit; memoised so referentially stable between renders that
   // only change selection or highlight state.
   automaton: Automaton
-  // Stable dispatcher callbacks — safe to pass as AutomatonGraph props without
+  // Stable dispatcher callbacks -- safe to pass as AutomatonGraph props without
   // triggering unnecessary re-mounts.
   dispatchers: AutomatonEditorDispatchers
   // Increments on every structural edit (add/remove state or transition).

@@ -15,7 +15,7 @@ import { DFA } from '@/core/automata/types'
 // parse -> buildNFA -> nfaToDFA. The reachable-only test asserts a count
 // structurally (the construction's reachable-pairs contract) but still decides the
 // LANGUAGE by simulate. This is the worked-example layer; the set-semantics laws
-// over random regexes are the property suite (plan 02).
+// over random regexes are the property suite.
 
 function dfaFromRegex(regex: string): DFA {
   return nfaToDFA(buildNFA(parse(regex)))

@@ -7,7 +7,7 @@ import { isDeterministic } from '@/core/automata/dfa'
 import { EditorPanel } from './EditorPanel'
 
 // Compute the structural badge text from the live automaton. This is NOT a
-// language-equivalence verdict — it reports structural type only (SKILL inv 2:
+// language-equivalence verdict -- it reports structural type only (SKILL inv 2:
 // decide language correctness by equivalence, never by shape). DFA
 // completeness is shown as a non-blocking annotation, never a blocker.
 function computeBadge(transitions: Array<{ symbol: string | null }>, isDetResult: boolean): string {
@@ -18,7 +18,7 @@ function computeBadge(transitions: Array<{ symbol: string | null }>, isDetResult
 }
 
 // Badge component: structural type indicator. Uses brand chrome for the badge
-// pill — never a state-semantic color (the badge is UI metadata, not a state role).
+// pill -- never a state-semantic color (the badge is UI metadata, not a state role).
 function ValidityBadge({ label }: { label: string }): JSX.Element {
   const isDFA = label === 'DFA'
   return (
@@ -38,7 +38,7 @@ function ValidityBadge({ label }: { label: string }): JSX.Element {
 
 // DFA completeness warning: shown when the automaton is structurally a DFA but
 // some (state, symbol) pairs have no transition defined. Non-blocking advisory
-// only — the editor never prevents interaction (SKILL invariant 1: trap states
+// only -- the editor never prevents interaction (SKILL invariant 1: trap states
 // shown explicitly, never blocked, never hidden).
 function IncompletenessWarning({ automaton }: { automaton: { states: Array<{ id: string }>; transitions: Array<{ from: string; symbol: string | null }>; alphabet: Set<string> } }): JSX.Element | null {
   const incomplete = useMemo(() => {
@@ -147,7 +147,7 @@ export function EditorView(): JSX.Element {
         {/* Control panel: sidebar on lg+, bottom-sheet on mobile */}
         <div className="lg:w-72 xl:w-80 shrink-0">
           <EditorPanel working={working} dispatchers={dispatchers} />
-          {/* DFA incompleteness advisory — only shown when structurally a DFA */}
+          {/* DFA incompleteness advisory -- only shown when structurally a DFA */}
           {badge === 'DFA' && <IncompletenessWarning automaton={automaton} />}
         </div>
       </div>

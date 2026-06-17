@@ -7,7 +7,7 @@ import type { JSX } from 'react'
 //
 // Under reduced motion, Play/Pause and the speed selector are hidden so the
 // experience becomes a static prev/next stage walk (UI-SPEC gate 4). The global
-// :focus-visible ring is never overridden (CLAUDE.md rule).
+// :focus-visible ring is never overridden (per the project conventions).
 
 export function PumpingControls({
   currentStep,
@@ -46,7 +46,7 @@ export function PumpingControls({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Prev — disabled at first stage */}
+      {/* Prev -- disabled at first stage */}
       <button
         type="button"
         onClick={onPrev}
@@ -59,7 +59,7 @@ export function PumpingControls({
         <span className="mr-1" aria-hidden="true">&#9664;</span> Prev
       </button>
 
-      {/* Play/Pause — hidden under reduced motion */}
+      {/* Play/Pause -- hidden under reduced motion */}
       {!reducedMotion && (
         <button
           type="button"
@@ -86,7 +86,7 @@ export function PumpingControls({
         </button>
       )}
 
-      {/* Next — disabled at last stage */}
+      {/* Next -- disabled at last stage */}
       <button
         type="button"
         onClick={onNext}
@@ -99,7 +99,7 @@ export function PumpingControls({
         Next <span className="ml-1" aria-hidden="true">&#9654;</span>
       </button>
 
-      {/* Speed select — hidden under reduced motion */}
+      {/* Speed select -- hidden under reduced motion */}
       {!reducedMotion && (
         <div className="flex items-center gap-2 ml-2 px-4 min-h-[44px] bg-surface-raised rounded-lg border border-border">
           <span className="text-sm font-medium text-text-mid">Speed:</span>

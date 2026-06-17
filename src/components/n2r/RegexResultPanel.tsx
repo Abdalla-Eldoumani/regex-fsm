@@ -8,7 +8,7 @@ import type { NfaToRegexResult } from '@/core/algorithms/gnfa'
 //
 // When the language is empty the empty-set glyph is rendered as plain text and
 // toRegexNode / formatRegex are never called (Pitfall 5 / A5 from RESEARCH).
-// The regex string is a plain text child — never dangerouslySetInnerHTML
+// The regex string is a plain text child -- never dangerouslySetInnerHTML
 // (T-06-06 mitigation).
 export function RegexResultPanel({
   result,

@@ -82,11 +82,11 @@ function makeSourceKey(
 export default function ClosureView(): JSX.Element {
   const [closureMode, setClosureMode] = useState<ClosureMode>('union')
 
-  // Source A — used by both product modes and complement.
+  // Source A -- used by both product modes and complement.
   const [specA, setSpecA] = useState<{ kind: 'preset'; id: string } | { kind: 'regex'; src: string }>(
     { kind: 'preset', id: DEFAULT_PRESET_A }
   )
-  // Source B — only used by product (union/intersection) modes.
+  // Source B -- only used by product (union/intersection) modes.
   const [specB, setSpecB] = useState<{ kind: 'preset'; id: string } | { kind: 'regex'; src: string }>(
     { kind: 'preset', id: DEFAULT_PRESET_B }
   )
@@ -481,7 +481,7 @@ export default function ClosureView(): JSX.Element {
             </div>
           </div>
 
-          {/* Source B — only shown for product modes */}
+          {/* Source B -- only shown for product modes */}
           {closureMode !== 'complement' && (
             <div className="flex flex-col gap-2 border-t border-border pt-3">
               <span className="text-xs font-mono text-text-low">Source B:</span>
@@ -569,9 +569,9 @@ export default function ClosureView(): JSX.Element {
                   Stage
                 </span>
                 <span className="text-sm font-mono text-text-hi">
-                  {currentStage === 'original' && 'original — DFA before completion'}
-                  {currentStage === 'completed' && 'completed — trap ∅ and missing edges added'}
-                  {currentStage === 'flipped' && 'flipped — accepting and non-accepting states swapped'}
+                  {currentStage === 'original' && 'original -- DFA before completion'}
+                  {currentStage === 'completed' && 'completed -- trap ∅ and missing edges added'}
+                  {currentStage === 'flipped' && 'flipped -- accepting and non-accepting states swapped'}
                 </span>
               </div>
             )}
