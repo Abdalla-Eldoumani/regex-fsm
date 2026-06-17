@@ -1,374 +1,140 @@
 # Architecture
 
-## System Overview
+regex-fsm is a client-side single-page application. There is no backend. Every construction, simulation, and proof runs in the browser against the pure algorithm layer.
 
-RegexFSM follows a layered architecture separating concerns into distinct modules:
+## Layers
 
 ```
-┌─────────────────────────────────────────┐
-│          UI Layer (React)               │
-│  - Input components                     │
-│  - Display components (React.memo)      │
-│  - Simulation components                │
-│  - Education components                 │
-└───────────────┬─────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  Routes (React + react-router-dom)                         │
+│  one view per tool: editor, multi-view, challenges,        │
+│  simulation, NFA→regex, closure, pumping, scratchpad       │
+└───────────────┬────────────────────────────────────────────┘
                 │
-┌───────────────▼─────────────────────────┐
-│       Visualization Layer               │
-│  - Cytoscape rendering                  │
-│  - Graph layout                         │
-│  - Layout cache (position persistence)  │
-│  - Export functionality                 │
-└───────────────┬─────────────────────────┘
+┌───────────────▼────────────────────────────────────────────┐
+│  Shared UI and context                                       │
+│  layout and header, command palette, mobile nav, guided      │
+│  tour, notation toggle, error boundary, a11y graph summary   │
+└───────────────┬────────────────────────────────────────────┘
                 │
-┌───────────────▼─────────────────────────┐
-│          Cache Layer                    │
-│  - LRU cache with localStorage          │
-│  - Algorithm result caching             │
-│  - Automatic cache invalidation         │
-└───────────────┬─────────────────────────┘
+┌───────────────▼────────────────────────────────────────────┐
+│  Visualization                                               │
+│  Cytoscape renderer, design-token bridge, layout cache,      │
+│  SVG / PNG / TikZ / Markdown / CSV serializers, describe()   │
+└───────────────┬────────────────────────────────────────────┘
                 │
-┌───────────────▼─────────────────────────┐
-│          Core Layer                     │
-│  - Regex parsing                        │
-│  - NFA/DFA construction (Thompson,      │
-│    ASU Direct, Brzozowski)              │
-│  - Simulation algorithms                │
-└─────────────────────────────────────────┘
+┌───────────────▼────────────────────────────────────────────┐
+│  Core (pure)                                                 │
+│  regex parsing, Thompson, subset, minimize, ASU direct,      │
+│  Brzozowski, GNFA, product, complement, equivalence,         │
+│  computation tree, simulation, bounds; LRU cache; patterns   │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-## Data Flow
-
-### Regex to Automaton Pipeline
-
-**Thompson's Construction (default):**
-1. User enters regex string → `RegexInput` component
-2. Input is debounced (300ms) before triggering computation
-3. String is tokenized → `tokenize(input)` in `src/core/regex/tokenizer.ts`
-4. Tokens are parsed into AST → `parse(input)` in `src/core/regex/parser.ts`
-5. AST is converted to NFA → `buildNFA(ast)` in `src/core/algorithms/thompson.ts`
-6. NFA is converted to DFA → `nfaToDFA(nfa)` in `src/core/algorithms/subset.ts`
-7. Both automata are displayed → `AutomatonView` components
-
-**ASU Direct Construction:**
-1-4. Same as above (parse to AST)
-5. AST is converted directly to DFA → `asuDirectToDFA(ast)` in `src/core/algorithms/asuDirect.ts`
-6. NFA panel shows informational message (no NFA produced)
-
-**Brzozowski Derivative Construction:**
-1-4. Same as above (parse to AST)
-5. AST is converted directly to DFA → `brzozowskiToDFA(ast)` in `src/core/algorithms/brzozowski.ts`
-6. NFA panel shows informational message (no NFA produced)
-
-### Simulation Flow
-
-1. User enters test string → `StringInput` component
-2. User selects NFA or DFA mode → `App` state
-3. Simulation is initialized → `useSimulation` hook
-4. User controls playback → `SimulationControls` component
-5. Current step is computed → `simulateNFA` or `simulateDFA` in `src/core/algorithms/simulate.ts`
-6. Graph is highlighted → `AutomatonGraph` component updates
-7. Explanation is shown → `StepExplanation` component
-
-## Module Responsibilities
-
-### Core Module
-
-**Purpose**: Implement formal language theory algorithms without UI concerns.
-
-**Responsibilities**:
-- Parse regular expressions into Abstract Syntax Trees
-- Convert regex AST to NFA using Thompson's construction
-- Convert NFA to DFA using subset construction
-- Simulate automaton execution on input strings
-- Compute lambda closures and move functions
-
-**Key Files**:
-- `src/core/regex/tokenizer.ts` - Lexical analysis
-- `src/core/regex/parser.ts` - Syntax analysis
-- `src/core/algorithms/thompson.ts` - NFA construction (Thompson's)
-- `src/core/algorithms/asuDirect.ts` - Direct regex-to-DFA (ASU syntax tree method)
-- `src/core/algorithms/brzozowski.ts` - Direct regex-to-DFA (Brzozowski derivatives)
-- `src/core/algorithms/subset.ts` - DFA construction (subset/powerset)
-- `src/core/algorithms/simulate.ts` - Execution simulation
-- `src/core/cache/` - LRU cache with dirty-flag saves and hash-based keys
-- `src/core/cachedAlgorithms.ts` - Cached wrappers for parse/buildNFA/nfaToDFA/minimizeDFA
-
-### Components Module
-
-**Purpose**: Provide React UI components for user interaction and display.
-
-**Responsibilities**:
-- Accept user input for regex and test strings
-- Display automata as graphs, tables, and lists
-- Control simulation playback
-- Provide educational content
-- Handle user events
-
-**Key Files**:
-- `src/components/App.tsx` - Main application component
-- `src/components/input/RegexInput.tsx` - Regex input with validation
-- `src/components/display/AutomatonView.tsx` - Automaton visualization wrapper
-- `src/components/simulation/SimulationPanel.tsx` - Simulation orchestration (React.memo)
-- `src/components/walkthrough/` - Interactive walkthrough system (overlay, tooltip, toggle)
-- `src/components/education/TheoryPanel.tsx` - Educational theory content
-
-### Visualization Module
-
-**Purpose**: Render automata as interactive graphs using Cytoscape.js.
-
-**Responsibilities**:
-- Convert automaton data structures to Cytoscape format
-- Add start arrow indicator (invisible marker node with visible arrow edge)
-- Apply visual styling (Indigo/Emerald color palette)
-- Compute graph layouts automatically
-- Highlight active states and transitions during simulation
-- Export graphs as PNG or SVG
-
-**Key Files**:
-- `src/visualization/renderer.tsx` - AutomatonGraph React component
-- `src/visualization/cytoscape-config.ts` - Cytoscape setup, conversion, and start arrow
-- `src/visualization/styles.ts` - Visual styling definitions (Indigo/Emerald theme)
-- `src/visualization/layout.ts` - Layout algorithm selection
-- `src/visualization/export.ts` - PNG/SVG export functions
-
-**Recent Enhancements**:
-- Start arrow indicator for clear initial state identification
-- Enhanced state styling with visual distinction for start/accept/trap states
-- Graph layout persistence across tab switches using CSS visibility
-
-## State Management
-
-### App-Level State
-
-The `App` component maintains global application state:
-
-```typescript
-- regex: string                         // Current regex input
-- debouncedRegex: string                // Debounced regex (300ms) for computation
-- alphabet: string                      // Custom alphabet (optional)
-- testString: string                    // Current test string
-- constructionMethod: 'thompson' | 'asuDirect' | 'brzozowski' // Algorithm selection
-- nfa: NFA | null                       // Generated NFA (null for direct methods)
-- dfa: DFA | null                       // Generated DFA
-- error: string                         // Parse/build errors
-- simulationMode: 'nfa' | 'dfa' | 'both' // Which automaton(s) to display
-- shouldMinimize: boolean               // Apply DFA minimization (default: true)
-- useLetterNames: boolean               // Use A,B,C naming instead of q0,q1 (default: false)
-- autoBuild: boolean                    // Auto-build on regex change (default: true)
-- nfaHighlightStates: string[]          // NFA states to highlight
-- dfaHighlightStates: string[]          // DFA states to highlight
-- nfaHighlightEdges: string[]           // NFA edges to highlight
-- dfaHighlightEdges: string[]           // DFA edges to highlight
-- nfaSimResult: SimulationResult | null // NFA simulation result
-- dfaSimResult: SimulationResult | null // DFA simulation result
-```
-
-### Simulation State
-
-The `useSimulation` hook manages simulation state:
-
-```typescript
-- result: SimulationResult | null  // Complete simulation result
-- currentStep: number              // Current step index
-- currentStepData: SimulationStep  // Current step details
-- isRunning: boolean               // Auto-play active
-- speed: number                    // Auto-play speed (ms)
-```
-
-## Component Hierarchy
-
-```
-App
-├── Header
-├── RegexInput
-├── StringInput
-├── SimulationPanel
-│   ├── InputTape
-│   ├── SimulationControls
-│   ├── StepExplanation
-│   └── Current State Display
-├── AutomatonView (NFA)
-│   ├── Tabs (Graph/Table/States/Info)
-│   ├── AutomatonGraph
-│   ├── TransitionTable
-│   ├── StateList
-│   └── Info Summary
-└── AutomatonView (DFA)
-    ├── Tabs (Graph/Table/States/Info)
-    ├── AutomatonGraph
-    ├── TransitionTable
-    ├── StateList
-    └── Info Summary
-```
-
-## Error Handling
-
-### Parsing Errors
-
-- Tokenizer throws errors with position information
-- Parser throws descriptive errors for invalid syntax
-- Errors are caught in `App` component
-- Error messages displayed to user with red styling
-
-### Simulation Errors
-
-- Invalid automaton states return null results
-- Simulation handles empty automata gracefully
-- UI components check for null/undefined before rendering
-
-## Performance Considerations
-
-### Caching Strategy
-
-The application uses a multi-level caching approach:
-
-**Algorithm Cache** (`src/core/cache/`):
-- LRU cache with configurable max size (default: 50 entries)
-- localStorage persistence with version-based invalidation
-- Dirty-flag saves: only writes to localStorage when cache actually changed (5s debounce)
-- Hash-based cache keys using djb2 for shorter, faster comparisons
-- Separate caches for parse, thompson, subset, and minimize results
-
-**Layout Cache** (`src/visualization/layoutCache.ts`):
-- Persists graph node positions across tab switches and page refreshes
-- 24-hour expiry, max 50 cached layouts
-- Cache key based on automaton structure
-
-**React Memoization** (`src/components/App.tsx`):
-- `useMemo` for derived state (NFA/DFA construction)
-- `useCallback` for stable handler references
-- `React.memo` on display components (TransitionTable, StateList, InputTape, SimulationControls, SimulationPanel, RegexInput, StringInput)
-
-### Automaton Construction
-
-- Thompson's NFA has O(m) states for regex length m
-- Subset construction worst case: O(2^n) DFA states for n NFA states
-- In practice, DFA state count is much lower than worst case
-- Repeated patterns return cached results instantly
-
-### Visualization
-
-- Cytoscape instance lifecycle and event listeners split into separate useEffects
-- Callback changes (onNodeClick/onEdgeClick) no longer destroy/recreate the instance
-- Highlight updates wrapped in `cy.startBatch()`/`cy.endBatch()` for grouped style changes
-- Layout computation cached when automaton unchanged
-- Node positions restored from cache on tab switch
-
-### Simulation
-
-- NFA simulation: O(n × m) for string length n, m states
-- DFA simulation: O(n) for string length n
-- Step-by-step simulation computes all steps upfront for smooth playback
-
-## Design Decisions
-
-### Why Multiple Construction Methods?
-
-The application supports three construction methods:
-- **Thompson's Construction** (default): Produces structurally simple NFAs with exactly one start and accept state. Best for visualization and understanding the regex → NFA → DFA pipeline.
-- **ASU Direct Construction**: Builds DFA directly from regex using syntax tree annotation. Demonstrates the position/followpos approach from Aho, Sethi, Ullman.
-- **Brzozowski Derivatives**: Builds DFA from regex using symbolic derivatives. Demonstrates an elegant theoretical approach where each state is itself a regex.
-
-### Why Subset Construction?
-
-Subset construction is the standard algorithm for NFA to DFA conversion. While it can produce exponentially many states, it demonstrates an important theoretical concept and works well for typical regex patterns.
-
-### Why Cytoscape.js?
-
-Cytoscape.js provides automatic graph layout algorithms, interactive controls, and efficient canvas rendering. It handles the complexity of positioning nodes and routing edges automatically.
-
-### Why Indigo/Emerald Color Scheme?
-
-The Indigo/Emerald theme provides a professional, accessible color palette with clear semantic meaning:
-- Indigo for start states and primary actions (representing "beginning")
-- Emerald for accept states (representing "success")
-- Red for trap/error states (representing "rejection")
-- Amber for active simulation steps (representing "current focus")
-
-This color scheme is WCAG 2.1 Level AA compliant for accessibility.
-
-## UI/UX Features
-
-### Flexible Simulation Modes
-
-The application supports three simulation display modes:
-- **NFA Mode**: Only NFA automaton displayed, takes full width
-- **DFA Mode**: Only DFA automaton displayed, takes full width
-- **Both Mode**: Both automatons displayed side-by-side (responsive grid)
-
-Implementation:
-- Mode selector with three buttons in simulation section
-- Dynamic grid layout: `grid-cols-1` (single) or `grid-cols-1 xl:grid-cols-2` (both)
-- Conditional rendering based on simulationMode state
-- Each automaton maintains independent simulation controls when in Both mode
-
-### Fullscreen Simulation Modal
-
-Each automaton has an individual "Simulate" button that opens a fullscreen modal:
-- **Split-Screen Layout**: Graph on left, controls on right (lg:grid-cols-2)
-- **Live Visualization**: AutomatonGraph updates during simulation
-- **Backdrop Blur**: 95% opacity black background with blur effect
-- **Independent State**: Modal simulation doesn't affect main simulation
-- **Highlight Propagation**: Highlights update parent view via callback
-
-Modal features:
-- Test string input
-- Full simulation controls (play, pause, step, reset)
-- Click backdrop or close button to dismiss
-- Responsive layout (stacks vertically on mobile)
-
-### Expandable Views
-
-Table and States tabs have dedicated expand buttons:
-- **Fullscreen Modal**: Opens table or state list in fullscreen overlay
-- **Improved Scrolling**: Increased max-height from 600px to 800px
-- **Better Visibility**: Dedicated fullscreen mode for complex automata with many states
-- **Easy Access**: Expand button appears when viewing Table or States tabs
-
-### Pattern Builder
-
-Interactive natural language to regex converter:
-- **27 Templates**: Across 9 categories (basic, position, repetition, character, combination, length, counting, negation, ordering)
-- **Dynamic Parameters**: Input fields adjust based on selected template
-- **Live Preview**: See generated regex before insertion
-- **Parser Compatible**: All templates generate patterns compatible with the simplified parser
-- **Direct DFA**: Complex patterns (e.g., "does not contain") can build DFA directly
-
-### DFA Options
-
-Configuration options for DFA generation:
-- **Minimize DFA**: Apply Moore's algorithm for optimal state count (default: on)
-- **Use Letter Names**: Switch from q0/q1/q2 to A/B/C naming (default: off)
-- **Auto-build Toggle**: Switch between automatic and manual build modes
-- **Build Buttons**: Explicit NFA/DFA build buttons in manual mode
-
-### Custom Alphabet Support
-
-Users can pre-define the alphabet:
-- **Complete DFAs**: Shows all symbol transitions including trap states
-- **Auto Expansion**: Automatically includes test string symbols when no custom alphabet defined
-- **Trap State Visibility**: Makes rejection paths explicit in DFA visualization
-
-## Testing Strategy
-
-### Unit Tests
-
-Each core algorithm has comprehensive unit tests:
-- Test base cases and edge cases
-- Verify algorithmic properties
-- Ensure correct outputs for known inputs
-
-### Integration Tests
-
-Visualization tests verify:
-- Correct conversion from automaton to Cytoscape format
-- Proper application of styles
-- Highlight functionality
-
-### Manual Testing
-
-UI components tested manually for:
-- Responsive behavior across screen sizes
-- User interaction flows
-- Visual appearance and accessibility
+The dependency arrow points one way: views depend on visualization and core, core depends on nothing in the application.
+
+## Routes
+
+The router is defined in `src/main.tsx`. Each route lazy-loads its view, and all routes render inside a shared `Layout`.
+
+| Path          | View                                  | What it does |
+|---------------|---------------------------------------|--------------|
+| `/`           | `components/App.tsx`                   | Regex scratchpad: type a regex, pick a construction method, see the NFA and DFA, simulate a test string |
+| `/editor`     | `components/editor/EditorView.tsx`     | Build an automaton by hand on a canvas |
+| `/multi`      | `components/multiview/MultiView.tsx`   | Regex, NFA, DFA, and minimal DFA synchronized by selection |
+| `/n2r`        | `components/n2r/NfaToRegexView.tsx`    | NFA to regex by GNFA state elimination |
+| `/closure`    | `components/closure/ClosureView.tsx`   | Union, intersection, and complement constructions |
+| `/pumping`    | `components/pumping/PumpingView.tsx`   | The adversarial pumping-lemma game |
+| `/challenges` | `components/challenges/ChallengesView.tsx` | Build-to-spec challenges and find-the-bug |
+| `/simulate`   | `components/simulation/SimulationView.tsx` | DFA run, NFA run with a computation tree, and side-by-side |
+
+Undefined routes render a 404. A `TourProvider` wraps the routes so the guided tour survives navigation.
+
+## Data flow
+
+### Regex to automaton (the `/` scratchpad)
+
+1. The user types a regex into `RegexInput`.
+2. The input is debounced (300 ms) before any computation runs.
+3. `tokenize` lexes the string (`core/regex/tokenizer.ts`).
+4. `parse` builds an AST by recursive descent (`core/regex/parser.ts`).
+5. The chosen construction method runs:
+   - **Thompson**: `buildNFA(ast)` then `nfaToDFA(nfa)` (subset construction).
+   - **ASU direct**: `asuDirectToDFA(ast)` straight to a DFA, no NFA.
+   - **Brzozowski**: `brzozowskiToDFA(ast)` straight to a DFA, no NFA.
+6. If minimization is on, `minimizeDFA` runs Moore's refinement.
+7. The NFA and DFA render as graphs, tables, and state lists.
+
+Results flow through a cache so repeated patterns return instantly.
+
+### Synchronized multi-view (`/multi`)
+
+The regex is built into a Thompson NFA, a subset DFA, and a Moore-minimized DFA in one pass that also records the correspondence maps: which NFA states sit behind each DFA state, and which original states merged into each minimal state. Clicking a state in any panel highlights its correspondents in the others. Selection clears when the regex changes.
+
+### Step constructions (`/n2r`, `/closure`)
+
+GNFA elimination and the product and complement constructions are computed as a list of steps. The view holds a step index; advancing the index reveals the next state to eliminate, or the next discovered state pair, along with the transient automaton at that step. Auto-play advances the index on a timer and stops under reduced-motion.
+
+### Simulation (`/simulate`)
+
+The source is a preset or a typed (debounced) regex. A shared step index drives the animation:
+
+- **DFA run** lights a single active state per step.
+- **NFA run** lights the full λ-closed active set and renders a computation tree from `computationTree.ts`.
+- **Side by side** runs the NFA and its determinized DFA from the same index, using the NFA-state-set correspondence to align them.
+
+The input tape, the controls, and the graph all read the same index.
+
+### Challenges (`/challenges`)
+
+The student builds an automaton (in the editor, or as a regex) and submits it. Grading calls `equivalence(student, reference)`, which decides language equality and, on a mismatch, returns the shortest distinguishing string and which side accepts it. Grading never inspects shape. Find-the-bug loads a broken machine pre-filled for the student to repair.
+
+## State management
+
+Each route owns its state with React hooks; there is no global store. The `/` scratchpad, the largest case, holds the regex and its debounced copy, the alphabet, the test string, the construction method, the generated NFA and DFA, simulation results and highlight sets, and the DFA options (minimize, letter names, auto-build).
+
+Two pieces of state are shared through React context:
+
+- **Notation** (`src/notation/`): course versus textbook glyphs, read by every component that renders a regex.
+- **Tour** (`src/components/tour/`): the guided-tour controller, mounted above the routes.
+
+## Performance
+
+- **Debounced input** (300 ms) keeps typing responsive; computation runs on the settled value.
+- **Algorithm cache** (`src/core/cache/`): an LRU cache with localStorage persistence and hash-based keys, with dirty-flag saves so it only writes when the cache actually changed.
+- **Layout cache** (`src/visualization/layoutCache.ts`): graph node positions persist across tab switches and refreshes.
+- **Cytoscape**: the instance lifecycle and the event listeners live in separate effects, so callback changes rebind listeners instead of rebuilding the graph; highlight changes are wrapped in a batch.
+- **Resource bounds**: a shared guard (`core/algorithms/bounds.ts`) caps construction at 256 states and a 2000 ms budget, with a parser recursion limit. Over the cap, a construction reports the input is too large instead of hanging, and the rest of the view stays usable.
+
+## Failure handling
+
+- **Parse errors** carry a position and render inline with a feedback color and an icon.
+- **Oversized constructions** throw a typed too-large error that the view catches and turns into a notice.
+- **Shared links**: the decoder fails closed. Oversized or malformed input is rejected before parsing; state is read with `JSON.parse` only; there is no code evaluation and no markup-injection path. See [components/README.md](./components/README.md) and the share module.
+- **Storage quota**: a save that would exceed localStorage is refused cleanly, with the prior saves left intact.
+- **Render errors** are caught by a top-level error boundary that offers reload and home.
+
+## Accessibility posture
+
+Accessibility is a quality floor enforced in tests, not a later phase.
+
+- Every interactive element is keyboard-operable, has a visible focus ring, and meets a 44px touch target at the 360px floor.
+- Dialogs (tour, command palette, mobile nav) trap focus while open, close on `Escape`, and restore focus to their trigger.
+- Every graph has a screen-reader description (`a11y/GraphSummary.tsx`, `visualization/describe.ts`) and a navigable transition table beside the diagram.
+- State colors are colorblind-safe and never the only signal: start carries an incoming arrow, accept a double ring, trap a dashed dimmed stroke, active a thicker stroke. Graph and DOM read one set of design tokens.
+- Animation honors `prefers-reduced-motion`.
+- Routes are checked with axe in the end-to-end suite, and there is no horizontal scroll at 360px.
+
+## Design decisions
+
+### Why several construction methods
+
+Thompson plus subset is the canonical pipeline and the easiest to read, so it is the default and the basis of the multi-view. ASU direct shows the position and followpos approach with no intermediate NFA. Brzozowski derivatives show the elegant view where each state is a regex. Offering all three lets a student compare the routes from a regex to a DFA.
+
+### Why grade by language equivalence
+
+A construction exercise has many correct shapes. Grading by structure would reject correct work that does not match a stored answer. Deciding language equality, and returning the shortest counterexample with its direction when the languages differ, grades the only thing that matters and gives feedback a student can act on.
+
+### Why a token bridge for the graph
+
+Cytoscape renders to a canvas, which cannot resolve CSS custom properties. The bridge reads the design tokens from the DOM at stylesheet-build time and injects the resolved colors, so an accepting state is the same green in the graph, the table, and the legend. The single source of truth is the theme block in the app's CSS.
