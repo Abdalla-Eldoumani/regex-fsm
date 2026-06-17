@@ -1,788 +1,102 @@
-# Components Module Documentation
+# Components module
 
-React components for the RegexFSM user interface.
+`src/components/` holds the React views, one per route, plus the shared chrome and UI primitives. This page describes what each view does; for routing and data flow see [../architecture.md](../architecture.md).
 
-## Module Structure
+## Layout
 
 ```
 src/components/
-├── App.tsx                     # Main application content (debounced input, construction method selector)
-├── Layout.tsx                  # Shared layout with header (lightweight CSS, walkthrough toggle)
-├── ErrorBoundary.tsx           # Error boundary for React errors
-├── NotFound.tsx                # Generic 404 page
-├── NotFoundGithub.tsx          # GitHub-specific 404 page
-├── common/                     # Reusable UI components
-│   ├── Button.tsx              # Button component
-│   └── Tabs.tsx                # Tab navigation
-├── input/                      # Input components
-│   ├── RegexInput.tsx          # Regex pattern input
-│   ├── StringInput.tsx         # Test string input
-│   ├── PatternBuilder.tsx      # Template-based pattern builder
-│   └── BuildButtons.tsx        # Manual NFA/DFA build controls
-├── display/                    # Automaton display
-│   ├── AutomatonView.tsx       # Main automaton viewer (useCallback highlights)
-│   ├── TransitionTable.tsx     # Transition function table (Map-indexed O(1) lookups)
-│   └── StateList.tsx           # State list view (Map-indexed O(1) lookups)
-├── simulation/                 # Simulation controls
-│   ├── SimulationPanel.tsx     # Simulation orchestration (React.memo)
-│   ├── SimulationControls.tsx  # Playback controls
-│   └── InputTape.tsx           # Visual input tape
-├── walkthrough/                # Interactive walkthrough system
-│   ├── WalkthroughOverlay.tsx  # SVG mask spotlight with RAF-throttled positioning
-│   ├── WalkthroughTooltip.tsx  # Smart positioned tooltip with step navigation
-│   ├── WalkthroughToggle.tsx   # Header dropdown to start walkthroughs
-│   └── AlgorithmWalkthrough.tsx # Expandable algorithm step panel
-└── education/                  # Educational content
-    ├── TheoryPanel.tsx         # Theory explanations
-    └── StepExplanation.tsx     # Step-by-step explanations
+├── App.tsx               # the "/" regex scratchpad
+├── layout/               # Layout, header, route chrome
+├── ErrorBoundary.tsx     # top-level render-error fallback
+├── editor/               # /editor   hand-built automaton editor
+├── multiview/            # /multi    synchronized regex / NFA / DFA / min-DFA
+├── challenges/           # /challenges  build-to-spec and find-the-bug
+├── simulation/           # /simulate  DFA, NFA, and side-by-side runs
+├── n2r/                  # /n2r      NFA → regex (GNFA elimination)
+├── closure/              # /closure  union / intersection / complement
+├── pumping/              # /pumping  the pumping-lemma game
+├── tour/                 # the guided course tour
+├── command/              # the Ctrl/Cmd+K command palette
+├── nav/                  # the mobile navigation menu
+├── a11y/                 # GraphSummary, the screen-reader graph description
+├── display/              # AutomatonView, TransitionTable, StateList
+├── input/                # RegexInput, StringInput, PatternBuilder, BuildButtons
+├── education/            # TheoryPanel, StepExplanation
+└── common/               # Button, Input, Tabs, Tooltip, Modal
 ```
 
-## Layout Component
+## The tool views
 
-**File**: `src/components/Layout.tsx`
+### Scratchpad (`App.tsx`, `/`)
 
-Shared layout component that wraps all routes with a consistent header and background.
+Type a regex with live validation and an auto-detected or user-defined alphabet, pick a construction method (Thompson, ASU direct, or Brzozowski), and see the NFA and DFA as a graph, a transition table, and a state list. DFA options toggle Moore minimization (on by default) and letter naming (`q0` to `A`). A test string drives a simulation in NFA, DFA, or both modes. Input is debounced 300 ms before computation. Current state can be shared as a link or saved to the library.
 
-### Features
+### Hand editor (`editor/`, `/editor`)
 
-- Sticky header with logo, navigation, and walkthrough toggle dropdown
-- Lightweight background (no animated blobs or heavy backdrop-blur)
-- React Router integration using `<Outlet />`
-- Responsive design
+Build an automaton directly. Tap the canvas to add a state; drag from a state to draw a transition; use the side panel to name states, mark start and accepting states, and edit or delete transitions and states. A live badge reports DFA, nondeterministic NFA, or NFA with λ-moves. A non-blocking advisory flags missing `(state, symbol)` pairs when the structure is a partial DFA. The editor is keyboard-operable.
 
-### Structure
+### Multi-view (`multiview/`, `/multi`)
 
-```typescript
-function Layout(): JSX.Element {
-  return (
-    <div className="min-h-screen bg-background text-text-primary">
-      {/* Animated background */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Grid pattern and gradient blobs */}
-      </div>
+The regex, its Thompson NFA, the subset DFA, and the Moore-minimized DFA shown together. Clicking a state in any panel highlights its correspondents in the others, using the NFA-state-set and merged-state maps recorded during construction. On desktop the four panels sit in a row; on tablet, a two-by-two grid; below `md`, a single tabbed panel so only one graph renders. Selection clears when the regex changes.
 
-      {/* Sticky header */}
-      <header className="sticky top-0 z-50">
-        <Link to="/">R Logo</Link>
-        <h1>RegexFSM</h1>
-        <Link to="/github">GitHub</Link>
-      </header>
+### Challenges (`challenges/`, `/challenges`)
 
-      {/* Route content */}
-      <Outlet />
-    </div>
-  )
-}
-```
+Pick an exercise, build an automaton to match the target language, and check it. Grading is by language equivalence only -- a correct answer of any shape passes. A wrong answer returns the shortest distinguishing string and whether the machine wrongly accepts or wrongly rejects it; an empty counterexample renders as `λ`. A find-the-bug mode loads a broken machine to repair. The build surface resets when the exercise changes, and an over-cap construction shows a too-large notice.
 
-### Navigation
+### Simulation (`simulation/`, `/simulate`)
 
-- **Home**: Clicking R logo navigates to `/`
-- **GitHub**: Navigates to `/github` (shows NotFoundGithub page)
+Three modes over a preset or a typed (debounced) regex:
 
-## ErrorBoundary Component
+- **DFA run**: one active state lights up per step.
+- **NFA run**: the full λ-closed active set lights up, with a computation tree of the parallel branches.
+- **Side by side**: the NFA and its determinized DFA step together from one control, aligned by state-set correspondence.
 
-**File**: `src/components/ErrorBoundary.tsx`
+Each mode has an animated input tape with a position marker and a verdict badge, step-forward and step-back, play and pause, and a speed slider. Auto-play is disabled under reduced-motion. The computation tree degrades to a notice on fan-out blow-up while the graph and tape stay usable.
 
-Class component that catches React errors in child components and displays a fallback UI.
+### NFA to regex (`n2r/`, `/n2r`)
 
-### Implementation
+GNFA state elimination. Step through the algorithm: at each step one state is highlighted and removed, and the surviving edges show regex labels rather than single symbols. The new start and accept states are labeled `S` and `A`. The result panel shows the final regex in course notation. A source NFA over the state cap shows a notice before elimination begins.
 
-```typescript
-class ErrorBoundary extends Component<Props, State> {
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
-  }
+### Closure (`closure/`, `/closure`)
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
-  }
-}
-```
+Union, intersection, and complement. Union and intersection take two source DFAs and build the product step by step as state pairs are discovered; complement takes one source, completes it, and flips the accepting set. Sources are presets or typed regexes. The transient automaton shows only what has been discovered at the current step, and a legend states the accepting condition for the current operation.
 
-### Fallback UI
+### Pumping-lemma game (`pumping/`, `/pumping`)
 
-- Error icon and message
-- Error details in code block
-- "Reload Page" button
-- "Go Home" button
+An adversarial proof of non-regularity. The tool fixes the pumping length, the user chooses a witness word in the language with `|w| ≥ p`, the tool picks the worst-case split `w = xyz` with `|xy| ≤ p` and `|y| ≥ 1`, and the user chooses a pump exponent `i ≠ 1`. The tool computes `xy^i z` and checks membership; a string outside the language closes the contradiction. A demo mode plays a full round automatically. Stage cards highlight the active step, and stepping respects reduced-motion.
 
-### Usage
+## Shared chrome
 
-Wraps the entire app in `src/main.tsx`:
+### Layout and header (`layout/`)
 
-```typescript
-<ErrorBoundary>
-  <BrowserRouter>
-    {/* App content */}
-  </BrowserRouter>
-</ErrorBoundary>
-```
+A sticky header with the home link, the notation toggle, the command-palette trigger, the tour launcher, and a source link. Below `md` the link row collapses into the mobile menu while the tour launcher stays reachable. The layout scrolls to top on route change and renders routes through an `<Outlet />`.
 
-## NotFound Component
+### Command palette (`command/`)
 
-**File**: `src/components/NotFound.tsx`
+Opened with `Ctrl`/`Cmd`+`K` or a header button. A filter input matches a label and keywords; arrow keys move the cursor with wrap, `Enter` runs the highlighted command, `Escape` closes. It lists every route plus global actions (toggle notation, open the tour). The active row is marked with a tint and a left bar, never color alone.
 
-Generic 404 page for undefined routes.
+### Mobile navigation (`nav/`)
 
-### Features
+Below `md`, a menu button toggles a panel listing every route as a link with `aria-current` on the active one. It closes on an outside click or `Escape` and restores focus to its trigger.
 
-- "404" heading with large font
-- "Lost in the automaton?" subheading
-- Error-themed design (red gradients)
-- Link back to home page
+### Guided tour (`tour/`)
 
-## NotFoundGithub Component
+A bottom-sheet dialog on mobile, a centered card on larger screens. Lessons run in course order; each pairs a plain-language explanation with the formal notation and may offer an "open this view" button that navigates to the matching tool. Back, next, finish, a counter, and a progress bar. Focus moves into the dialog on open, `Escape` closes, and focus restores to the launcher.
 
-**File**: `src/components/NotFoundGithub.tsx`
+### Error boundary (`ErrorBoundary.tsx`)
 
-GitHub-specific 404 page indicating the repository is in private development.
+Catches render errors and shows a fallback with reload and home actions.
 
-### Features
-
-- "Repository Not Public Yet" message
-- Explanation that the repository is currently private
-- LinkedIn links for:
-  - Abdalla ElDoumani
-  - Ibrahim Ahmed
-- Star animation background
-- Purple gradient theme
-
-## App Component
-
-**File**: `src/components/App.tsx`
-
-Main content component for the home route (`/`).
-
-### Responsibilities
-
-- Maintains global application state
-- Orchestrates the regex → NFA → DFA pipeline
-- Manages simulation mode (NFA vs DFA)
-- Coordinates highlight state between components
-
-### State Management
-
-```typescript
-const [regex, setRegex] = useState('')
-const [debouncedRegex, setDebouncedRegex] = useState('')  // 300ms debounce for computation
-const [alphabet, setAlphabet] = useState('')
-const [testString, setTestString] = useState('')
-const [constructionMethod, setConstructionMethod] = useState<'thompson' | 'asuDirect' | 'brzozowski'>('thompson')
-const [nfa, setNfa] = useState<NFA | null>(null)
-const [dfa, setDfa] = useState<DFA | null>(null)
-const [error, setError] = useState<string>('')
-const [simulationMode, setSimulationMode] = useState<'nfa' | 'dfa' | 'both'>('nfa')
-const [nfaHighlightStates, setNfaHighlightStates] = useState<string[]>([])
-const [dfaHighlightStates, setDfaHighlightStates] = useState<string[]>([])
-const [nfaHighlightEdges, setNfaHighlightEdges] = useState<string[]>([])
-const [dfaHighlightEdges, setDfaHighlightEdges] = useState<string[]>([])
-const [nfaSimResult, setNfaSimResult] = useState<SimulationResult | null>(null)
-const [dfaSimResult, setDfaSimResult] = useState<SimulationResult | null>(null)
-```
+## Display and input
 
-### Pipeline with useMemo
-
-```typescript
-const { nfa, dfa, error } = useMemo(() => {
-  if (directDfa) return { nfa: null, dfa: directDfa, error: '' }
-  if (!regex || !autoBuild) return { nfa: null, dfa: null, error: '' }
-
-  try {
-    const ast = parse(regex)  // Cached
-    const generatedNfa = buildNFA(ast)  // Cached
-
-    // Build effective alphabet
-    const regexAlphabet = generatedNfa.alphabet
-    const customAlphabetSet = alphabet ? new Set(alphabet.split('')) : null
-    const testStringChars = new Set(testString.split(''))
-    const effectiveAlphabet = customAlphabetSet || new Set([...regexAlphabet, ...testStringChars])
-
-    let generatedDfa = nfaToDFA(generatedNfa, effectiveAlphabet)  // Cached
-
-    if (shouldMinimize) {
-      const result = minimizeDFA(generatedDfa, useLetterNames)  // Cached
-      generatedDfa = result.dfa
-    }
-
-    return { nfa: generatedNfa, dfa: generatedDfa, error: '' }
-  } catch (err) {
-    return { nfa: null, dfa: null, error: err instanceof Error ? err.message : 'Unknown error' }
-  }
-}, [regex, alphabet, testString, shouldMinimize, useLetterNames, autoBuild, directDfa])
-```
-
-### Content Structure
-
-App component renders the main content (no header):
-
-```
-App
-├── Main Section
-│   ├── Input Row (RegexInput | StringInput)
-│   ├── Simulation Panel
-│   │   └── SimulationPanel (NFA or DFA)
-│   └── Automaton Views
-│       ├── AutomatonView (NFA)
-│       └── AutomatonView (DFA)
-└── Footer
-```
-
-The header is rendered by the Layout component, not App.
+- **AutomatonView** (`display/`) wraps the graph with tabs for the graph, the transition table, and the state list, plus export controls. The graph stays mounted across tab switches so its layout is not recomputed.
+- **TransitionTable** renders `δ` with `→` for the start, `✓` for accepting, and `∅` for the trap. It is the navigable, screen-reader-friendly form of the diagram. Lookups are Map-indexed.
+- **StateList** lists states with roles and shows accept and reject banners after a simulation, each with an icon and text.
+- **RegexInput** validates as you type and exposes the optional alphabet field. **PatternBuilder** turns a template into a regex. **StringInput** takes the test string.
 
-## Common Components
-
-### Button
-
-**File**: `src/components/common/Button.tsx`
-
-Simple button component with variant styles.
-
-```typescript
-interface ButtonProps {
-  label: string
-  onClick: () => void
-  disabled?: boolean
-  variant?: 'primary' | 'secondary' | 'danger'
-}
-```
-
-**Variants**:
-- `primary`: Blue background (Catppuccin blue)
-- `secondary`: Gray background with border
-- `danger`: Red background
-
-### Tabs
-
-**File**: `src/components/common/Tabs.tsx`
-
-Tab navigation component.
-
-```typescript
-interface TabsProps {
-  tabs: { id: string; label: string }[]
-  activeTab: string
-  onChange: (tabId: string) => void
-}
-```
-
-**Styling**: Active tab has blue bottom border, inactive tabs are gray.
-
-## Input Components
-
-### RegexInput
-
-**File**: `src/components/input/RegexInput.tsx`
-
-Regex pattern input with validation, error display, and custom alphabet field.
-
-```typescript
-interface RegexInputProps {
-  value: string
-  onChange: (value: string) => void
-  alphabet: string
-  onAlphabetChange: (value: string) => void
-  error?: string
-}
-```
-
-**Features**:
-- Real-time input capture
-- Error message display in red
-- Monospace font for pattern
-- Placeholder example: `(a+b)*abb`
-- **Custom Alphabet Field**: Optional alphabet input for complete DFA generation with trap states
-- Auto-detection when alphabet is empty (includes symbols from regex and test string)
-
-**Example**:
-```typescript
-<RegexInput
-  value={regex}
-  onChange={setRegex}
-  error={error}
-/>
-```
-
-### StringInput
-
-**File**: `src/components/input/StringInput.tsx`
-
-Test string input for simulation.
-
-```typescript
-interface StringInputProps {
-  value: string
-  onChange: (value: string) => void
-}
-```
-
-**Features**:
-- Monospace font for input
-- Placeholder: `Enter test string`
-- No validation (any string accepted)
-
-## Display Components
-
-### AutomatonView
-
-**File**: `src/components/display/AutomatonView.tsx`
-
-Main component for viewing an automaton with multiple tabs.
-
-```typescript
-interface AutomatonViewProps {
-  automaton: Automaton | null
-  title: string
-  error?: string
-  highlightStates?: string[]
-  highlightEdges?: string[]
-}
-```
-
-**Tabs**:
-1. **Graph**: Visual graph representation
-2. **Table**: Transition table
-3. **States**: State list with details
-4. **Info**: Summary statistics
-
-**Export Buttons**: PNG and SVG export available on Graph tab.
-
-**Example**:
-```typescript
-<AutomatonView
-  automaton={nfa}
-  title="NFA (Nondeterministic Finite Automaton)"
-  error={error}
-  highlightStates={nfaHighlightStates}
-  highlightEdges={nfaHighlightEdges}
-/>
-```
-
-### TransitionTable
-
-**File**: `src/components/display/TransitionTable.tsx`
-
-Displays transition function as a table.
-
-```typescript
-interface TransitionTableProps {
-  automaton: Automaton
-  highlightState?: string
-}
-```
-
-**Table Structure**:
-- Rows: States
-- Columns: Input symbols (including λ if present)
-- Cells: Target states (set notation for multiple targets)
-
-**Indicators**:
-- `→` Start state
-- `✓` Accept state
-- `∅` No transition (empty set)
-
-**Highlighting**: Current simulation state highlighted in blue.
-
-### StateList
-
-**File**: `src/components/display/StateList.tsx`
-
-Lists all states with their properties and transitions.
-
-```typescript
-interface StateListProps {
-  automaton: Automaton
-  highlightStates?: string[]
-}
-```
-
-**For Each State**:
-- State ID with START/ACCEPT badges
-- Outgoing transitions (symbol → target)
-- Incoming transitions (source → symbol)
-
-**Summary Section**:
-- Total state count
-- Start state
-- Accept states
-- Total transition count
-
-## Simulation Components
-
-### SimulationPanel
-
-**File**: `src/components/simulation/SimulationPanel.tsx`
-
-Orchestrates simulation display and controls.
-
-```typescript
-interface SimulationPanelProps {
-  automaton: Automaton | null
-  input: string
-  mode: 'nfa' | 'dfa'
-  onHighlightChange: (states: string[], edges: string[]) => void
-}
-```
-
-**Components Used**:
-- InputTape: Visual tape with current position
-- SimulationControls: Playback buttons
-- StepExplanation: Natural language step description
-- Current state display
-
-**Highlight Callback**: Notifies parent when simulation step changes to update graph highlighting.
-
-### SimulationControls
-
-**File**: `src/components/simulation/SimulationControls.tsx`
-
-Playback control buttons for simulation.
-
-```typescript
-interface SimulationControlsProps {
-  isRunning: boolean
-  canStep: boolean
-  canReset: boolean
-  currentStep: number
-  totalSteps: number
-  onPlay: () => void
-  onPause: () => void
-  onStepForward: () => void
-  onStepBack: () => void
-  onReset: () => void
-  onComplete: () => void
-}
-```
-
-**Buttons**:
-- Reset (⏮): Jump to start
-- Step Back (◀): Previous step
-- Play/Pause (▶/⏸): Auto-advance
-- Step Forward (▶): Next step
-- Complete (⏭): Jump to end
-
-**Progress Display**: "Step X / Y"
-
-### InputTape
-
-**File**: `src/components/simulation/InputTape.tsx`
-
-Visual representation of input string as tape cells.
-
-```typescript
-interface InputTapeProps {
-  input: string
-  currentPosition: number
-  accepted: boolean | null
-}
-```
-
-**Visual States**:
-- Consumed symbols: Dimmed (gray)
-- Current symbol: Highlighted (yellow)
-- Remaining symbols: Normal (white)
-
-**Result Display**:
-- Green "✓ Accepted" if accepted
-- Red "✗ Rejected" if rejected
-- Hidden during simulation
-
-## Education Components
-
-### TheoryPanel
-
-**File**: `src/components/education/TheoryPanel.tsx`
-
-Displays theory explanations for formal language concepts.
-
-```typescript
-interface TheoryPanelProps {
-  topic: 'nfa' | 'dfa' | 'regex' | 'thompson' | 'subset' | 'simulation'
-}
-```
-
-**Content Structure**:
-Each topic has collapsible sections:
-- **Definition**: Formal mathematical definition
-- **Properties**: Key characteristics
-- **Example**: Concrete instance
-
-**Topics**:
-- `nfa`: NFA definition and properties
-- `dfa`: DFA definition and properties
-- `regex`: Regular expression syntax
-- `thompson`: Thompson's construction algorithm
-- `subset`: Subset construction algorithm
-- `simulation`: Automaton simulation process
-
-**Interaction**: Click section to expand/collapse.
-
-### StepExplanation
-
-**File**: `src/components/education/StepExplanation.tsx`
-
-Provides natural language explanations for simulation steps.
-
-```typescript
-interface StepExplanationProps {
-  step: SimulationStep | null
-  mode: 'nfa' | 'dfa'
-  isComplete: boolean
-  accepted: boolean
-}
-```
-
-**Explanation Types**:
-
-**Initialization**:
-- NFA: "Starting in state q0. Computing λ-closure: {q0, q1}."
-- DFA: "Starting in state q0."
-
-**Reading Symbol**:
-- NFA: "Read symbol 'a' at position 0. Current states: {q0, q1}."
-- DFA: "Read symbol 'a' at position 0. Transitioned to state q1."
-
-**Completion**:
-- Accepted: "String accepted. Final states: q3."
-- Rejected: "String rejected. No valid path to an accept state exists."
-
-**Additional Info**:
-- Warns when no valid transitions available
-- Notes nondeterminism when multiple states active
-
-## Custom Hooks
-
-### useSimulation
-
-**File**: `src/hooks/useSimulation.ts`
-
-Manages simulation state and controls.
-
-```typescript
-interface UseSimulationProps {
-  automaton: Automaton | null
-  input: string
-  mode: 'nfa' | 'dfa'
-}
-
-interface UseSimulationReturn {
-  result: SimulationResult | null
-  currentStep: number
-  currentStepData: SimulationStep | null
-  isRunning: boolean
-  canStep: boolean
-  canReset: boolean
-  stepForward: () => void
-  stepBack: () => void
-  reset: () => void
-  play: () => void
-  pause: () => void
-  complete: () => void
-}
-```
-
-**Features**:
-- Computes full simulation result upfront
-- Tracks current step index
-- Auto-play with configurable speed (default 800ms)
-- Step forward/backward navigation
-- Reset to start, complete to end
-
-**Auto-play Logic**:
-```typescript
-useEffect(() => {
-  if (!isRunning || !canStep) return
-
-  const timer = setTimeout(() => {
-    stepForward()
-  }, speed)
-
-  return () => clearTimeout(timer)
-}, [isRunning, currentStep, speed])
-```
-
-## New UI/UX Features
-
-### Flexible Simulation Modes
-
-The application supports three simulation display modes controlled by a mode selector in the simulation section:
-
-**Modes**:
-- **NFA Mode**: Only NFA automaton displayed, takes full width
-- **DFA Mode**: Only DFA automaton displayed, takes full width
-- **Both Mode**: Both automatons displayed side-by-side with responsive grid (xl:grid-cols-2)
-
-**Implementation**:
-```typescript
-const [simulationMode, setSimulationMode] = useState<'nfa' | 'dfa' | 'both'>('nfa')
-
-// In render
-<section className={`grid gap-8 ${
-  simulationMode === 'both' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'
-}`}>
-  {(simulationMode === 'nfa' || simulationMode === 'both') && (
-    <AutomatonView automaton={nfa} mode="nfa" />
-  )}
-  {(simulationMode === 'dfa' || simulationMode === 'both') && (
-    <AutomatonView automaton={dfa} mode="dfa" />
-  )}
-</section>
-```
-
-### Fullscreen Simulation Modal
-
-Each AutomatonView has a "Simulate" button that opens a fullscreen modal overlay:
-
-**File**: `src/components/simulation/SimulationModal.tsx`
-
-**Features**:
-- **Split-Screen Layout**: Graph on left, controls on right (lg:grid-cols-2)
-- **Live Visualization**: AutomatonGraph component displays and updates during simulation
-- **Backdrop Blur**: 95% opacity background with blur effect
-- **Independent State**: Modal simulation doesn't affect main simulation
-- **Highlight Propagation**: Updates parent automaton view via onHighlightChange callback
-
-**Component API**:
-```typescript
-interface SimulationModalProps {
-  automaton: Automaton
-  mode: 'nfa' | 'dfa'
-  isOpen: boolean
-  onClose: () => void
-  onHighlightChange: (states: string[], edges: string[]) => void
-}
-```
-
-### Expandable Views
-
-Table and States tabs in AutomatonView have dedicated expand buttons:
-
-**Features**:
-- **Fullscreen Modal**: Opens table or state list in fullscreen overlay
-- **Improved Scrolling**: Max-height increased from 600px to 800px
-- **Better Visibility**: Dedicated fullscreen mode for complex automata with many states
-- **Easy Access**: Expand button appears when viewing Table or States tabs
-
-**Implementation**: Uses same modal pattern as simulation modal with conditional content rendering.
-
-### Pattern Builder
-
-Interactive natural language to regex converter with 23 templates across 9 categories:
-
-**File**: `src/components/input/PatternBuilder.tsx`
-
-**Features**:
-- **Collapsible Design**: Doesn't clutter UI when not in use
-- **Categorized Dropdown**: Templates organized into 9 categories
-- **Dynamic Parameters**: Input fields adjust based on selected template
-- **Live Preview**: See generated regex before insertion
-- **One-Click Insertion**: Inserts pattern into RegexInput
-- **Parser Compatible**: All templates generate patterns compatible with simplified parser
-
-**Categories**: basic, position, repetition, character, combination, length, counting, negation, ordering
-
-## Styling
-
-All components use Tailwind CSS with Indigo/Emerald color theme (updated from Catppuccin Mocha):
-
-```javascript
-// Catppuccin Mocha Colors
-base: '#1e1e2e'       // Background
-surface0: '#313244'   // Card backgrounds
-text: '#cdd6f4'       // Primary text
-blue: '#89b4fa'       // Start states, primary actions
-green: '#a6e3a1'      // Accept states, success
-red: '#f38ba8'        // Errors, rejection
-yellow: '#f9e2af'     // Current position, symbols
-```
-
-### Responsive Breakpoints
-
-- Mobile: `<640px` - Stacked layout
-- Tablet: `640px-1024px` - Partial stacking
-- Desktop: `>1024px` - Side-by-side layout
-
-**Breakpoint Classes**:
-- `sm:` - 640px and up
-- `md:` - 768px and up
-- `lg:` - 1024px and up
-- `xl:` - 1280px and up
-
-**Example**:
-```typescript
-className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-// 1 column on mobile, 2 columns on desktop
-```
-
-## Component Patterns
-
-### Props Interface
-
-Define props inline for simple components:
-```typescript
-function Button({ label, onClick }: {
-  label: string
-  onClick: () => void
-}) { ... }
-```
-
-Use separate interface for complex props:
-```typescript
-interface AutomatonViewProps {
-  automaton: Automaton | null
-  title: string
-  error?: string
-}
-
-function AutomatonView(props: AutomatonViewProps) { ... }
-```
-
-### Event Handlers
-
-Name handlers descriptively with `handle` prefix:
-```typescript
-const handleExportPNG = () => { ... }
-const handleStepForward = () => { ... }
-```
-
-### Conditional Rendering
-
-Use early returns for error/empty states:
-```typescript
-if (error) {
-  return <ErrorDisplay message={error} />
-}
-
-if (!automaton) {
-  return <EmptyState />
-}
-
-return <NormalView />
-```
-
-### State Lifting
-
-Lift state to nearest common ancestor:
-- Regex value: `App` component
-- Active tab: `AutomatonView` component
-- Expanded sections: `TheoryPanel` component
-
-### Memoization
-
-Display components wrapped with `React.memo` to prevent unnecessary re-renders:
-- `TransitionTable`
-- `StateList`
-- `InputTape`
-- `SimulationControls`
-- `RegexInput`
-- `StringInput`
-- `SimulationPanel`
-
-Derived state computed with `useMemo`:
-- NFA/DFA construction in `App.tsx` (uses `debouncedRegex`, not raw `regex`)
-- Transition indexes (Map-based) in `TransitionTable` and `StateList`
-- Alphabet, accept state sets, and column lists in display components
-
-Stable handlers created with `useCallback`:
-- Highlight change handlers (in App.tsx and AutomatonView.tsx)
-- Event callbacks passed to child components
+## Styling and accessibility
+
+Components use Tailwind v4 utilities driven by design tokens defined in the app's CSS. Backgrounds are a cool indigo-slate; the brand iris-indigo is for UI chrome only. State colors are reserved for automaton roles and are colorblind-safe, each paired with a non-color cue: start has an incoming arrow, accept a double ring, trap a dashed dimmed stroke, active a thicker stroke. The graph canvas and the DOM read the same tokens, so a role is the same color everywhere.
+
+The accessibility floor is enforced, not aspirational. Every interactive element is keyboard-operable, carries a visible focus ring, and meets a 44px touch target at the 360px floor. Dialogs trap focus while open, close on `Escape`, and restore focus on close. Every graph has a screen-reader description via `a11y/GraphSummary.tsx` and `visualization/describe.ts`, alongside the navigable transition table. There is no horizontal scroll at 360px, and routes are checked with axe in the end-to-end suite.
