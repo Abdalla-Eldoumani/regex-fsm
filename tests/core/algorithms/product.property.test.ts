@@ -23,7 +23,7 @@ import { DFA } from '@/core/automata/types'
 // sampled), this is a DECISION over the bounded language, not a probabilistic spot
 // check. No input is ever compiled to a JS RegExp (threat T-07-TAMPER); everything
 // is driven through the bespoke pipeline. The seed is fixed so any counterexample
-// reproduces; per the skill and the root CLAUDE.md, a counterexample becomes a
+// reproduces; per the project conventions, a counterexample becomes a
 // named unit test in product.test.ts and the ALGORITHM in product.ts is fixed --
 // the property is never loosened and no assertion is weakened.
 

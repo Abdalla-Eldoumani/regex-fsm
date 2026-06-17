@@ -249,7 +249,7 @@ test('pumping route has no serious or critical axe violations', async ({ page })
 
   // The SplitTape is plain DOM (no canvas), so no exclusion is needed for it.
   // We exclude only the invisible pumping-segment-y span wrapper (it is `contents`
-  // and can confuse some axe rules). In practice no exclusion is required — only
+  // and can confuse some axe rules). In practice no exclusion is required -- only
   // add one if axe reports a false positive on an uninspectable element.
   const results = await new AxeBuilder({ page })
     .withTags('wcag2aa')

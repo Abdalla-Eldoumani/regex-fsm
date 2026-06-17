@@ -65,7 +65,7 @@ export function star(child: GnfaLabel): GnfaLabel {
 // Two labels with the same canonical key denote the same expression tree, so this
 // is what drives the idempotent-union rule R + R = R below. It is structural, not
 // semantic: it does not decide language equivalence (that is the property tests'
-// job in plan 02), only that two trees are literally the same after simplify().
+// job), only that two trees are literally the same after simplify().
 export function canonical(r: GnfaLabel): string {
   switch (r.type) {
     case 'empty':
@@ -314,7 +314,7 @@ export function buildGNFA(nfa: NFA): GnfaBuild {
 // falls back to localeCompare. START and ACCEPT are never eliminable. A fixed
 // order makes the produced regex and the snapshots reproducible run to run; the
 // order changes the regex's FORM only, never its language (this is exactly what
-// the per-step language property in plan 02 protects).
+// the per-step language property protects).
 function interiorOrder(stateIds: string[], start: string, accept: string): string[] {
   const interior = stateIds.filter(id => id !== start && id !== accept)
   const numeric = (id: string): number | null => {
@@ -405,7 +405,7 @@ export function eliminate(build: GnfaBuild): EliminateResult {
 // Convert an NFA to an equivalent regex by GNFA state elimination (N2R-01/N2R-03).
 // Returns BOTH the final regex (as a RegexNode, or null + isEmptyLanguage when the
 // language is empty) AND the ordered per-step snapshots for animation. The
-// language-preserving invariant holds at every snapshot (proven by the plan 02
+// language-preserving invariant holds at every snapshot (proven by the
 // property tests). Pure; never mutates the input.
 export function nfaToRegex(nfa: NFA): NfaToRegexResult {
   const build = buildGNFA(nfa)

@@ -5,7 +5,7 @@ import type { JSX } from 'react'
 // is aria-hidden; the role=status text is the accessible announcement.
 //
 // Warning tokens (bg-warning/10 + border-warning/30 + text-warning) come from
-// the design system's feedback palette — never color alone; icon + text paired.
+// the design system's feedback palette -- never color alone; icon + text paired.
 export function TooLargeNotice({
   message,
   partial,
@@ -18,7 +18,7 @@ export function TooLargeNotice({
       role="status"
       className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4"
     >
-      {/* Warning triangle — aria-hidden because the text carries the meaning */}
+      {/* Warning triangle -- aria-hidden because the text carries the meaning */}
       <svg
         aria-hidden="true"
         className="mt-0.5 h-5 w-5 shrink-0 text-warning"

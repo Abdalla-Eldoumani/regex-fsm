@@ -167,6 +167,28 @@ describe('ASU direct regex-to-DFA construction', () => {
     })
   })
 
+  describe('independent-call state numbering regression', () => {
+    // The construction once kept its node-id counter at module scope and reset it
+    // on entry. That made two constructions share mutable state: any path that ran
+    // between the reset and the allocation would leak ids across calls. A
+    // closure-local generator gives each call its own counter, so two independent
+    // calls on the same input produce identical numbering.
+    it('two independent calls on the same regex produce identical state ids', () => {
+      const ast = parse('(a+b)*abb')
+      const alphabet = new Set(['a', 'b'])
+
+      const first = asuDirectDFA(ast, alphabet)
+      const second = asuDirectDFA(ast, alphabet)
+
+      expect(second.dfa.states.map(s => s.id)).toEqual(first.dfa.states.map(s => s.id))
+      expect(second.dfa.startState).toEqual(first.dfa.startState)
+      expect(second.dfa.acceptStates).toEqual(first.dfa.acceptStates)
+      // followpos is keyed by internal node id, so identical keys confirm the id
+      // allocation did not drift between the two calls.
+      expect([...second.followpos.keys()]).toEqual([...first.followpos.keys()])
+    })
+  })
+
   describe('equivalence with Thompson+Subset pipeline', () => {
     const testCases = [
       { regex: 'a', strings: ['', 'a', 'b', 'aa'] },

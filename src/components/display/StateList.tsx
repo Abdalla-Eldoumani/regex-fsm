@@ -27,7 +27,7 @@ export const StateList = memo(function StateList({ automaton, highlightStates = 
       else inc.set(t.to, [t])
     }
     return { outgoingMap: out, incomingMap: inc }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- pre-existing; revisit under test in its owning phase (see .agent/TECH_DEBT.md)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- pre-existing; revisit under test in its owning phase
   }, [automaton.transitions])
 
   const getOutgoingTransitions = (stateId: string) => outgoingMap.get(stateId) ?? []
@@ -54,7 +54,7 @@ export const StateList = memo(function StateList({ automaton, highlightStates = 
 
   return (
     <div className="space-y-4 max-h-[800px] min-h-[400px] overflow-y-auto pr-2">
-      {/* Result banners use feedback tokens (success/error) — these communicate a simulation
+      {/* Result banners use feedback tokens (success/error) -- these communicate a simulation
           outcome, not a state role. animate-fade-in has been removed as the animation token
           no longer exists in the theme. */}
       {isRejected && (
@@ -105,9 +105,9 @@ export const StateList = memo(function StateList({ automaton, highlightStates = 
             }`}
           >
             <div className="flex items-center gap-3 mb-4 overflow-hidden">
-              {/* State badge — uses state-semantic tokens, not bg-error/bg-success with text-white.
+              {/* State badge -- uses state-semantic tokens, not bg-error/bg-success with text-white.
                   Same tokens as graph node colors; non-color cue is the text id itself.
-                  on-state token doesn't exist in this theme — text-on-bg is the correct choice
+                  on-state token doesn't exist in this theme -- text-on-bg is the correct choice
                   since the soft tints have enough contrast against text-text-hi. */}
               <div
                 className={`w-10 h-10 flex items-center justify-center rounded-full font-mono font-bold text-sm flex-shrink-0 border-2 ${
@@ -121,19 +121,19 @@ export const StateList = memo(function StateList({ automaton, highlightStates = 
               </div>
               <div className="flex gap-2">
                 {isStartState(state.id) && (
-                  /* Start label chip — state-semantic token (no-drift contract) */
+                  /* Start label chip -- state-semantic token (no-drift contract) */
                   <span className="px-2 py-0.5 bg-state-start-soft border border-state-start/40 rounded-md text-xs text-state-start font-medium uppercase tracking-wider">
                     Start
                   </span>
                 )}
                 {isAcceptState(state.id) && (
-                  /* Accept label chip — state-semantic token (no-drift contract) */
+                  /* Accept label chip -- state-semantic token (no-drift contract) */
                   <span className="px-2 py-0.5 bg-state-accept-soft border border-state-accept/40 rounded-md text-xs text-state-accept font-medium uppercase tracking-wider">
                     Accept
                   </span>
                 )}
                 {isTrapState(state.id) && (
-                  /* Trap label chip — state-semantic token (no-drift contract) */
+                  /* Trap label chip -- state-semantic token (no-drift contract) */
                   <span className="px-2 py-0.5 bg-state-trap-soft border border-state-trap/40 rounded-md text-xs text-state-trap font-medium uppercase tracking-wider">
                     Trap
                   </span>
@@ -153,7 +153,7 @@ export const StateList = memo(function StateList({ automaton, highlightStates = 
                     {outgoing.map((t, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-sm">
                         <span className="text-text-mid">On</span>
-                        {/* Transition symbol chip — neutral surface, not a state role */}
+                        {/* Transition symbol chip -- neutral surface, not a state role */}
                         <code className="px-1.5 py-0.5 bg-surface-raised rounded border border-border text-text-hi font-mono text-xs">
                           {t.symbol === null ? 'λ' : t.symbol}
                         </code>
@@ -195,13 +195,13 @@ export const StateList = memo(function StateList({ automaton, highlightStates = 
         )
       })}
 
-      {/* Summary footer — neutral surface, not state-semantic */}
+      {/* Summary footer -- neutral surface, not state-semantic */}
       <div className="mt-6 p-4 bg-surface-raised/40 rounded-xl border border-border/50 text-sm text-text-mid">
         <div className="font-semibold text-text-hi mb-2">Summary</div>
         <div className="grid grid-cols-2 gap-4">
           <div>Total states: <span className="font-mono text-text-hi">{automaton.states.length}</span></div>
           <div>Total transitions: <span className="font-mono text-text-hi">{automaton.transitions.length}</span></div>
-          {/* Start/accept refs in summary use state-semantic tokens — same as graph */}
+          {/* Start/accept refs in summary use state-semantic tokens -- same as graph */}
           <div>Start state: <code className="text-state-start font-mono">{automaton.startState}</code></div>
           <div>
             Accept states: {automaton.acceptStates.length === 0 ? (

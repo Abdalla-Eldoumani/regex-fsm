@@ -16,7 +16,7 @@ export function useSimulation({ automaton, input, mode }: UseSimulationOptions) 
 
   useEffect(() => {
     if (!automaton || input === null || input === undefined) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing setState-in-effect; refactor under test in its owning phase (see .agent/TECH_DEBT.md)
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing setState-in-effect; refactor under test in its owning phase
       setResult(null)
       setCurrentStep(0)
       setIsRunning(false)
@@ -42,7 +42,7 @@ export function useSimulation({ automaton, input, mode }: UseSimulationOptions) 
 
     const canContinue = currentStep < result.steps.length - 1
     if (!canContinue) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing setState-in-effect; refactor under test in its owning phase (see .agent/TECH_DEBT.md)
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing setState-in-effect; refactor under test in its owning phase
       setIsRunning(false)
       return
     }

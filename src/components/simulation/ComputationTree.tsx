@@ -8,7 +8,7 @@ import type {
 
 // ComputationTree: the bespoke DOM view of an NFA's genuine nondeterministic
 // execution on one input. It renders the configuration-set DAG produced by
-// computationTree.ts (plan 01) without re-deriving anything: one row per level
+// computationTree.ts without re-deriving anything: one row per level
 // (level 0 the start closure at the top, one row per consumed symbol below it),
 // each configuration drawn as a font-mono set, lambda-closure expansions and
 // dead branches labelled, accepting leaves ringed.

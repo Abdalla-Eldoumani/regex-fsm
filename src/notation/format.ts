@@ -38,7 +38,7 @@ function rightmostIsPlus(node: RegexNode): boolean {
 }
 
 // Returns true if the leftmost character of the formatted right child of a concat
-// could begin a new atom — if so a trailing + on the left would be misread as union.
+// could begin a new atom -- if so a trailing + on the left would be misread as union.
 function leftmostStartsAtom(node: RegexNode): boolean {
   switch (node.type) {
     case 'symbol': return true

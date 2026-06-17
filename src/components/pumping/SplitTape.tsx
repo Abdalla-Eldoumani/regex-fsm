@@ -7,7 +7,7 @@ import type { JSX } from 'react'
 // not know about splits. A sibling keeps the concerns isolated.
 //
 // The y-segment carries the `.active` treatment (border-state-active + bg-state-active-soft)
-// because y is the pumped block — the block the adversary chose as the repeated cycle
+// because y is the pumped block -- the block the adversary chose as the repeated cycle
 // (§4.3.2). The non-color cue is the segment label below each run (x, y, z), matching
 // InputTape's "Head" caption pattern. Colorblind-safe: each segment also has a distinct
 // border style (subtle for x, state-active for y, raised for z).
@@ -34,7 +34,7 @@ function ActiveCell({ char }: { char: string }): JSX.Element {
     <div
       // y is the pumped block: the adversary's repeated cycle from §4.3.2.
       // The .active treatment (is-active + border-state-active + bg-state-active-soft)
-      // is the project-wide amber "this is the thing happening now" cue (CLAUDE.md).
+      // is the project-wide amber "this is the thing happening now" cue (per the project conventions).
       className="flex items-center justify-center w-10 h-10 shrink-0 rounded-lg font-mono text-lg font-bold is-active border-state-active bg-state-active-soft text-text-hi"
     >
       {char}

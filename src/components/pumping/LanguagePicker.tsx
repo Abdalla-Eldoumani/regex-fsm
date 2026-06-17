@@ -46,7 +46,7 @@ export function LanguagePicker({
       </div>
       {selected && (
         // The course-notation definition. Rendered font-mono so Σ, superscripts,
-        // and set-builder notation read as symbolic content (CLAUDE.md token rule).
+        // and set-builder notation read as symbolic content (per the project conventions).
         <div className="font-mono text-sm text-text-mid px-1">
           {selected.definition}
         </div>

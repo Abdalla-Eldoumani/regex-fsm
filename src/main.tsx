@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components -- app entry point: Fast Refresh of exports is moot here; the lazy() route consts and LoadingFallback are not refreshable components (see .agent/TECH_DEBT.md) */
+/* eslint-disable react-refresh/only-export-components -- app entry point: Fast Refresh of exports is moot here; the lazy() route consts and LoadingFallback are not refreshable components */
 import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'

@@ -378,7 +378,7 @@ describe('pattern templates', () => {
     })
 
     it('position template + form parses identically to equivalent | form', () => {
-      // starts_with emits (a + b + c)* — verify the parser handles spaced + union
+      // starts_with emits (a + b + c)* -- verify the parser handles spaced + union
       const plusForm = '(a + b + c)*'
       const pipeForm = '(a|b|c)*'
       expect(() => parse(plusForm)).not.toThrow()

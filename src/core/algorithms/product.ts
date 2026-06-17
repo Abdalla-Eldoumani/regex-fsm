@@ -9,7 +9,7 @@ import { completeDFA } from './complement'
 // the same languages and is the construction students are asked to draw. The
 // accepting condition is the ONLY difference between the two modes -- union accepts
 // when EITHER component accepts, intersection when BOTH do. The property suite
-// (plan 02) binds this to the course languages by full enumeration; this module is
+// the property suite binds this to the course languages by full enumeration; this module is
 // the construction, decided correct by simulateDFA, never by shape.
 //
 // Reachable-only: the product is built by BFS from the start pair, so unreachable

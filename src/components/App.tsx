@@ -528,7 +528,7 @@ function App() {
               <div className="p-5 border-b border-border bg-gradient-to-r from-brand-tint to-transparent flex justify-between items-center relative">
                  <div className="relative z-10">
                    <h3 className="font-display font-bold text-text-hi flex items-center gap-3">
-                     {/* Chrome dot — brand, not a state color */}
+                     {/* Chrome dot -- brand, not a state color */}
                      <span className="w-3 h-3 rounded-full bg-brand shadow-sm"></span>
                      <span className="text-lg">Nondeterministic Finite Automaton</span>
                    </h3>
@@ -577,7 +577,7 @@ function App() {
                <div className="p-5 border-b border-border bg-gradient-to-r from-brand-tint to-transparent flex justify-between items-center relative">
                  <div className="relative z-10">
                    <h3 className="font-display font-bold text-text-hi flex items-center gap-3">
-                      {/* Chrome dot — brand, not a state color */}
+                      {/* Chrome dot -- brand, not a state color */}
                       <span className="w-3 h-3 rounded-full bg-brand shadow-sm"></span>
                       <span className="text-lg">Deterministic Finite Automaton</span>
                    </h3>
@@ -657,7 +657,7 @@ function App() {
           <p className="text-sm text-text-low">
             Designed for educational purposes. Visualizing Formal Language Theory.
           </p>
-          {/* Three chrome dots — brand ramp, not state colors */}
+          {/* Three chrome dots -- brand ramp, not state colors */}
           <div className="mt-4 flex justify-center items-center gap-2">
             <div className="w-1 h-1 rounded-full bg-brand"></div>
             <div className="w-1 h-1 rounded-full bg-brand-hover"></div>

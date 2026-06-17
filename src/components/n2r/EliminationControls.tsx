@@ -46,7 +46,7 @@ export function EliminationControls({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Prev — disabled at first step */}
+      {/* Prev -- disabled at first step */}
       <button
         type="button"
         onClick={onPrev}
@@ -59,7 +59,7 @@ export function EliminationControls({
         <span className="mr-1" aria-hidden="true">◀</span> Prev
       </button>
 
-      {/* Play/Pause — hidden under reduced motion */}
+      {/* Play/Pause -- hidden under reduced motion */}
       {!reducedMotion && (
         <button
           type="button"
@@ -86,7 +86,7 @@ export function EliminationControls({
         </button>
       )}
 
-      {/* Next — disabled at last step */}
+      {/* Next -- disabled at last step */}
       <button
         type="button"
         onClick={onNext}
@@ -99,7 +99,7 @@ export function EliminationControls({
         Next <span className="ml-1" aria-hidden="true">▶</span>
       </button>
 
-      {/* Speed select — hidden under reduced motion (auto-play is suppressed) */}
+      {/* Speed select -- hidden under reduced motion (auto-play is suppressed) */}
       {!reducedMotion && (
         <div className="flex items-center gap-2 ml-2 px-4 min-h-[44px] bg-surface-raised rounded-lg border border-border">
           <span className="text-sm font-medium text-text-mid">Speed:</span>

@@ -18,7 +18,7 @@ import { nfaToDFA } from '@/core/algorithms/subset'
 import { formatRegex } from '@/notation/format'
 
 // Regexes chosen to exercise union (+), empty string (λ/ε), concatenation,
-// and Kleene star — the full glyph-flip surface.
+// and Kleene star -- the full glyph-flip surface.
 const TEST_REGEXES = [
   '(a + b)*abb',   // union + concat + star (the canonical course example)
   'a + b',          // bare union

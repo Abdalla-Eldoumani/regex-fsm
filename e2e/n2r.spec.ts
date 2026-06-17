@@ -89,7 +89,7 @@ test('final regex is shown in course notation after stepping to last step', asyn
 
   const text = await finalRegex.textContent()
   // The a* preset should produce a regex containing "a" and "*" in course notation.
-  // We do not assert an exact string — the course form varies by simplification.
+  // We do not assert an exact string -- the course form varies by simplification.
   // We do assert course notation is used: no textbook "|" union character.
   expect(text).toBeTruthy()
   expect(text).toContain('a')
@@ -102,7 +102,7 @@ test('final regex is shown in course notation after stepping to last step', asyn
 test('eliminated state carries the active class during elimination steps', async ({ page }) => {
   await gotoLoadedN2R(page)
 
-  // Advance to step 2 (after initial GNFA — a step where a state is eliminated).
+  // Advance to step 2 (after initial GNFA -- a step where a state is eliminated).
   const nextBtn = page.locator('[data-testid="n2r-next"]')
   await nextBtn.click()
   await page.waitForTimeout(100)

@@ -12,7 +12,7 @@
 // {0^n 1^n | n in N0} non-regular by DFA state-repetition. N0 includes 0, so the
 // empty string is in that language. We mirror that convention here: a^n b^n uses
 // n >= 0, hence member("") is true. The witnesses are the proven ones from the
-// research: a^p b^p for a^n b^n, and a^p b a^p b for ww (Pitfall 2 — a^p a^p is
+// research: a^p b^p for a^n b^n, and a^p b a^p b for ww (Pitfall 2 -- a^p a^p is
 // wrong because it stays inside ww under pumping).
 
 /**
