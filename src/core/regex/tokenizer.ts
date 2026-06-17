@@ -55,21 +55,11 @@ export function tokenize(input: string): Token[] {
     }
 
     if (char === '+') {
-      const lastToken = tokens[tokens.length - 1]
-      const isPlusOperator = lastToken && (
-        lastToken.type === 'RPAREN' ||
-        lastToken.type === 'STAR' ||
-        lastToken.type === 'PLUS' ||
-        lastToken.type === 'OPTIONAL' ||
-        lastToken.type === 'SYMBOL' ||
-        lastToken.type === 'EPSILON'
-      )
-
-      if (isPlusOperator) {
-        tokens.push({ type: 'PLUS', pos })
-      } else {
-        tokens.push({ type: 'UNION', pos })
-      }
+      // `+` is overloaded in this course: infix union (a + b) and postfix
+      // positive closure (a+). The lexer cannot tell them apart from a local
+      // window, so it emits one neutral PLUS token and the parser decides by
+      // grammar position (union when an operand follows, closure otherwise).
+      tokens.push({ type: 'PLUS', pos })
       pos++
       continue
     }

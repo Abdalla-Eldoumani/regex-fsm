@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Automaton } from '@/core/automata/types'
 import { SimulationPanel } from './SimulationPanel'
 import { AutomatonGraph } from '@/visualization/renderer'
+import { GraphSummary } from '@/components/a11y'
 
 interface SimulationModalProps {
   automaton: Automaton
@@ -24,6 +25,7 @@ export function SimulationModal({
 
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing setState-in-effect; refactor under test in its owning phase
       setInput('')
       onHighlightChange([], [])
       setHighlightStates([])
@@ -46,22 +48,24 @@ export function SimulationModal({
   }
 
   return (
+    /* bg-bg/95 backdrop so the scrim is dark but the modal card itself is surface-overlay */
     <div
-      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-50 bg-bg/95 backdrop-blur-md"
       onClick={handleBackdropClick}
     >
       <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border bg-surface/80 backdrop-blur-sm shadow-lg">
+        <div className="flex items-center justify-between p-6 border-b border-border bg-surface-overlay shadow-md">
           <div className="flex items-center gap-4">
-            <div className={`w-3 h-3 rounded-full ${mode === 'nfa' ? 'bg-primary' : 'bg-secondary'} shadow-lg animate-pulse`}></div>
-            <h2 className="text-2xl font-display font-bold text-text-primary">
+            {/* mode indicator uses brand chrome, not a state color */}
+            <div className="w-3 h-3 rounded-full bg-brand shadow-sm"></div>
+            <h2 className="text-2xl font-display font-bold text-text-hi">
               {mode === 'nfa' ? 'NFA' : 'DFA'} Simulation
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="cursor-pointer w-10 h-10 flex items-center justify-center rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all hover:scale-110"
+            className="cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-low hover:text-text-hi hover:bg-surface-raised transition-all"
             title="Close (Esc)"
           >
             <svg
@@ -79,34 +83,37 @@ export function SimulationModal({
         <div className="flex-1 overflow-hidden">
           <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
             {/* Left side: Graph */}
-            <div className="bg-surface/80 backdrop-blur-sm rounded-2xl border-2 border-border shadow-xl overflow-hidden">
-              <div className={`p-4 border-b border-border bg-gradient-to-r ${mode === 'nfa' ? 'from-primary/10' : 'from-secondary/10'} via-transparent to-transparent`}>
-                <h3 className="text-lg font-semibold text-text-primary">Automaton Graph</h3>
+            <div className="bg-surface rounded-lg border border-border shadow-md overflow-hidden">
+              <div className="p-4 border-b border-border bg-surface-raised">
+                <h3 className="text-lg font-semibold text-text-hi">Automaton Graph</h3>
               </div>
               <div className="h-[calc(100%-64px)]">
-                <AutomatonGraph
-                  automaton={automaton}
-                  highlightStates={highlightStates}
-                  highlightEdges={highlightEdges}
-                />
+                <GraphSummary automaton={automaton} ariaLabel="State diagram">
+                  <AutomatonGraph
+                    automaton={automaton}
+                    highlightStates={highlightStates}
+                    highlightEdges={highlightEdges}
+                  />
+                </GraphSummary>
               </div>
             </div>
 
             {/* Right side: Simulation controls */}
-            <div className="bg-surface/80 backdrop-blur-sm rounded-2xl border-2 border-border shadow-xl overflow-hidden flex flex-col">
-              <div className={`p-4 border-b border-border bg-gradient-to-r ${mode === 'nfa' ? 'from-primary/10' : 'from-secondary/10'} via-transparent to-transparent`}>
-                <h3 className="text-lg font-semibold text-text-primary">Simulation Controls</h3>
+            <div className="bg-surface rounded-lg border border-border shadow-md overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-border bg-surface-raised">
+                <h3 className="text-lg font-semibold text-text-hi">Simulation Controls</h3>
               </div>
               <div className="flex-1 overflow-y-auto p-6">
                 <div className="mb-6">
-                  <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-text-mid uppercase tracking-label mb-2">
                     Test String
                   </label>
+                  {/* symbolic input field: font-mono for the test string */}
                   <input
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="w-full px-4 py-3 bg-background/80 backdrop-blur-sm border-2 rounded-xl font-mono text-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-4 transition-all shadow-inner border-border hover:border-border-hover focus:ring-primary/20 focus:border-primary shadow-primary/5"
+                    className="w-full px-4 min-h-[44px] bg-surface-raised border border-border rounded-lg font-mono text-lg text-text-hi placeholder:text-text-low focus-visible:outline-none transition-all"
                     placeholder="Enter string to simulate..."
                     autoFocus
                   />

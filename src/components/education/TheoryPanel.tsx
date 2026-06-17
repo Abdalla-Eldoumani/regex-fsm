@@ -13,21 +13,21 @@ const theoryContent: Record<string, TheorySection[]> = {
   nfa: [
     {
       title: 'Definition',
-      content: 'A Nondeterministic Finite Automaton (NFA) is a 5-tuple (Q, Σ, δ, q₀, F) where Q is a finite set of states, Σ is the input alphabet, δ: Q × (Σ ∪ {λ}) → P(Q) is the transition function, q₀ ∈ Q is the start state, and F ⊆ Q is the set of accept states.',
+      content: 'A Nondeterministic Finite Automaton (NFA) is a 5-tuple (Q, Σ, δ, q₀, A) where Q is a finite set of states, Σ is the input alphabet, δ: Q × (Σ ∪ {λ}) → P(Q) is the transition function, q₀ ∈ Q is the start state, and A ⊆ Q is the set of accepting states.',
     },
     {
       title: 'Properties',
-      content: 'NFAs can have multiple transitions for the same input symbol from a given state. They can have lambda (λ) transitions that allow state changes without consuming input. An NFA accepts a string if at least one computation path leads to an accept state.',
+      content: 'NFAs can have multiple transitions for the same input symbol from a given state. They can have lambda (λ) transitions that allow state changes without consuming input. An NFA accepts a string if at least one computation path leads to an accepting state.',
     },
     {
       title: 'Example',
-      content: 'An NFA for the language (a|b)*abb has states that track the progress toward matching the suffix "abb". It uses nondeterminism to guess when the final "abb" sequence begins.',
+      content: 'An NFA for the language (a + b)*abb has states that track the progress toward matching the suffix "abb". It uses nondeterminism to guess when the final "abb" sequence begins.',
     },
   ],
   dfa: [
     {
       title: 'Definition',
-      content: 'A Deterministic Finite Automaton (DFA) is a 5-tuple (Q, Σ, δ, q₀, F) where Q is a finite set of states, Σ is the input alphabet, δ: Q × Σ → Q is the transition function, q₀ ∈ Q is the start state, and F ⊆ Q is the set of accept states.',
+      content: 'A Deterministic Finite Automaton (DFA) is a 5-tuple (Q, Σ, δ, q₀, A) where Q is a finite set of states, Σ is the input alphabet, δ: Q × Σ → Q is the transition function, q₀ ∈ Q is the start state, and A ⊆ Q is the set of accepting states.',
     },
     {
       title: 'Properties',
@@ -35,21 +35,21 @@ const theoryContent: Record<string, TheorySection[]> = {
     },
     {
       title: 'Example',
-      content: 'A DFA for the language (a|b)*abb requires states that remember the last two symbols read. Each state represents what suffix of "abb" has been matched so far.',
+      content: 'A DFA for the language (a + b)*abb requires states that remember the last two symbols read. Each state represents what suffix of "abb" has been matched so far.',
     },
   ],
   regex: [
     {
       title: 'Definition',
-      content: 'Regular expressions define languages using operators: concatenation (ab), union (a|b), and Kleene star (a*). Additional operators like positive closure (a+) and optional (a?) are syntactic sugar.',
+      content: 'Regular expressions define languages using operators: concatenation (ab), union (a + b), and Kleene star (a*). Positive closure r+ is a first-class course operator (Definition 3.9) with L(r+) = L(r)+. The optional operator (a?) is an app convenience extension, not part of Definition 3.9.',
     },
     {
       title: 'Properties',
-      content: 'Regular expressions define exactly the regular languages. Every regular expression can be converted to an equivalent NFA. Operator precedence: star > concatenation > union. Parentheses override precedence.',
+      content: 'Regular expressions define exactly the regular languages. Every regular expression can be converted to an equivalent NFA. Union binds loosest, then concatenation, then closure (*, +). Parentheses override precedence.',
     },
     {
       title: 'Example',
-      content: 'The regex (a|b)*abb matches any string over {a,b} ending in "abb". The star applies to (a|b), allowing any prefix, followed by the literal suffix "abb".',
+      content: 'The regex (a + b)*abb matches any string over {a,b} ending in "abb". The star applies to (a + b), allowing any prefix, followed by the literal suffix "abb".',
     },
   ],
   thompson: [
@@ -63,7 +63,7 @@ const theoryContent: Record<string, TheorySection[]> = {
     },
     {
       title: 'Example',
-      content: 'For regex ab|c: Build NFAs for a, b, and c. Concatenate a and b using lambda transitions. Build union of (ab) and c using lambda transitions from new start state.',
+      content: 'For regex ab + c: Build NFAs for a, b, and c. Concatenate a and b using lambda transitions. Build union of (ab) and c using lambda transitions from new start state.',
     },
   ],
   subset: [
@@ -87,11 +87,11 @@ const theoryContent: Record<string, TheorySection[]> = {
     },
     {
       title: 'Properties',
-      content: 'NFA simulation: Initialize with λ-closure of start state. For each input symbol, compute move then λ-closure. Accept if any final state is in accept set. DFA simulation: Start at q₀. For each symbol, follow unique transition. Accept if final state is in F.',
+      content: 'NFA simulation: Initialize with λ-closure of start state. For each input symbol, compute move then λ-closure. Accept if any final state is in accepting set A. DFA simulation: Start at q₀. For each symbol, follow unique transition. Accept if final state is in A.',
     },
     {
       title: 'Example',
-      content: 'Simulating "abb" on an NFA for (a|b)*abb: Start in {q0}. Read "a": move to {q0,q1}. Read "b": move to {q0,q2}. Read "b": move to {q0,q3}. Accept since q3 is an accept state.',
+      content: 'Simulating "abb" on an NFA for (a + b)*abb: Start in {q0}. Read "a": move to {q0,q1}. Read "b": move to {q0,q2}. Read "b": move to {q0,q3}. Accept since q3 is an accepting state.',
     },
   ],
 }
@@ -121,22 +121,22 @@ export function TheoryPanel({ topic }: TheoryPanelProps) {
   }
 
   return (
-    <div className="p-4 bg-surface0 rounded-lg">
-      <h3 className="text-lg font-semibold text-text mb-4">{topicTitles[topic]}</h3>
+    <div className="p-4 bg-surface rounded-lg">
+      <h3 className="text-lg font-semibold text-text-hi mb-4">{topicTitles[topic]}</h3>
       <div className="space-y-2">
         {sections.map((section, index) => (
-          <div key={index} className="border border-overlay0 rounded">
+          <div key={index} className="border border-border rounded">
             <button
               onClick={() => toggleSection(index)}
-              className="w-full px-4 py-2 text-left flex items-center justify-between hover:bg-surface1 transition-colors"
+              className="w-full px-4 min-h-[44px] text-left flex items-center justify-between hover:bg-surface-raised transition-colors"
             >
-              <span className="font-medium text-text">{section.title}</span>
-              <span className="text-subtext0">
+              <span className="font-medium text-text-hi">{section.title}</span>
+              <span className="text-text-mid">
                 {expandedSections.has(index) ? '−' : '+'}
               </span>
             </button>
             {expandedSections.has(index) && (
-              <div className="px-4 py-3 bg-base text-sm text-subtext1 leading-relaxed border-t border-overlay0">
+              <div className="px-4 py-3 bg-surface-raised text-sm text-text leading-relaxed border-t border-border">
                 {section.content}
               </div>
             )}

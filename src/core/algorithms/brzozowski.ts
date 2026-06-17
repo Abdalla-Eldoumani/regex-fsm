@@ -1,5 +1,5 @@
 import { RegexNode } from '../regex/ast'
-import { DFA, State, Transition } from '../automata/types'
+import { DFA, State, Transition, TooLargeError, BOUNDS } from '../automata/types'
 
 // Extended node type for Brzozowski: adds 'reject' (empty language ∅)
 type BrzNode =
@@ -171,9 +171,19 @@ export function brzozowskiDFA(ast: RegexNode, alphabet: Set<string>): Brzozowski
   const derivativeLog: BrzozowskiResult['derivatives'] = []
   const TRAP_STATE = '∅'
   let trapNeeded = false
-  const MAX_STATES = 1000 // safety limit
+  // Wall-clock budget: mirror of subset.ts. Captured before the loop so the
+  // first iteration's check reflects actual elapsed time, not setup cost.
+  const startedAt = performance.now()
 
-  while (worklist.length > 0 && stateExpressions.size < MAX_STATES) {
+  while (worklist.length > 0) {
+    // SAFETY-01: throw instead of silently returning a truncated (wrong) DFA.
+    // A partial DFA presented as complete is worse than none (invariant 8).
+    if (stateExpressions.size > BOUNDS.MAX_DFA_STATES) {
+      throw new TooLargeError('state-cap', BOUNDS.MAX_DFA_STATES, { states: stateExpressions.size })
+    }
+    if (performance.now() - startedAt > BOUNDS.TIME_BUDGET_MS) {
+      throw new TooLargeError('time-budget', BOUNDS.TIME_BUDGET_MS, { states: stateExpressions.size })
+    }
     const currentKey = worklist.pop()!
     const currentExpr = stateExpressions.get(currentKey)!
     const currentName = getStateName(currentKey)

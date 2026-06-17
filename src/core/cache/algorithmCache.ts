@@ -1,18 +1,17 @@
 import { LRUCache } from './LRUCache'
 import { RegexNode } from '../regex/ast'
 import { NFA, DFA } from '../automata/types'
+import type { MinimizationResult } from '../algorithms/minimize'
 import { parseKey, thompsonKey, subsetKey, minimizeKey } from './keys'
 
-// MinimizationResult type defined locally (minimize.ts may not exist)
-interface MinimizationResult {
-  dfa: DFA
-  stateMapping: Map<string, string>
-  mergedStates: Map<string, string[]>
-  description: string
-}
-
-// Cache version for invalidation on app updates
-const CACHE_VERSION = '1.0.0'
+// Cache version for invalidation on app updates.
+// Bumped to 1.1.0 when `+` between operands was corrected to parse as union:
+// the same regex string now builds a different (correct) automaton, so automata
+// cached under the old misparse must be discarded by the version mismatch.
+// Bumped to 1.2.0 when minimizeDFA was wired from a no-op stub to the real Moore
+// implementation: minimize results cached under the stub were the unminimized DFA
+// stored under real DFA keys, so they are now stale-wrong and must be discarded.
+const CACHE_VERSION = '1.2.0'
 const STORAGE_KEY = 'regexfsm_cache'
 
 interface CacheState {

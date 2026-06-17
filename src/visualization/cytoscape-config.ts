@@ -28,7 +28,17 @@ export interface CytoscapeElements {
   edges: CytoscapeEdge[]
 }
 
-export function automatonToCytoscape(automaton: Automaton): CytoscapeElements {
+// edgeIds is the positional bridge for the editor (BL-01). The core Transition
+// carries no id by contract, so the editor passes its authoritative EditorEdge.id
+// for each transition (same order as automaton.transitions, since toAutomaton is a
+// 1:1 positional map). When supplied, the editor id becomes the Cytoscape edge id,
+// so onSelect reports the editor id and the panel's t.id === edgeId match is exact
+// even after a deletion renumbers the array. Omit it (read-only panes) and the id
+// falls back to the array index `e${i}` exactly as before.
+export function automatonToCytoscape(
+  automaton: Automaton,
+  edgeIds?: ReadonlyArray<string | undefined>
+): CytoscapeElements {
   const nodes: CytoscapeNode[] = automaton.states.map(s => ({
     data: {
       id: s.id,
@@ -42,10 +52,13 @@ export function automatonToCytoscape(automaton: Automaton): CytoscapeElements {
     const isLoop = t.from === t.to
     return {
       data: {
-        id: `e${i}`,
+        id: edgeIds?.[i] ?? `e${i}`,
         source: t.from,
         target: t.to,
         label: t.symbol ?? 'λ',
+        // isEmpty drives the dashed-stroke selector so the style survives mode
+        // switching (in textbook mode the label becomes ε, not λ).
+        isEmpty: t.symbol === null,
       },
       classes: isLoop ? 'loop' : '',
     }

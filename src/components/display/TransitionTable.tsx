@@ -53,17 +53,23 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
   return (
     <div className="overflow-x-auto overflow-y-auto rounded-lg border border-border max-h-[800px] min-h-[400px]">
       <table className="w-full border-collapse text-sm min-w-max">
+        {/* sr-only caption names the table as the transition function δ for the same
+            automaton the diagram renders, so AT announces the table's purpose. Hidden
+            from sighted users (the visible layout is unchanged) but in the a11y tree. */}
+        <caption className="sr-only">Transition function δ for the automaton</caption>
         <thead>
-          <tr className="bg-secondary-light/50">
-            <th className="px-4 py-3 text-left border-b border-r border-border text-text-secondary font-semibold">
+          <tr className="bg-surface-raised">
+            <th scope="col" className="px-4 py-3 text-left border-b border-r border-border text-text-mid font-semibold">
               State
             </th>
             {columns.map(symbol => (
               <th
                 key={symbol}
-                className="px-4 py-3 text-center border-b border-border text-text-secondary font-semibold"
+                scope="col"
+                className="px-4 py-3 text-center border-b border-border text-text-mid font-semibold"
               >
-                <code className="px-2 py-1 bg-background rounded border border-border text-text-primary font-mono text-xs">{symbol}</code>
+                {/* Symbol column header -- neutral bg, not a state role */}
+                <code className="px-2 py-1 bg-bg rounded border border-border text-text-hi font-mono text-xs">{symbol}</code>
               </th>
             ))}
           </tr>
@@ -71,43 +77,52 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
         <tbody>
           {automaton.states.map(state => {
             const isHighlighted = highlightState === state.id
+            // Highlighted row uses brand-tint (UI chrome); zebra and hover use surface tokens.
+            // State role glyphs (→ ✓ ⊗) use state-semantic colors, not brand/feedback colors,
+            // enforcing the no-drift contract: same token as the graph legend.
             const rowClasses = isHighlighted
-              ? 'bg-primary-light/20'
-              : 'hover:bg-secondary-light/20 even:bg-secondary-light/5'
+              ? 'bg-brand-tint'
+              : 'hover:bg-surface-raised/40 even:bg-surface-raised/20'
 
             return (
               <tr key={state.id} className={`${rowClasses} transition-colors`}>
-                <td className="px-4 py-3 border-r border-border border-b border-border/50 font-mono">
+                {/* Row header: scope="row" ties this state to its δ cells for AT. It
+                    is a th, not a td, but keeps the identical className so the visual
+                    styling is unchanged (font-weight is reset by the flex content). */}
+                <th scope="row" className="px-4 py-3 border-r border-border border-b border-border/50 font-mono">
                   <div className="flex items-center gap-2 max-w-[200px]">
                     {isStartState(state.id) && (
-                      <span className="text-primary text-xs flex-shrink-0" title="Start State">→</span>
+                      // → glyph uses state-start color -- matches graph and legend exactly
+                      <span className="text-state-start text-xs flex-shrink-0" title="Start State">→</span>
                     )}
                     <span
                       className={`truncate ${
-                        isTrapState(state.id) ? 'text-error font-semibold' :
-                        isAcceptState(state.id) ? 'text-success font-semibold' : 'text-text-primary'
+                        isTrapState(state.id) ? 'text-state-trap font-semibold' :
+                        isAcceptState(state.id) ? 'text-state-accept font-semibold' : 'text-text-hi'
                       }`}
                       title={state.id}
                     >
                       {state.id}
                     </span>
                     {isAcceptState(state.id) && (
-                      <span className="text-success text-xs flex-shrink-0" title="Accept State">✓</span>
+                      // ✓ glyph uses state-accept color -- matches graph and legend exactly
+                      <span className="text-state-accept text-xs flex-shrink-0" title="Accept State">✓</span>
                     )}
                     {isTrapState(state.id) && (
-                      <span className="text-error text-xs flex-shrink-0" title="Trap State">⊗</span>
+                      // ⊗ glyph uses state-trap color -- matches graph and legend exactly
+                      <span className="text-state-trap text-xs flex-shrink-0" title="Trap State">⊗</span>
                     )}
                   </div>
-                </td>
+                </th>
                 {alphabet.map(symbol => {
                   const targets = getTransitions(state.id, symbol)
                   return (
                     <td
                       key={symbol}
-                      className="px-4 py-3 text-center border-b border-border/50 font-mono text-text-primary"
+                      className="px-4 py-3 text-center border-b border-border/50 font-mono text-text-hi"
                     >
                       {targets.length === 0 ? (
-                        <span className="text-text-tertiary">∅</span>
+                        <span className="text-text-low">∅</span>
                       ) : targets.length === 1 ? (
                         targets[0]
                       ) : (
@@ -117,11 +132,11 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
                   )
                 })}
                 {hasLambda && (
-                  <td className="px-4 py-3 text-center border-b border-border/50 font-mono text-text-primary">
+                  <td className="px-4 py-3 text-center border-b border-border/50 font-mono text-text-hi">
                     {(() => {
                       const targets = getTransitions(state.id, null)
                       return targets.length === 0 ? (
-                        <span className="text-text-tertiary">∅</span>
+                        <span className="text-text-low">∅</span>
                       ) : targets.length === 1 ? (
                         targets[0]
                       ) : (
@@ -136,17 +151,18 @@ export const TransitionTable = memo(function TransitionTable({ automaton, highli
         </tbody>
       </table>
 
-      <div className="mt-4 px-2 text-xs text-text-tertiary space-y-1">
+      {/* Legend footer -- state-semantic tokens (no-drift contract) */}
+      <div className="mt-4 px-2 text-xs text-text-low space-y-1">
         <div className="flex items-center gap-2">
-          <span className="text-primary">→</span>
+          <span className="text-state-start">→</span>
           <span>Start state</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-success">✓</span>
+          <span className="text-state-accept">✓</span>
           <span>Accept state</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-error">⊗</span>
+          <span className="text-state-trap">⊗</span>
           <span>Trap state (rejection sink)</span>
         </div>
         <div className="flex items-center gap-2">

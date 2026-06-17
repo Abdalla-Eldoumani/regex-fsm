@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { nfaToDFA } from '@/core/algorithms/subset'
+import { nfaToDFA, nfaToDFAWithCorrespondence } from '@/core/algorithms/subset'
 import { buildNFA } from '@/core/algorithms/thompson'
 import { parse } from '@/core/regex/parser'
+import { simulateDFA } from '@/core/algorithms/simulate'
 import { validateDFA, isDeterministic } from '@/core/automata/dfa'
+import { TooLargeError } from '@/core/automata/types'
 
 describe('subset construction', () => {
   describe('simple conversions', () => {
@@ -190,22 +192,37 @@ describe('subset construction', () => {
       expect(dfa.alphabet).toEqual(new Set(['a', 'b']))
     })
 
-    it('converts a*b+c? to DFA', () => {
+    // 03-01 parse fix: a*b+c? = union(a*b, c?) (the + at b+c is union). The DFA
+    // must accept exactly L(a*b) ∪ {λ, c}: empty and c via the optional arm, a*b
+    // via the left arm; a lone "a" or an a*b chased by c is in neither arm.
+    it('converts a*b+c? = union(a*b, c?) to DFA: accepts empty, b, c, ab; rejects a, abc', () => {
       const ast = parse('a*b+c?')
       const nfa = buildNFA(ast)
       const dfa = nfaToDFA(nfa)
 
       expect(isDeterministic(dfa)).toBe(true)
       expect(dfa.alphabet).toEqual(new Set(['a', 'b', 'c']))
+
+      const accept = ['', 'b', 'c', 'ab', 'aab']
+      const reject = ['a', 'abc', 'aabbc', 'bc', 'aa']
+      accept.forEach(s => expect(simulateDFA(dfa, s).accepted).toBe(true))
+      reject.forEach(s => expect(simulateDFA(dfa, s).accepted).toBe(false))
     })
 
-    it('converts (a+b)*c to DFA', () => {
+    // 03-01 parse fix: (a+b)*c = (a|b)*c (the + inside the group is union), so the
+    // DFA accepts any string of a's and b's followed by exactly one trailing c.
+    it('converts (a+b)*c = (a|b)*c to DFA: accepts c, ac, bac; rejects empty, ab', () => {
       const ast = parse('(a+b)*c')
       const nfa = buildNFA(ast)
       const dfa = nfaToDFA(nfa)
 
       expect(isDeterministic(dfa)).toBe(true)
       expect(() => validateDFA(dfa)).not.toThrow()
+
+      const accept = ['c', 'ac', 'bc', 'abc', 'bac', 'aaac']
+      const reject = ['', 'ab', 'abcc', 'ca']
+      accept.forEach(s => expect(simulateDFA(dfa, s).accepted).toBe(true))
+      reject.forEach(s => expect(simulateDFA(dfa, s).accepted).toBe(false))
     })
 
     it('converts nested groups to DFA', () => {
@@ -458,6 +475,106 @@ describe('subset construction', () => {
 
       expect(dfa.alphabet.has('c')).toBe(true)
       expect(dfa.states.some(s => s.id === '∅')).toBe(true)
+    })
+  })
+
+  describe('subset correspondence', () => {
+    it('wrapper dfa is structurally identical to nfaToDFA for a|b', () => {
+      const ast = parse('a|b')
+      const nfa = buildNFA(ast)
+      const bare = nfaToDFA(nfa)
+      const { dfa } = nfaToDFAWithCorrespondence(nfa)
+
+      // same state ids
+      const bareIds = bare.states.map(s => s.id).sort()
+      const wrapIds = dfa.states.map(s => s.id).sort()
+      expect(wrapIds).toEqual(bareIds)
+      expect(dfa.startState).toBe(bare.startState)
+      expect(dfa.acceptStates.slice().sort()).toEqual(bare.acceptStates.slice().sort())
+      expect(dfa.alphabet).toEqual(bare.alphabet)
+    })
+
+    it('nfaStateSets has an entry for every DFA state', () => {
+      const ast = parse('a|b')
+      const nfa = buildNFA(ast)
+      const { dfa, nfaStateSets } = nfaToDFAWithCorrespondence(nfa)
+
+      for (const state of dfa.states) {
+        expect(nfaStateSets.has(state.id)).toBe(true)
+      }
+    })
+
+    it('start state nfaStateSets entry matches its set-notation id', () => {
+      const ast = parse('a|b')
+      const nfa = buildNFA(ast)
+      const { dfa, nfaStateSets } = nfaToDFAWithCorrespondence(nfa)
+
+      const startId = dfa.startState
+      const subset = nfaStateSets.get(startId)!
+
+      // sanity cross-check: the id is set notation {q0,...}; parse it and compare
+      // (permitted in tests per the research notes -- forbidden in view code)
+      const parsed = startId.slice(1, -1).split(',').filter(s => s.length > 0).sort()
+      expect(subset.slice().sort()).toEqual(parsed)
+    })
+
+    it('trap state maps to empty array', () => {
+      // using custom alphabet ensures a trap state is produced
+      const ast = parse('a')
+      const nfa = buildNFA(ast)
+      const customAlpha = new Set(['a', 'b'])
+      const { dfa, nfaStateSets } = nfaToDFAWithCorrespondence(nfa, customAlpha)
+
+      expect(dfa.states.some(s => s.id === '∅')).toBe(true)
+      expect(nfaStateSets.get('∅')).toEqual([])
+    })
+
+    it('wrapper dfa deep-equals nfaToDFA for (a|b)*abb', () => {
+      const ast = parse('(a|b)*abb')
+      const nfa = buildNFA(ast)
+      const bare = nfaToDFA(nfa)
+      const { dfa } = nfaToDFAWithCorrespondence(nfa)
+
+      expect(dfa.states.map(s => s.id).sort()).toEqual(bare.states.map(s => s.id).sort())
+      expect(dfa.acceptStates.slice().sort()).toEqual(bare.acceptStates.slice().sort())
+      expect(dfa.startState).toBe(bare.startState)
+      expect(dfa.alphabet).toEqual(bare.alphabet)
+    })
+
+    it('wrapper dfa deep-equals nfaToDFA for a*b*', () => {
+      const ast = parse('a*b*')
+      const nfa = buildNFA(ast)
+      const bare = nfaToDFA(nfa)
+      const { dfa } = nfaToDFAWithCorrespondence(nfa)
+
+      expect(dfa.states.map(s => s.id).sort()).toEqual(bare.states.map(s => s.id).sort())
+      expect(dfa.acceptStates.slice().sort()).toEqual(bare.acceptStates.slice().sort())
+      expect(dfa.startState).toBe(bare.startState)
+    })
+
+    it('preserves SAFETY-01 cap: too-large NFA still throws TooLargeError', () => {
+      // Build the 2^9=512-state blow-up NFA directly (same construction as bounds.test.ts).
+      // The correspondence wrapper must not suppress the TooLargeError; it must fire on
+      // the same path as the bare nfaToDFA.
+      const n = 9
+      const states = Array.from({ length: n + 1 }, (_, i) => ({ id: `q${i}` }))
+      const transitions: import('@/core/automata/types').Transition[] = [
+        { from: 'q0', to: 'q0', symbol: 'a' },
+        { from: 'q0', to: 'q0', symbol: 'b' },
+        { from: 'q0', to: 'q1', symbol: 'a' },
+      ]
+      for (let i = 1; i < n; i++) {
+        transitions.push({ from: `q${i}`, to: `q${i + 1}`, symbol: 'a' })
+        transitions.push({ from: `q${i}`, to: `q${i + 1}`, symbol: 'b' })
+      }
+      const blowUpNFA: import('@/core/automata/types').NFA = {
+        states,
+        transitions,
+        startState: 'q0',
+        acceptStates: [`q${n}`],
+        alphabet: new Set(['a', 'b']),
+      }
+      expect(() => nfaToDFAWithCorrespondence(blowUpNFA)).toThrow(TooLargeError)
     })
   })
 })

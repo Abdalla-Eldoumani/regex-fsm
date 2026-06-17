@@ -25,13 +25,21 @@ export interface ASUResult {
   description: string
 }
 
-let nodeCounter = 0
-
-function nextNodeId(): number {
-  return nodeCounter++
+// A unique node id source scoped to a single asuDirectDFA call. Keeping the
+// counter inside a closure rather than at module scope means concurrent or
+// re-entrant calls cannot share the counter, so node ids never leak between
+// constructions. Mirrors createStateIdGenerator in the automata layer.
+function createNodeIdGenerator(): () => number {
+  let counter = 0
+  return () => counter++
 }
 
-function annotate(ast: RegexNode, positions: Map<number, string>, posCounter: { val: number }): AnnotatedNode {
+function annotate(
+  ast: RegexNode,
+  positions: Map<number, string>,
+  posCounter: { val: number },
+  nextNodeId: () => number
+): AnnotatedNode {
   switch (ast.type) {
     case 'empty': {
       return {
@@ -56,8 +64,8 @@ function annotate(ast: RegexNode, positions: Map<number, string>, posCounter: { 
       }
     }
     case 'concat': {
-      const left = annotate(ast.left, positions, posCounter)
-      const right = annotate(ast.right, positions, posCounter)
+      const left = annotate(ast.left, positions, posCounter, nextNodeId)
+      const right = annotate(ast.right, positions, posCounter, nextNodeId)
       const nullable = left.nullable && right.nullable
       const firstpos = left.nullable
         ? union(left.firstpos, right.firstpos)
@@ -76,8 +84,8 @@ function annotate(ast: RegexNode, positions: Map<number, string>, posCounter: { 
       }
     }
     case 'union': {
-      const left = annotate(ast.left, positions, posCounter)
-      const right = annotate(ast.right, positions, posCounter)
+      const left = annotate(ast.left, positions, posCounter, nextNodeId)
+      const right = annotate(ast.right, positions, posCounter, nextNodeId)
       return {
         id: nextNodeId(),
         type: 'union',
@@ -89,7 +97,7 @@ function annotate(ast: RegexNode, positions: Map<number, string>, posCounter: { 
       }
     }
     case 'star': {
-      const child = annotate(ast.child, positions, posCounter)
+      const child = annotate(ast.child, positions, posCounter, nextNodeId)
       return {
         id: nextNodeId(),
         type: 'star',
@@ -100,7 +108,7 @@ function annotate(ast: RegexNode, positions: Map<number, string>, posCounter: { 
       }
     }
     case 'plus': {
-      const child = annotate(ast.child, positions, posCounter)
+      const child = annotate(ast.child, positions, posCounter, nextNodeId)
       return {
         id: nextNodeId(),
         type: 'plus',
@@ -111,7 +119,7 @@ function annotate(ast: RegexNode, positions: Map<number, string>, posCounter: { 
       }
     }
     case 'optional': {
-      const child = annotate(ast.child, positions, posCounter)
+      const child = annotate(ast.child, positions, posCounter, nextNodeId)
       return {
         id: nextNodeId(),
         type: 'optional',
@@ -161,13 +169,13 @@ function stateSetKey(s: Set<number>): string {
 }
 
 export function asuDirectDFA(ast: RegexNode, alphabet: Set<string>): ASUResult {
-  nodeCounter = 0
+  const nextNodeId = createNodeIdGenerator()
   const positions = new Map<number, string>()
   const posCounter = { val: 0 }
 
   // Augment: (r)#
   const END_MARKER = '#'
-  const annotatedAst = annotate(ast, positions, posCounter)
+  const annotatedAst = annotate(ast, positions, posCounter, nextNodeId)
   const endPos = posCounter.val
   positions.set(endPos, END_MARKER)
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { buildNFA } from '@/core/algorithms/thompson'
+import { buildNFA, buildNFAWithCorrespondence } from '@/core/algorithms/thompson'
 import { parse } from '@/core/regex/parser'
+import { simulateNFA } from '@/core/algorithms/simulate'
 
 describe('thompson construction', () => {
   describe('base cases', () => {
@@ -182,19 +183,37 @@ describe('thompson construction', () => {
       expect(nfa.acceptStates).toHaveLength(1)
     })
 
-    it('builds NFA for a*b+c?', () => {
+    // 03-01 parse fix: a*b+c? = union(concat(star a, b), optional c) because the
+    // + at b+c has operand c following (union), not closure on b. Thompson's union
+    // adds one fresh accept state for the whole expression, so acceptStates is 1.
+    // Language {a*b} ∪ {λ, c}: empty and c accept via the optional arm; a*b accepts
+    // via the left arm; a lone "a" or any a*b followed by c is in neither arm.
+    it('builds NFA for a*b+c? = union(a*b, c?): accepts empty, b, c, ab; rejects a, abc', () => {
       const ast = parse('a*b+c?')
       const nfa = buildNFA(ast)
 
       expect(nfa.alphabet).toEqual(new Set(['a', 'b', 'c']))
       expect(nfa.acceptStates).toHaveLength(1)
+
+      const accept = ['', 'b', 'c', 'ab', 'aab', 'aaab']
+      const reject = ['a', 'abc', 'aabbc', 'bc', 'aa']
+      accept.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(true))
+      reject.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(false))
     })
 
-    it('builds NFA for (a+b)*c', () => {
+    // 03-01 parse fix: with + as union, (a+b) = union(a,b), so (a+b)*c builds the
+    // SAME language as (a|b)*c = concat(star(union(a,b)), c): any string of a's and
+    // b's (including empty) followed by a single trailing c.
+    it('builds NFA for (a+b)*c = (a|b)*c: accepts c, ac, bac; rejects empty, ab', () => {
       const ast = parse('(a+b)*c')
       const nfa = buildNFA(ast)
 
       expect(nfa.alphabet).toEqual(new Set(['a', 'b', 'c']))
+
+      const accept = ['c', 'ac', 'bc', 'abc', 'bac', 'aaac', 'bbbc']
+      const reject = ['', 'ab', 'abcc', 'ca']
+      accept.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(true))
+      reject.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(false))
     })
 
     it('builds NFA for nested groups', () => {
@@ -304,12 +323,90 @@ describe('thompson construction', () => {
       expect(nfa.alphabet).toEqual(new Set(['a', 'b']))
     })
 
-    it('builds NFA for all operators', () => {
+    // 03-01 parse fix: union binds loosest, and the + at b+c is union too, so
+    // a*b+c?|d = union(union(a*b, c?), d) = {a*b} ∪ {λ, c} ∪ {d}. Thompson's
+    // outermost union still yields a single accept state. The empty string, c,
+    // and d each match one arm; a lone "a" matches none.
+    it('builds NFA for a*b+c?|d = union(a*b, c?, d): accepts empty, b, c, d; rejects a, abc', () => {
       const ast = parse('a*b+c?|d')
       const nfa = buildNFA(ast)
 
       expect(nfa.alphabet).toEqual(new Set(['a', 'b', 'c', 'd']))
       expect(nfa.acceptStates).toHaveLength(1)
+
+      const accept = ['', 'b', 'c', 'd', 'ab', 'aab']
+      const reject = ['a', 'abc', 'bc', 'aabbc', 'dd', 'bd']
+      accept.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(true))
+      reject.forEach(s => expect(simulateNFA(nfa, s).accepted).toBe(false))
+    })
+  })
+
+  describe('thompson correspondence', () => {
+    it('single symbol: nfa deep-equals buildNFA result', () => {
+      const ast = parse('a')
+      const { nfa } = buildNFAWithCorrespondence(ast)
+      const bare = buildNFA(ast)
+
+      expect(nfa.states.map(s => s.id).sort()).toEqual(bare.states.map(s => s.id).sort())
+      expect(nfa.startState).toBe(bare.startState)
+      expect(nfa.acceptStates).toEqual(bare.acceptStates)
+      expect(nfa.alphabet).toEqual(bare.alphabet)
+    })
+
+    it('single symbol: fragments has one entry with correct states', () => {
+      const ast = parse('a')
+      const { nfa, fragments } = buildNFAWithCorrespondence(ast)
+
+      expect(fragments.size).toBe(1)
+      const [entry] = fragments.values()
+      const fstateIds = new Set(entry.stateIds)
+      const nfaIds = new Set(nfa.states.map(s => s.id))
+      expect(fstateIds).toEqual(nfaIds)
+      expect(nfa.states.map(s => s.id)).toContain(entry.start)
+      expect(nfa.acceptStates).toContain(entry.accept)
+    })
+
+    it('union a|b: root fragment stateIds is superset of both children', () => {
+      const ast = parse('a|b')
+      const { fragments } = buildNFAWithCorrespondence(ast)
+
+      // 3 nodes: n0=union root, n1=symbol a, n2=symbol b (pre-order)
+      const rootEntry = fragments.get('n0')!
+      const leftEntry = fragments.get('n1')!
+      const rightEntry = fragments.get('n2')!
+
+      expect(rootEntry).toBeDefined()
+      expect(leftEntry).toBeDefined()
+      expect(rightEntry).toBeDefined()
+
+      const rootSet = new Set(rootEntry.stateIds)
+      for (const id of leftEntry.stateIds) expect(rootSet.has(id)).toBe(true)
+      for (const id of rightEntry.stateIds) expect(rootSet.has(id)).toBe(true)
+      // children are strict subsets
+      expect(rootEntry.stateIds.length).toBeGreaterThan(leftEntry.stateIds.length)
+      expect(rootEntry.stateIds.length).toBeGreaterThan(rightEntry.stateIds.length)
+    })
+
+    it('concat ab: nfa deep-equals buildNFA result', () => {
+      const ast = parse('ab')
+      const { nfa } = buildNFAWithCorrespondence(ast)
+      const bare = buildNFA(ast)
+
+      expect(nfa.states.map(s => s.id).sort()).toEqual(bare.states.map(s => s.id).sort())
+      expect(nfa.startState).toBe(bare.startState)
+      expect(nfa.acceptStates).toEqual(bare.acceptStates)
+    })
+
+    it('buildNFA is still byte-identical: same states and transitions as wrapper nfa', () => {
+      for (const regex of ['a*', '(a|b)*', '(a|b)*abb']) {
+        const ast = parse(regex)
+        const { nfa } = buildNFAWithCorrespondence(ast)
+        const bare = buildNFA(ast)
+
+        expect(nfa.states.map(s => s.id).sort()).toEqual(bare.states.map(s => s.id).sort())
+        expect(nfa.alphabet).toEqual(bare.alphabet)
+        expect(nfa.acceptStates).toEqual(bare.acceptStates)
+      }
     })
   })
 
