@@ -1,612 +1,76 @@
-# Visualization Module Documentation
+# Visualization module
 
-Graph rendering and export functionality using Cytoscape.js.
-
-## Module Structure
-
-```
-src/visualization/
-├── renderer.tsx          # AutomatonGraph React component
-├── cytoscape-config.ts   # Cytoscape initialization, conversion, start arrow
-├── styles.ts             # Visual styling (Indigo/Emerald palette)
-├── layout.ts             # Layout algorithm configuration
-├── layoutCache.ts        # Graph position persistence (localStorage)
-├── export.ts             # PNG/SVG export functions
-└── animation.ts          # Animation utilities (placeholder)
-```
-
-## Features
-
-- **Start Arrow**: Clear visual indicator for initial state
-- **State Legend**: Visual key showing state types (start, accept, trap, active)
-- **Enhanced Styling**: Indigo glow (start), emerald border (accept), red dashed (trap)
-- **Layout Persistence**: Graph positions preserved across tab switches and page refreshes
-- **Layout Cache**: Positions cached in localStorage with 24-hour expiry
-- **Export**: PNG and SVG download functionality
-
-## AutomatonGraph Component
-
-**File**: `src/visualization/renderer.tsx`
-
-React component that renders an automaton as an interactive graph.
-
-### Component API
-
-```typescript
-interface AutomatonGraphProps {
-  automaton: Automaton
-  highlightStates?: string[]
-  highlightEdges?: string[]
-  onNodeClick?: (nodeId: string) => void
-  onEdgeClick?: (edgeId: string) => void
-}
-
-interface AutomatonGraphHandle {
-  getCytoscapeInstance: () => Core | null
-}
-
-const AutomatonGraph = forwardRef<AutomatonGraphHandle, AutomatonGraphProps>(...)
-```
-
-### Usage
-
-```typescript
-const graphRef = useRef<AutomatonGraphHandle>(null)
-
-<AutomatonGraph
-  ref={graphRef}
-  automaton={nfa}
-  highlightStates={['q0', 'q1']}
-  highlightEdges={[]}
-  onNodeClick={(id) => console.log('Clicked:', id)}
-/>
-
-// Later: access Cytoscape instance
-const cy = graphRef.current?.getCytoscapeInstance()
-if (cy) {
-  exportAsPNG(cy, 'graph.png')
-}
-```
-
-### Implementation Details
-
-The renderer uses three separate `useEffect` hooks to prevent unnecessary Cytoscape instance recreation:
-
-#### Effect 1: Instance Lifecycle
-
-Creates/destroys the Cytoscape instance. Only depends on `automaton` and `savePositions`.
-
-```typescript
-useEffect(() => {
-  if (!containerRef.current) return
-
-  const elements = automatonToCytoscape(automaton)
-  const allElements = [...elements.nodes, ...elements.edges]
-
-  cyRef.current = cytoscape({
-    container: containerRef.current,
-    elements: allElements,
-    style: getStylesheet(),
-    layout: selectLayout(automaton),
-  })
-
-  // Cleanup
-  return () => {
-    cyRef.current?.destroy()
-    cyRef.current = null
-  }
-}, [automaton, savePositions])
-```
-
-#### Effect 2: Event Listeners
-
-Registers tap handlers. Changes to `onNodeClick`/`onEdgeClick` callbacks no longer destroy/recreate the instance — they just rebind event listeners.
-
-```typescript
-useEffect(() => {
-  const cy = cyRef.current
-  if (!cy) return
-
-  const nodeHandler = (e: cytoscape.EventObject) => { onNodeClick?.(e.target.id()) }
-  const edgeHandler = (e: cytoscape.EventObject) => { onEdgeClick?.(e.target.id()) }
-
-  cy.on('tap', 'node', nodeHandler)
-  cy.on('tap', 'edge', edgeHandler)
-
-  return () => {
-    cy.off('tap', 'node', nodeHandler)
-    cy.off('tap', 'edge', edgeHandler)
-  }
-}, [automaton, onNodeClick, onEdgeClick])
-```
-
-#### Effect 3: Highlight Updates (Batched)
-
-Highlights update without full re-render, wrapped in `cy.startBatch()`/`cy.endBatch()` to prevent per-class-change style recalculations:
-
-```typescript
-useEffect(() => {
-  const cy = cyRef.current
-  if (!cy) return
-
-  cy.startBatch()
-  cy.nodes().removeClass('active')
-  cy.edges().removeClass('active')
-
-  highlightStates.forEach(stateId => { cy.$id(stateId).addClass('active') })
-  highlightEdges.forEach(edgeId => { cy.$id(edgeId).addClass('active') })
-  cy.endBatch()
-}, [highlightStates, highlightEdges])
-```
-
-## Cytoscape Configuration
-
-**File**: `src/visualization/cytoscape-config.ts`
-
-### Automaton to Cytoscape Conversion
-
-Converts automaton data structures to Cytoscape element format.
-
-```typescript
-interface CytoscapeElements {
-  nodes: ElementDefinition[]
-  edges: ElementDefinition[]
-}
-
-function automatonToCytoscape(automaton: Automaton): CytoscapeElements
-```
-
-#### Node Conversion
-
-```typescript
-const nodes = automaton.states.map(state => ({
-  data: {
-    id: state.id,
-    label: state.label || state.id,
-    isStart: state.id === automaton.startState,
-    isAccept: automaton.acceptStates.includes(state.id)
-  }
-}))
-```
-
-**Node Data Fields**:
-- `id`: Unique state identifier
-- `label`: Display label
-- `isStart`: Boolean flag for start state
-- `isAccept`: Boolean flag for accept state
-
-#### Edge Conversion
-
-```typescript
-const edges = automaton.transitions.map((t, i) => ({
-  data: {
-    id: `e${i}`,
-    source: t.from,
-    target: t.to,
-    label: t.symbol === null ? 'λ' : t.symbol
-  }
-}))
-```
-
-**Edge Data Fields**:
-- `id`: Unique edge identifier
-- `source`: Source state ID
-- `target`: Target state ID
-- `label`: Transition symbol (λ for lambda)
-
-### Highlight Support
-
-Nodes and edges can be marked as `active` for highlight:
-
-```typescript
-cy.$id('q0').addClass('active')    // Highlight node q0
-cy.$id('e5').addClass('active')    // Highlight edge e5
-```
-
-## Styling
-
-**File**: `src/visualization/styles.ts`
-
-Visual styling using Indigo/Emerald professional color palette.
-
-### Color Palette
-
-```typescript
-export const colors = {
-  base: '#1e1e2e',        // Background
-  mantle: '#181825',      // Darker background
-  surface0: '#313244',    // Node background
-  surface1: '#45475a',    // Hover state
-  overlay0: '#6c7086',    // Borders, inactive
-  text: '#cdd6f4',        // Labels
-  blue: '#89b4fa',        // Start state
-  green: '#a6e3a1',       // Accept state
-  yellow: '#f9e2af',      // Active state
-  mauve: '#cba6f7',       // Active transition
-  red: '#f38ba8',         // Error
-}
-```
-
-### Node Styles
-
-#### Default Node
-
-```typescript
-{
-  'background-color': colors.surface0,
-  'border-width': 2,
-  'border-color': colors.overlay0,
-  'label': 'data(label)',
-  'text-valign': 'center',
-  'text-halign': 'center',
-  'color': colors.text,
-  'font-size': 14,
-  'width': 40,
-  'height': 40,
-}
-```
-
-#### Start State
-
-```typescript
-selector: 'node[isStart]',
-style: {
-  'border-color': colors.blue,
-  'border-width': 3
-}
-```
-
-#### Accept State
-
-```typescript
-selector: 'node[isAccept]',
-style: {
-  'border-color': colors.green,
-  'border-width': 4
-}
-```
-
-#### Active State (during simulation)
-
-```typescript
-selector: 'node.active',
-style: {
-  'background-color': colors.yellow,
-  'border-color': colors.mauve,
-  'border-width': 4
-}
-```
-
-### Edge Styles
-
-#### Default Edge
-
-```typescript
-{
-  'width': 2,
-  'line-color': colors.overlay0,
-  'target-arrow-color': colors.overlay0,
-  'target-arrow-shape': 'triangle',
-  'curve-style': 'bezier',
-  'label': 'data(label)',
-  'font-size': 12,
-  'color': colors.text,
-  'text-background-color': colors.base,
-  'text-background-opacity': 1,
-  'text-background-padding': 2
-}
-```
-
-#### Active Edge (during simulation)
-
-```typescript
-selector: 'edge.active',
-style: {
-  'line-color': colors.mauve,
-  'target-arrow-color': colors.mauve,
-  'width': 3
-}
-```
-
-### Stylesheet Export
-
-```typescript
-export function getStylesheet(): Stylesheet[] {
-  return [
-    { selector: 'node', style: { ... } },
-    { selector: 'node[isStart]', style: { ... } },
-    { selector: 'node[isAccept]', style: { ... } },
-    { selector: 'node.active', style: { ... } },
-    { selector: 'edge', style: { ... } },
-    { selector: 'edge.active', style: { ... } }
-  ]
-}
-```
+`src/visualization/` renders automata as interactive graphs with Cytoscape, keeps graph colors in sync with the DOM through a design-token bridge, and serializes automata to several export formats. It also provides the screen-reader text description.
 
 ## Layout
 
-**File**: `src/visualization/layout.ts`
-
-Automatic graph layout algorithm configuration.
-
-### Breadthfirst Layout
-
-Used for most automata. Arranges nodes in levels from start state.
-
-```typescript
-export const breadthfirstLayout: LayoutOptions = {
-  name: 'breadthfirst',
-  directed: true,
-  spacingFactor: 1.5,
-  avoidOverlap: true,
-  nodeDimensionsIncludeLabels: true
-}
+```
+src/visualization/
+├── renderer.tsx              # AutomatonGraph React component (reduced-motion aware)
+├── cytoscape-config.ts       # element conversion and the start-arrow marker
+├── styles.ts                 # the token bridge: reads --color-* from the DOM
+├── layout.ts                 # layout selection (hierarchical / force-directed)
+├── layoutCache.ts            # node-position persistence (localStorage)
+├── export.ts                 # PNG and SVG download; reads live tokens at click time
+├── automatonToSVG.ts         # standalone SVG serializer
+├── automatonToTikZ.ts        # LaTeX/TikZ serializer
+├── automatonToMarkdown.ts    # Markdown transition-table serializer
+├── automatonToCSV.ts         # CSV serializer with formula-injection guard
+├── describe.ts               # plain-text description for screen readers
+└── animation.ts              # animation helpers
 ```
 
-**Properties**:
-- Hierarchical left-to-right arrangement
-- Start state on left
-- Accept states tend toward right
-- Clear visualization of state progression
+## AutomatonGraph
 
-### COSE Layout
+`renderer.tsx` exports `AutomatonGraph`, the React wrapper around a Cytoscape instance. It takes an automaton, highlight sets for states and edges, and optional click and edit handlers, and forwards a ref to the underlying instance for export.
 
-Force-directed layout for complex automata with many cycles.
+It uses three separate effects so the instance is not needlessly rebuilt:
 
-```typescript
-export const coseLayout: LayoutOptions = {
-  name: 'cose',
-  idealEdgeLength: 100,
-  nodeOverlap: 20,
-  refresh: 20,
-  fit: true,
-  padding: 30,
-  randomize: false,
-  componentSpacing: 100,
-  nodeRepulsion: 400000,
-  edgeElasticity: 100,
-  nestingFactor: 5,
-  gravity: 80,
-  numIter: 1000
-}
-```
+1. **Instance lifecycle** -- creates and destroys the Cytoscape instance; depends on the automaton.
+2. **Event listeners** -- binds tap handlers; a callback change rebinds without rebuilding the graph.
+3. **Highlight updates** -- applies and clears the `active` class inside `cy.startBatch()` / `cy.endBatch()` so a step does not trigger per-class style recalculation.
 
-**Properties**:
-- Physical simulation (nodes repel, edges attract)
-- Handles cycles well
-- More organic appearance
-- Longer computation time
+The renderer reads `prefers-reduced-motion`. Highlights are static class changes, not canvas tweens, so edge traversal is a static path highlight and the active pulse (a DOM/CSS treatment) stops under reduce. A live listener re-applies the current highlight when the OS setting changes, without recreating the instance.
 
-### Layout Selection
+### Editable mode
 
-```typescript
-export function selectLayout(automaton: Automaton): LayoutOptions {
-  // Use breadthfirst by default
-  return breadthfirstLayout
-}
-```
+`AutomatonGraph` accepts an optional `editable` prop (default `false`) used by the hand editor. When set, it initializes `cytoscape-edgehandles` with a generous touch target and gestures disabled, so a tap reveals a draw handle and a drag draws an edge. The extension's temporary edge is removed in the complete handler and the real edge is re-added from the editor's model, so the temporary shape never becomes the stored edge. Tapping the background adds a state; selection reports selected node and edge ids.
 
-Currently always uses breadthfirst. Could be enhanced to:
-- Detect cycles and switch to COSE
-- Count lambda transitions and adjust layout
-- Allow user selection
+## Element conversion
+
+`cytoscape-config.ts` converts an automaton to Cytoscape elements. Each state becomes a node carrying `isStart` and `isAccept` flags; the trap state `∅` is recognized by id and styled dashed and dimmed. Each transition becomes an edge whose label is the symbol, or `λ` for a λ-transition. When the automaton has states, an invisible marker node and a visible arrow edge are injected to show the start state.
+
+## The token bridge
+
+Cytoscape renders to a `<canvas>`, which cannot resolve CSS custom properties. So `styles.ts` is a bridge, not a color table: `getStylesheet()` reads each design token from the DOM with `getComputedStyle(document.documentElement).getPropertyValue(name)` at stylesheet-build time and injects the resolved string into the style objects. The graph and the DOM therefore read one set of tokens, and an accepting state is the same green in the graph, the transition table, and the legend. The single source of truth is the theme block in the app's CSS; each read has a per-token fallback so a too-early read never yields a black or transparent node.
+
+Every state role carries a non-color cue, since color is never the only signal:
+
+- **Start**: the incoming start arrow.
+- **Accept**: a double ring (`border-style: double`).
+- **Trap** (`∅`): a dashed stroke, dimmed.
+- **Active / current**: a thicker stroke.
+
+λ-edges are dashed. Selection uses a brand-hover halo reserved for the editor; it never implies a state role.
+
+## Layout
+
+`layout.ts` chooses a layout per automaton. A hierarchical left-to-right layout suits DFAs and simple NFAs; a force-directed layout handles NFAs with many λ-transitions. `layoutCache.ts` persists node positions in localStorage so a graph keeps its arrangement across tab switches and refreshes, and manual drags update the cache.
 
 ## Export
 
-**File**: `src/visualization/export.ts`
+All exporters are pure string functions, independent of React and the DOM, each escaping for its target syntax. `export.ts` reads the live design tokens at click time (after the app CSS has loaded) and handles the file download.
 
-Functions to export graphs as PNG or SVG images.
+| Format       | File                     | Output                                                                 | Injection guard |
+|--------------|--------------------------|------------------------------------------------------------------------|-----------------|
+| SVG          | `automatonToSVG.ts`      | A standalone `<svg>`: nodes as circles, accepting states double-ringed, edges as curves, the trap dashed and dimmed | XML escaping on all ids, labels, and symbols |
+| PNG          | `export.ts`              | A 2x raster of the live graph with the token background                | n/a (raster) |
+| LaTeX / TikZ | `automatonToTikZ.ts`     | A compilable `tikzpicture` using `\usetikzlibrary{automata}`; `λ` as `$\lambda$`, the trap as `$\emptyset$` | TeX escaping on ids and symbols |
+| Markdown     | `automatonToMarkdown.ts` | A GitHub pipe table mirroring the on-screen transition table, with a λ column for NFAs and set notation for multi-target cells | pipe and newline escaping in cells |
+| CSV          | `automatonToCSV.ts`      | RFC 4180 CSV of the transition table                                   | a leading `=`, `+`, `-`, or `@` is prefixed so a spreadsheet cannot run it as a formula, then standard quoting |
 
-### PNG Export
+There is no HTML or SVG injection path: every interpolated value is escaped for its format, and the text description uses only course-notation symbols.
 
-```typescript
-export function exportAsPNG(
-  cy: cytoscape.Core,
-  filename: string = 'automaton.png'
-): void
-```
+## Screen-reader description
 
-**Implementation**:
-
-```typescript
-const png = cy.png({
-  output: 'blob',
-  bg: '#1e1e2e',    // Match background color
-  full: true,       // Include entire graph
-  scale: 2,         // 2x resolution for clarity
-})
-
-if (png instanceof Blob) {
-  const url = URL.createObjectURL(png)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
-}
-```
-
-**Features**:
-- High resolution (2x scale)
-- Includes entire graph (not just viewport)
-- Dark background matches UI
-- Automatic download
-
-### SVG Export
-
-```typescript
-export function exportAsSVG(
-  cy: cytoscape.Core,
-  filename: string = 'automaton.svg'
-): void
-```
-
-**Implementation**:
-
-Generates SVG manually from Cytoscape graph data:
-
-```typescript
-const json = cy.json()
-const nodes = json.elements?.nodes || []
-const edges = json.elements?.edges || []
-
-// Build SVG string
-let svg = `<svg xmlns="http://www.w3.org/2000/svg" ...>
-  <rect fill="#1e1e2e"/>  <!-- Background -->
-  <g>`
-
-// Add circles for nodes
-nodes.forEach((node) => {
-  const x = node.position?.x || 0
-  const y = node.position?.y || 0
-  svg += `<circle cx="${x}" cy="${y}" r="20" .../>`
-})
-
-// Add lines for edges
-edges.forEach((edge) => {
-  // Find source and target positions
-  // Draw line with arrowhead
-  svg += `<line x1="..." y1="..." x2="..." y2="..." />`
-})
-
-svg += `</g></svg>`
-
-// Download as file
-const blob = new Blob([svg], { type: 'image/svg+xml' })
-// ... download logic
-```
-
-**Features**:
-- Vector format (scales infinitely)
-- Editable in vector graphics programs
-- Smaller file size than PNG
-- Preserves structure
-
-### JSON Export
-
-```typescript
-export function exportAsJSON(
-  cy: cytoscape.Core,
-  filename: string = 'automaton.json'
-): void
-```
-
-Exports full Cytoscape graph state as JSON:
-
-```typescript
-const json = cy.json()
-const jsonStr = JSON.stringify(json, null, 2)
-
-const blob = new Blob([jsonStr], { type: 'application/json' })
-// ... download logic
-```
-
-**Use Cases**:
-- Save graph state
-- Import into other tools
-- Debugging layout
-
-## Integration with Components
-
-### AutomatonView Integration
-
-```typescript
-const graphRef = useRef<AutomatonGraphHandle>(null)
-
-const handleExportPNG = () => {
-  const cy = graphRef.current?.getCytoscapeInstance()
-  if (cy) {
-    exportAsPNG(cy, `${title}.png`)
-  }
-}
-
-return (
-  <div>
-    {activeTab === 'graph' && (
-      <>
-        <Button onClick={handleExportPNG}>PNG</Button>
-        <AutomatonGraph ref={graphRef} automaton={automaton} />
-      </>
-    )}
-  </div>
-)
-```
-
-### Simulation Highlighting
-
-```typescript
-// In SimulationPanel
-useEffect(() => {
-  if (currentStepData) {
-    onHighlightChange(currentStepData.nextStates, [])
-  }
-}, [currentStepData])
-
-// In App
-<AutomatonGraph
-  automaton={nfa}
-  highlightStates={simulationMode === 'nfa' ? nfaHighlightStates : []}
-/>
-```
-
-## Performance Considerations
-
-### Avoiding Re-renders
-
-- Cytoscape instance created once per automaton (split effect pattern)
-- Callback changes (onNodeClick/onEdgeClick) rebind listeners without destroying instance
-- Highlights wrapped in batch mode (`cy.startBatch()`/`cy.endBatch()`)
-- Layout computed once, cached by Cytoscape
-
-### Layout Caching
-
-**File**: `src/visualization/layoutCache.ts`
-
-Graph node positions are cached in localStorage:
-- Cache key generated from automaton structure (states + transitions)
-- Max 50 cached layouts, oldest evicted when full
-- 24-hour expiry on cached positions
-- Positions restored on page refresh or tab switch
-- Manual node drags update the cache automatically
-
-### Large Graphs
-
-For automata with many states:
-- Breadthfirst layout: O(n) time
-- COSE layout: O(n² × iterations) time
-- Rendering: Hardware-accelerated canvas
-
-Current implementation handles up to ~100 states smoothly.
-
-### Memory Management
-
-```typescript
-return () => {
-  cyRef.current?.destroy()  // Clean up on unmount
-  cyRef.current = null
-}
-```
-
-Cytoscape instance destroyed when component unmounts to prevent memory leaks.
-
-## Accessibility
-
-Current implementation focuses on visual representation. Future enhancements:
-
-- Text description of graph structure
-- Keyboard navigation between nodes
-- Screen reader announcements for highlights
-- High contrast mode option
-
-## Future Enhancements
-
-Potential improvements:
-
-1. **Animated Transitions**: Smooth animation between simulation steps
-2. **Manual Layout**: Allow users to drag nodes
-3. **Zoom/Pan Controls**: UI buttons for viewport control
-4. **Minimap**: Overview of large graphs
-5. **Edge Labels**: Better positioning for readability
-6. **Self-loops**: Special rendering for transitions from state to itself
-7. **Multiple Edges**: Bundle parallel transitions
-8. **Layout Options**: User-selectable layout algorithms
+`describe.ts` produces a plain-text description of an automaton: the quintuple `(Q, Σ, δ, q₀, A)`, the alphabet, the state roster, the start state, the accepting set, and the transitions, with notes for the sink state. It is the prose companion to the on-screen transition table, which is the navigable, table-form view of the same `δ`. Together they make every diagram reachable without the canvas.
