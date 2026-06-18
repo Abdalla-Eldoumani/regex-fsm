@@ -113,4 +113,58 @@ describe('automatonToMarkdown', () => {
     const md = automatonToMarkdown(a)
     expect(md).toContain('a\\|b')
   })
+
+  // Threat T-12-08, the backslash-escaping crux. mdCell neutralizes the backslash
+  // FIRST (\ -> \\) and only then the pipe (| -> \|). So a literal "\|" must become
+  // "\\\|": the original backslash is doubled and the original pipe gets its own
+  // escape. The old order escaped the pipe first and produced "\\|", which renders
+  // as an escaped backslash followed by a LIVE pipe that opens a new column. This
+  // test distinguishes the correct "\\\|" from the buggy "\\|".
+  it('escapes a backslash before a pipe so the pipe cannot survive as a live column break', () => {
+    const a: Automaton = {
+      states: [{ id: 'q0' }, { id: 'q1' }],
+      transitions: [{ from: 'q0', to: 'q1', symbol: '\\|' }],
+      startState: 'q0',
+      acceptStates: ['q1'],
+      alphabet: new Set(['\\|']),
+    }
+    const md = automatonToMarkdown(a)
+    // The header carries the column symbol "\|" -> the escaped form "\\\|".
+    expect(md).toContain('\\\\\\|')
+    // The buggy backslash-then-live-pipe output must NOT appear as the rendered
+    // cell: "\\|" with no third escaping backslash before the pipe. Asserted via a
+    // regex that forbids exactly two backslashes immediately before a pipe.
+    expect(/(^|[^\\])\\\\\|/.test(md)).toBe(false)
+  })
+
+  it('escapes a lone backslash in a state id to a double backslash', () => {
+    const a: Automaton = {
+      states: [{ id: 'q\\0' }],
+      transitions: [],
+      startState: 'q\\0',
+      acceptStates: [],
+      alphabet: new Set<string>(),
+    }
+    const md = automatonToMarkdown(a)
+    // The single backslash in the id is doubled; the raw "q\0" must not survive.
+    expect(md).toContain('q\\\\0')
+    expect(md).not.toContain('q\\0|')
+  })
+
+  // A newline inside a cell would break the single-line table row, so mdCell
+  // collapses CR/LF to a single space.
+  it('replaces a newline inside a symbol with a space so the row stays intact', () => {
+    const a: Automaton = {
+      states: [{ id: 'q0' }, { id: 'q1' }],
+      transitions: [{ from: 'q0', to: 'q1', symbol: 'a\nb' }],
+      startState: 'q0',
+      acceptStates: ['q1'],
+      alphabet: new Set(['a\nb']),
+    }
+    const md = automatonToMarkdown(a)
+    expect(md).toContain('a b')
+    // No state row carries a bare newline that would split it across lines: header,
+    // separator, and exactly one row per state.
+    expect(md.split('\n')).toHaveLength(2 + a.states.length)
+  })
 })
