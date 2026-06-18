@@ -95,6 +95,33 @@ describe('automatonToTikZ', () => {
     expect(tex).toContain('\\$')
   })
 
+  // Threat T-12-07, the brace case. Subset-construction DFA state ids carry literal
+  // braces, e.g. "{q0,q1}". A raw brace in TeX opens/closes a group, so an
+  // unescaped id would swallow following tokens and break compilation. tex() must
+  // escape "{" to "\{" and "}" to "\}" so the set-notation id renders as text.
+  it('escapes braces in a subset-construction state id so LaTeX does not eat them', () => {
+    const a: Automaton = {
+      states: [{ id: '{q0,q1}' }, { id: '{q2}' }],
+      transitions: [
+        { from: '{q0,q1}', to: '{q2}', symbol: 'a' },
+        { from: '{q2}', to: '{q0,q1}', symbol: 'b' },
+      ],
+      startState: '{q0,q1}',
+      acceptStates: ['{q2}'],
+      alphabet: new Set(['a', 'b']),
+    }
+    const tex = automatonToTikZ(a)
+    // The set-notation ids appear with both braces escaped.
+    expect(tex).toContain('\\{q0,q1\\}')
+    expect(tex).toContain('\\{q2\\}')
+    // The raw, unescaped id "{q0,q1}" must NOT survive as a node-body token: a brace
+    // that is part of the id is always preceded by a backslash. (Structural TeX
+    // braces from \node{...} are fine; what we forbid is the q0,q1 set wrapped in
+    // bare braces.)
+    expect(tex).not.toContain('{q0,q1}')
+    expect(tex).not.toContain('{q2}')
+  })
+
   it('reflects the actual automaton with a node per state and an edge per transition', () => {
     const a: Automaton = {
       states: [{ id: 'q0' }, { id: 'q1' }, { id: 'q2' }],
