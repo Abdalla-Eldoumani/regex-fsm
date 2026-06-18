@@ -82,9 +82,3 @@ export function exportAsSVG(automaton: Automaton, filename: string = 'automaton.
   const svg = automatonToSVG(automaton, positions, readSvgColors())
   downloadText(filename, svg, 'image/svg+xml')
 }
-
-export function exportAsJSON(cy: cytoscape.Core, filename: string = 'automaton.json') {
-  const json = cy.json()
-  const jsonStr = JSON.stringify(json, null, 2)
-  downloadText(filename, jsonStr, 'application/json')
-}
