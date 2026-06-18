@@ -25,7 +25,6 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
-    "clsx": "2.1.1",
     "cytoscape": "3.34.0",
     "cytoscape-edgehandles": "4.0.1",
     "lz-string": "1.5.0",
@@ -49,7 +48,6 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
     "@vitest/coverage-v8": "4.1.8",
-    "@vitest/ui": "4.1.8",
     "eslint": "10.5.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.3",

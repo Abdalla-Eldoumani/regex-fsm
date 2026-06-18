@@ -119,6 +119,40 @@ describe('completeDFA', () => {
     expect(incomplete.states).toHaveLength(snapshotStates)
     expect(incomplete.transitions).toHaveLength(snapshotTransitions)
   })
+
+  // The overAlphabet widening path: a DFA total over its OWN {a} is incomplete over a
+  // WIDER Σ = {a, b}. Completing over the wider Σ must add the missing 'b'-edges and
+  // a trap whose self-loops cover BOTH symbols, not just the input's own alphabet.
+  // This is the precondition the complement and closure views rely on when Σ is
+  // larger than a symbol-light machine's own alphabet.
+  it('completes over a widened alphabet with trap self-loops on every widened symbol', () => {
+    // q0 -a-> q0 is total over {a} but has no 'b'-edge. Σ is widened to {a, b}.
+    const overA: DFA = {
+      states: [{ id: 'q0' }],
+      transitions: [{ from: 'q0', to: 'q0', symbol: 'a' }],
+      startState: 'q0',
+      acceptStates: ['q0'],
+      alphabet: new Set(['a']),
+    }
+
+    const result = completeDFA(overA, new Set(['a', 'b']))
+
+    expect(result.trapAdded).toBe(true)
+    // The widened alphabet is carried on the completed machine.
+    expect(result.dfa.alphabet).toEqual(new Set(['a', 'b']))
+    // q0 gains exactly the missing 'b'-edge to the trap (its 'a'-edge already existed).
+    expect(result.addedEdges).toContainEqual({ from: 'q0', to: '∅', symbol: 'b' })
+    expect(result.addedEdges).not.toContainEqual({ from: 'q0', to: '∅', symbol: 'a' })
+    // The trap self-loops over BOTH widened symbols, not just the input's own {a}.
+    const trapLoops = result.dfa.transitions.filter((t) => t.from === '∅' && t.to === '∅')
+    const trapSymbols = new Set(trapLoops.map((t) => t.symbol))
+    expect(trapSymbols).toEqual(new Set(['a', 'b']))
+    // The completed machine is total over the widened Σ: every state has |Σ| = 2 edges.
+    for (const s of result.dfa.states) {
+      const outgoing = result.dfa.transitions.filter((t) => t.from === s.id)
+      expect(new Set(outgoing.map((t) => t.symbol))).toEqual(new Set(['a', 'b']))
+    }
+  })
 })
 
 describe('complementDFA', () => {

@@ -268,6 +268,64 @@ describe('minimizeDFA', () => {
   })
 })
 
+describe('letter naming past Z (getLetterName off-by-one guard)', () => {
+  // getLetterName is module-private, so drive it through minimizeDFA. A modulo-27
+  // counter over {a} has 27 PAIRWISE-DISTINGUISHABLE states: a single accepting
+  // residue means each state qi accepts a^k for a different residue class, so no two
+  // states can merge and minimization keeps all 27. With letter naming on, the 27
+  // partitions take names A..Z (indices 0..25) and then index 26 -> 'AA'. The buggy
+  // `Math.floor(index/26) - 1` boundary is exactly what decides the 27th name: the
+  // correct formula yields 'AA', a no-minus-one bug yields 'BA', so the name SET
+  // distinguishes them.
+  function mod27Cycle(): DFA {
+    const n = 27
+    const states = Array.from({ length: n }, (_, i) => ({ id: `q${i}`, label: `q${i}` }))
+    const transitions = Array.from({ length: n }, (_, i) => ({
+      from: `q${i}`,
+      to: `q${(i + 1) % n}`,
+      symbol: 'a',
+    }))
+    return {
+      states,
+      transitions,
+      startState: 'q0',
+      acceptStates: ['q0'], // exactly one accepting residue -> all 27 are distinct
+      alphabet: new Set(['a']),
+    }
+  }
+
+  it('keeps all 27 distinguishable states and names the 27th AA, not BA', () => {
+    const result = minimizeDFA(mod27Cycle(), true)
+    // No states merge: the minimal machine still has 27.
+    expect(result.dfa.states).toHaveLength(27)
+
+    const names = new Set(result.dfa.states.map((s) => s.id))
+    // The 27th name is the boundary case the off-by-one would break.
+    expect(names.has('AA')).toBe(true)
+    expect(names.has('BA')).toBe(false) // the no-minus-one bug's output
+    expect(names.has('@A')).toBe(false) // a minus-too-much bug (charCode 64 = '@')
+
+    // The full name set is exactly A..Z plus AA, nothing malformed.
+    const expected = new Set<string>()
+    for (let i = 0; i < 26; i++) expected.add(String.fromCharCode(65 + i))
+    expected.add('AA')
+    expect(names).toEqual(expected)
+
+    // Every name is a real uppercase-letter label (no stray '@' or '[').
+    expect(result.dfa.states.every((s) => /^[A-Z]+$/.test(s.id))).toBe(true)
+  })
+
+  it('preserves the language after the past-Z renaming', () => {
+    const dfa = mod27Cycle()
+    const result = minimizeDFA(dfa, true)
+    // a^k is accepted iff k is a multiple of 27. Check across the boundary.
+    for (const k of [0, 1, 26, 27, 28, 53, 54]) {
+      const str = 'a'.repeat(k)
+      expect(simulateDFA(result.dfa, str).accepted).toBe(simulateDFA(dfa, str).accepted)
+    }
+  })
+})
+
 describe('renameDFAStates', () => {
   it('should rename states with q0, q1, q2... by default', () => {
     const dfa: DFA = {

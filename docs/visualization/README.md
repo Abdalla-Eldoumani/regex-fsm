@@ -16,8 +16,7 @@ src/visualization/
 ├── automatonToTikZ.ts        # LaTeX/TikZ serializer
 ├── automatonToMarkdown.ts    # Markdown transition-table serializer
 ├── automatonToCSV.ts         # CSV serializer with formula-injection guard
-├── describe.ts               # plain-text description for screen readers
-└── animation.ts              # animation helpers
+└── describe.ts               # plain-text description for screen readers
 ```
 
 ## AutomatonGraph

@@ -59,5 +59,3 @@ export const VALID_TOUR_ROUTES = [
   '/challenges',
   '/simulate',
 ] as const
-
-export type TourRoute = (typeof VALID_TOUR_ROUTES)[number]

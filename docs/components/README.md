@@ -21,9 +21,9 @@ src/components/
 ├── nav/                  # the mobile navigation menu
 ├── a11y/                 # GraphSummary, the screen-reader graph description
 ├── display/              # AutomatonView, TransitionTable, StateList
-├── input/                # RegexInput, StringInput, PatternBuilder, BuildButtons
+├── input/                # RegexInput, StringInput, PatternBuilder
 ├── education/            # TheoryPanel, StepExplanation
-└── common/               # Button, Input, Tabs, Tooltip, Modal
+└── common/               # Tabs, TooLargeNotice
 ```
 
 ## The tool views

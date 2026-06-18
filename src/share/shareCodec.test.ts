@@ -372,4 +372,155 @@ describe('shareCodec', () => {
       expect(r === null || (r.kind === 'regex' && r.src === '((((')).toBe(true)
     })
   })
+
+  // The per-field src/testString caps are module-private (MAX_REGEX_SRC_LENGTH and
+  // MAX_TEST_STRING_LENGTH, both 4096). A field at the cap survives; one byte over
+  // is rejected. Referencing the literal here is deliberate: if the source cap
+  // moves, this test should be updated in lockstep, which is the point of locking it.
+  const FIELD_CAP = 4096
+
+  describe('gate (e): per-field DoS caps fail closed (SHARE-02 / T-12-05)', () => {
+    it('rejects a regex src longer than the cap but admits one at the cap', () => {
+      const atCap = { ...goodRegex, src: 'a'.repeat(FIELD_CAP) }
+      const overCap = { ...goodRegex, src: 'a'.repeat(FIELD_CAP + 1) }
+      // alphabet must contain 'a' for nothing else to trip; goodRegex already has it.
+      expect(decodeShareState(encodeShareState(atCap as ShareState))).not.toBeNull()
+      expect(decodeShareState(encodeShareState(overCap as ShareState))).toBeNull()
+    })
+
+    it('rejects a testString longer than the cap but admits one at the cap', () => {
+      const atCap = {
+        ...goodRegex,
+        options: { ...goodRegex.options, testString: 'a'.repeat(FIELD_CAP) },
+      }
+      const overCap = {
+        ...goodRegex,
+        options: { ...goodRegex.options, testString: 'a'.repeat(FIELD_CAP + 1) },
+      }
+      expect(decodeShareState(encodeShareState(atCap as ShareState))).not.toBeNull()
+      expect(decodeShareState(encodeShareState(overCap as ShareState))).toBeNull()
+    })
+
+    it('rejects a regex alphabet larger than MAX_ALPHABET_SIZE', () => {
+      // MAX_ALPHABET_SIZE === BOUNDS.MAX_DFA_STATES. One symbol over the cap is
+      // rejected even though every entry is a valid string.
+      const tooMany = Array.from({ length: BOUNDS.MAX_DFA_STATES + 1 }, (_, i) => `s${i}`)
+      const bad = { ...goodRegex, alphabet: tooMany }
+      expect(decodeShareState(wire(bad))).toBeNull()
+    })
+
+    it('rejects an automaton alphabet larger than MAX_ALPHABET_SIZE', () => {
+      // The automaton branch caps its own alphabet at MAX_ALPHABET_SIZE. Build a
+      // referentially-clean doc (no transitions reference the oversized symbols) so
+      // only the alphabet-size gate can be the reason for the null.
+      const tooMany = Array.from({ length: BOUNDS.MAX_DFA_STATES + 1 }, (_, i) => `s${i}`)
+      const bad = {
+        v: SHARE_VERSION,
+        kind: 'automaton',
+        states: [{ id: 'q0' }],
+        alphabet: tooMany,
+        transitions: [],
+        start: 'q0',
+        accept: [],
+      }
+      expect(decodeShareState(wire(bad))).toBeNull()
+    })
+
+    it('rejects an automaton whose transition count exceeds the edge cap', () => {
+      // The edge cap is transitions.length > MAX_DFA_STATES * (alphabet.length + 1).
+      // With one symbol that is 256 * 2 = 512, so 513 transitions trips it. The count
+      // gate runs BEFORE referential integrity, so valid self-loops on q0 are enough.
+      const cap = BOUNDS.MAX_DFA_STATES * (1 + 1)
+      const tooManyEdges = Array.from({ length: cap + 1 }, () => ({
+        from: 'q0',
+        to: 'q0',
+        symbol: 'a',
+      }))
+      const bad = {
+        v: SHARE_VERSION,
+        kind: 'automaton',
+        states: [{ id: 'q0' }],
+        alphabet: ['a'],
+        transitions: tooManyEdges,
+        start: 'q0',
+        accept: [],
+      }
+      expect(decodeShareState(wire(bad))).toBeNull()
+    })
+
+    it('rejects an automaton with more accept states than states', () => {
+      // accept.length > states.length is impossible for a real machine; the gate
+      // rejects it before referential integrity even resolves the ids.
+      const bad = {
+        v: SHARE_VERSION,
+        kind: 'automaton',
+        states: [{ id: 'q0' }],
+        alphabet: ['a'],
+        transitions: [],
+        start: 'q0',
+        accept: ['q0', 'q1'],
+      }
+      expect(decodeShareState(wire(bad))).toBeNull()
+    })
+  })
+
+  describe('gate (a): MAX_ENCODED_LENGTH exact boundary (SHARE-02 / T-12-01)', () => {
+    it('admits an input of exactly the cap to decompression and rejects one over', () => {
+      // The length gate is `raw.length > MAX_ENCODED_LENGTH`, so a string of exactly
+      // the cap is NOT rejected by the gate -- decompression is attempted (and here
+      // fails on garbage, yielding null). A string one over is rejected before
+      // decompress ever runs. This pins the boundary as strictly-greater, not >=.
+      decompressSpy.mockClear()
+      const atCap = 'A'.repeat(MAX_ENCODED_LENGTH)
+      expect(decodeShareState(atCap)).toBeNull() // garbage, but the gate let it through
+      expect(decompressSpy).toHaveBeenCalledTimes(1)
+
+      decompressSpy.mockClear()
+      const overCap = 'A'.repeat(MAX_ENCODED_LENGTH + 1)
+      expect(decodeShareState(overCap)).toBeNull()
+      expect(decompressSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  // Prototype-pollution lock (SHARE-02). A crafted payload carrying __proto__ and
+  // constructor keys must never mutate Object.prototype, and the decode must return
+  // null or a clean ShareState -- never an object whose prototype was poisoned. The
+  // validator builds a fresh object from checked fields, and JSON.parse treats
+  // __proto__ as a plain own key, so the chain is never reached; this test is the
+  // standing guard against a future change that spreads the parsed input instead.
+  describe('prototype-pollution lock (SHARE-02)', () => {
+    it('a payload with __proto__ and constructor never pollutes Object.prototype', () => {
+      // The malicious JSON is written as a RAW string, not via JSON.stringify of an
+      // object literal: literal `__proto__:` syntax sets the prototype rather than an
+      // own key and would be dropped by stringify, so it would never reach the wire.
+      // A real attacker sends the bytes directly, which is what this models.
+      const malicious =
+        '{"v":1,"kind":"automaton","states":[{"id":"q0"}],"alphabet":["a"],' +
+        '"transitions":[],"start":"q0","accept":[],' +
+        '"__proto__":{"polluted":true},"constructor":{"prototype":{"alsoPolluted":true}}}'
+      const r = decodeShareState(compressToEncodedURIComponent(malicious))
+
+      // No global pollution leaked from the decode.
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+      expect(({} as Record<string, unknown>).alsoPolluted).toBeUndefined()
+      // The result is null or a clean object that does not carry the pollution marker
+      // as an own enumerable key.
+      expect(
+        r === null ||
+          (r.kind === 'automaton' && !Object.prototype.hasOwnProperty.call(r, 'polluted')),
+      ).toBe(true)
+    })
+
+    it('a __proto__ nested inside a valid regex doc does not pollute', () => {
+      // A second vector: __proto__ buried in the options object. Decode must still be
+      // null-or-valid and must not pollute the global prototype.
+      const malicious =
+        '{"v":1,"kind":"regex","src":"a","alphabet":["a"],"options":' +
+        '{"constructionMethod":"thompson","shouldMinimize":true,"useLetterNames":false,' +
+        '"testString":"","__proto__":{"hacked":true}}}'
+      const r = decodeShareState(compressToEncodedURIComponent(malicious))
+      expect(({} as Record<string, unknown>).hacked).toBeUndefined()
+      expect(r === null || r.kind === 'regex').toBe(true)
+    })
+  })
 })

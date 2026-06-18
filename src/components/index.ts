@@ -1,7 +1,0 @@
-export { default as App } from './App'
-export { default as Layout } from './Layout'
-export * from './input'
-export * from './display'
-export * from './simulation'
-export * from './education'
-export * from './common'
