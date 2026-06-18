@@ -4,7 +4,7 @@ import { buildNFA } from '@/core/algorithms/thompson'
 import { nfaToDFA } from '@/core/algorithms/subset'
 import { simulateDFA } from '@/core/algorithms/simulate'
 import { productDFA } from '@/core/algorithms/product'
-import { DFA } from '@/core/automata/types'
+import { DFA, TooLargeError } from '@/core/automata/types'
 
 // Unit suite for the product DFA, union and intersection (automata-correctness
 // invariant 7).
@@ -157,5 +157,103 @@ describe('productDFA determinism', () => {
     productDFA(containsA, containsB, 'intersection')
     expect(containsA.states).toHaveLength(aStates)
     expect(containsB.states).toHaveLength(bStates)
+  })
+})
+
+describe('productDFA bound (SAFETY-01, threat T-07-DOS)', () => {
+  // A non-accepting cycle over {a} that returns to start every m symbols. Two such
+  // cycles of COPRIME length advance in lockstep on 'a', and by CRT the product
+  // reaches all m*n diagonal pairs. With m=17, n=16 that is 272 reachable pairs,
+  // past the 256 cap, so the product's own seen.size guard throws. Both inputs stay
+  // over {a} only so completeDFA adds no trap and the pair count is exactly m*n.
+  function cycle(prefix: string, m: number): DFA {
+    const states = Array.from({ length: m }, (_, i) => ({ id: `${prefix}${i}` }))
+    const transitions = Array.from({ length: m }, (_, i) => ({
+      from: `${prefix}${i}`,
+      to: `${prefix}${(i + 1) % m}`,
+      symbol: 'a',
+    }))
+    return {
+      states,
+      transitions,
+      startState: `${prefix}0`,
+      acceptStates: [],
+      alphabet: new Set(['a']),
+    }
+  }
+
+  it('throws TooLargeError when the product exceeds MAX_DFA_STATES', () => {
+    const a = cycle('p', 17)
+    const b = cycle('q', 16) // 17 * 16 = 272 reachable pairs > 256
+    expect(() => productDFA(a, b, 'intersection')).toThrow(TooLargeError)
+  })
+
+  it('does not throw for a small product well under the cap', () => {
+    const a = cycle('p', 3)
+    const b = cycle('q', 4) // 12 reachable pairs, safe
+    expect(() => productDFA(a, b, 'union')).not.toThrow()
+  })
+})
+
+describe('productDFA disjoint alphabets (Pitfall 2)', () => {
+  // A accepts a+ over {a} ONLY; B accepts b+ over {b} ONLY -- the alphabets are
+  // DISJOINT. This is the crux of Pitfall 2: completion runs over the merged {a, b}
+  // FIRST, so A gains a 'b'-edge to a trap and a single 'b' kills A forever. Hence
+  // A's language over {a, b} is exactly a+ (all-a, at least one a), NOT "contains
+  // an a"; likewise B is b+. The product must run over {a, b}, be complete, and
+  // compute the set law on these COMPLETED languages: a+ ∩ b+ = empty, a+ ∪ b+.
+  const aPlus: DFA = {
+    states: [{ id: 'sa0' }, { id: 'sa1' }],
+    transitions: [
+      { from: 'sa0', to: 'sa1', symbol: 'a' },
+      { from: 'sa1', to: 'sa1', symbol: 'a' },
+    ],
+    startState: 'sa0',
+    acceptStates: ['sa1'],
+    alphabet: new Set(['a']),
+  }
+  const bPlus: DFA = {
+    states: [{ id: 'sb0' }, { id: 'sb1' }],
+    transitions: [
+      { from: 'sb0', to: 'sb1', symbol: 'b' },
+      { from: 'sb1', to: 'sb1', symbol: 'b' },
+    ],
+    startState: 'sb0',
+    acceptStates: ['sb1'],
+    alphabet: new Set(['b']),
+  }
+
+  it('builds over the merged alphabet and stays complete', () => {
+    const result = productDFA(aPlus, bPlus, 'intersection')
+    expect(result.dfa.alphabet).toEqual(new Set(['a', 'b']))
+    // Completeness: every state has exactly |Σ| = 2 outgoing transitions, one per
+    // merged symbol. Disjoint inputs would be incomplete without the completion step.
+    for (const state of result.dfa.states) {
+      const outgoing = result.dfa.transitions.filter((t) => t.from === state.id)
+      const symbols = new Set(outgoing.map((t) => t.symbol))
+      expect(symbols).toEqual(new Set(['a', 'b']))
+    }
+  })
+
+  it('intersection of a+ and b+ is the empty language', () => {
+    // No string can be all-a and all-b at once, so the intersection accepts nothing.
+    const both = productDFA(aPlus, bPlus, 'intersection').dfa
+    for (const s of ['', 'a', 'b', 'aa', 'bb', 'ab', 'ba', 'aab', 'abab']) {
+      expect(simulateDFA(both, s).accepted).toBe(false)
+    }
+  })
+
+  it('union accepts a+ or b+, and a mixed string is rejected', () => {
+    const either = productDFA(aPlus, bPlus, 'union').dfa
+    // In a+ or b+.
+    expect(simulateDFA(either, 'a').accepted).toBe(true)
+    expect(simulateDFA(either, 'b').accepted).toBe(true)
+    expect(simulateDFA(either, 'aa').accepted).toBe(true)
+    expect(simulateDFA(either, 'bbb').accepted).toBe(true)
+    // Mixing a and b leaves both languages, so the union rejects it. The empty
+    // string is in neither a+ nor b+ either.
+    expect(simulateDFA(either, '').accepted).toBe(false)
+    expect(simulateDFA(either, 'ab').accepted).toBe(false)
+    expect(simulateDFA(either, 'ba').accepted).toBe(false)
   })
 })
