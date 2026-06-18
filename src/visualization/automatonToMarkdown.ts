@@ -12,10 +12,12 @@ import type { Automaton } from '@/core/automata/types'
 const LAMBDA = 'λ'
 const EMPTY = '∅'
 
-// Escape a cell for a Markdown pipe table: a literal pipe would open a new column
-// and a newline would break the row, so neutralize both (threat T-12-08).
+// Escape a cell for a Markdown pipe table. Backslash is neutralized first so a
+// literal "\|" cannot survive as an escaped backslash plus a live pipe that opens
+// a new column; then the pipe and the newline (which would break the row) are
+// neutralized too (threat T-12-08).
 function mdCell(s: string): string {
-  return s.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
+  return s.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
 }
 
 // The sorted target set for one (state, symbol) cell, in TransitionTable's exact
