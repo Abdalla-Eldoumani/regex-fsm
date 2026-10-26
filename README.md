@@ -184,7 +184,7 @@ Technical documentation lives in [docs/](./docs/):
 
 ## Companion tool
 
-regex-fsm has a sibling: the **AArch64 Playground** (https://aarch64-playground.com), a browser-based environment for writing and running AArch64 assembly. Both are carefully built teaching tools for hard university CS topics, made by the same author, with the same standard of correctness and craft.
+regex-fsm has a sibling: the **AArch64 Playground** (https://aarch64-playground.com), a browser-based environment for writing and running AArch64 assembly. Both are teaching tools for hard university CS topics, by the same author.
 
 ## Authors
 
